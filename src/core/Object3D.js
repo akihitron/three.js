@@ -114,6 +114,119 @@ class Object3D extends EventDispatcher {
 		this.animations = [];
 
 		this.userData = {};
+		
+
+		{ // @VMD@
+			this.script = "";
+			this.script_mode = null;
+			this.isMosaicObject = false;
+			this._collapsible_ = false;
+			this._animation_clock_ = 0;
+
+			this.user = {
+				updaters: {},
+			}
+			this.ikEnabled = true;
+			const self = this;
+			function _find_(name, o, exact_math=false,arr=null) {
+				const _name_ = o.name;
+				if (name instanceof RegExp) {
+					if (_name_.match(name)) {
+						if (arr) arr.push(o);
+						else return o;
+				}
+				} else {
+					if (exact_math) {
+						if (_name_ === name)  {
+							if (arr) arr.push(o);
+							else return o;
+						}
+					} else {
+						if (_name_.indexOf(name)>=0)  {
+							if (arr) arr.push(o);
+							else return o;
+						}
+					}
+				}
+				for (const sub of o.children) {
+					let ret = null;
+					ret = _find_(name, sub, exact_math, arr);
+					if (ret && arr == null) return ret;
+				}
+				return null;
+			}
+			this.find = function(name, exact_math=false) {
+				return _find_(name,self,exact_math);
+			}
+			this.findAll = function(name, exact_math=false) {
+				const arr = [];
+				_find_(name,self,exact_math, arr)
+				return arr;
+			}
+			function _findMaterial_(name, o=self, exact_math=false) {
+				if (o.material) {
+					if (Array.isArray(o.material)) {
+						for (const material of o.material) {
+							const _name_ = material.name;
+							if (name instanceof RegExp) {
+								if (_name_.match(name)) return material;
+							} else {
+								if (exact_math) {
+									if (_name_ === name) return material;
+								} else {
+									if (_name_.indexOf(name)>=0) return material;
+								}
+							}
+						}
+					} else {
+						const _name_ = o.material.name;
+						if (name instanceof RegExp) {
+							if (_name_.match(name)) return o.material;
+						} else {
+							if (exact_math) {
+								if (_name_ === name) return o.material;
+							} else {
+								if (_name_.indexOf(name)>=0) return o.material;
+							}
+						}
+					}
+				}
+				for (const sub of o.children) {
+					let ret = null;
+					ret = _findMaterial_(name, sub, exact_math);
+					if (ret) return ret;
+				}
+				return null;
+			}
+			this.findMaterial = function(name, exact_math=false) {
+				return _findMaterial_(name,self,exact_math);
+			}
+			this.setUpdater = function(key, callback) {
+				this.user.updaters[key] = callback;
+			}
+
+			this.isMMD = false;
+
+			// // Single
+			// this.getCurrentAction = function () {}
+			// this.setCurrentAction = function(any, params) {}
+
+			// // Multiple
+			// this.setActions = function(any, params) {}
+			// this.getActions = function() {}
+			// this.clearActions = function() {}
+			// // Multiple
+			// this.getAnimationBlender = function() {}
+			// this.createAnimationBlender = function() {}
+
+			// // Mode
+			// this.setActionMode = function(mode) {}
+			// this.getActionMode = function() {}
+
+			// // Single/Multiple
+			// this.updateActions = undefined;//function(delta) {}
+			
+		}
 
 	}
 
