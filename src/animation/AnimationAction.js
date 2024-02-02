@@ -50,6 +50,9 @@ class AnimationAction {
 		// scaled local time of the action
 		// gets clamped or wrapped to 0..clip.duration according to loop
 		this.time = 0;
+		
+		this.timeOffset = 0; // @VMD@
+
 
 		this.timeScale = 1;
 		this._effectiveTimeScale = 1;
@@ -509,7 +512,7 @@ class AnimationAction {
 
 				if ( time >= duration ) {
 
-					time = duration;
+					// time = duration; // @VMD@
 
 				} else if ( time < 0 ) {
 
@@ -524,7 +527,9 @@ class AnimationAction {
 				}
 
 				if ( this.clampWhenFinished ) this.paused = true;
-				else this.enabled = false;
+				else {
+					// this.enabled = false; // @VMD@
+				}
 
 				this.time = time;
 

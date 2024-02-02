@@ -76,30 +76,92 @@ class Mesh extends Object3D {
 
 		const geometry = this.geometry;
 
-		const morphAttributes = geometry.morphAttributes;
-		const keys = Object.keys( morphAttributes );
 
-		if ( keys.length > 0 ) {
+		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		if (geometry.isMMDMorph) {
+			const morphAttributes = geometry.morphAttributes;
+			const morphs = geometry.morphs;
+			const keys = Object.keys( morphAttributes );
 
-			const morphAttribute = morphAttributes[ keys[ 0 ] ];
+			if ( keys.length > 0 ) {
 
-			if ( morphAttribute !== undefined ) {
+				const morphAttribute = morphAttributes[ keys[ 0 ] ];
 
-				this.morphTargetInfluences = [];
-				this.morphTargetDictionary = {};
+				if ( morphAttribute !== undefined ) {
 
-				for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+					this.morphTargetInfluences = [];
+					this.morphTargetDictionary = {};
+					this.morphTargetIndexDictionary = [];
 
-					const name = morphAttribute[ m ].name || String( m );
+					for ( let m = 0, ml = morphs.length; m < ml; m ++ ) {
 
-					this.morphTargetInfluences.push( 0 );
-					this.morphTargetDictionary[ name ] = m;
+						const name = morphs[ m ].name || String( m );
+
+						this.morphTargetInfluences.push( 0 );
+						this.morphTargetDictionary[ name ] = m;
+						this.morphTargetIndexDictionary.push( name );
+
+					}
 
 				}
 
 			}
+		} else {
 
+			const morphAttributes = geometry.morphAttributes;
+			const keys = Object.keys( morphAttributes );
+
+			if ( keys.length > 0 ) {
+
+				const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+				if ( morphAttribute !== undefined ) {
+
+					this.morphTargetInfluences = [];
+					this.morphTargetDictionary = {};
+					this.morphTargetIndexDictionary = [];
+
+
+					for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+						const name = morphAttribute[ m ].name || String( m );
+
+						this.morphTargetInfluences.push( 0 );
+						this.morphTargetDictionary[ name ] = m;
+						this.morphTargetIndexDictionary.push( name );
+
+					}
+
+				}
+
+			}
 		}
+		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+
+		// const morphAttributes = geometry.morphAttributes;
+		// const keys = Object.keys( morphAttributes );
+
+		// if ( keys.length > 0 ) {
+
+		// 	const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+		// 	if ( morphAttribute !== undefined ) {
+
+		// 		this.morphTargetInfluences = [];
+		// 		this.morphTargetDictionary = {};
+
+		// 		for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+		// 			const name = morphAttribute[ m ].name || String( m );
+
+		// 			this.morphTargetInfluences.push( 0 );
+		// 			this.morphTargetDictionary[ name ] = m;
+
+		// 		}
+
+		// 	}
+
+		// }
 
 	}
 

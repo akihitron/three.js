@@ -161,6 +161,9 @@ class Texture extends EventDispatcher {
 
 		this.needsUpdate = true;
 
+		this.source_file = source.source_file; // @VMD@
+
+
 		return this;
 
 	}
@@ -186,7 +189,9 @@ class Texture extends EventDispatcher {
 			uuid: this.uuid,
 			name: this.name,
 
-			image: this.source.toJSON( meta ).uuid,
+			// image: this.source.toJSON( meta ).uuid,
+			image: this.source.uuid, // @VMD@
+
 
 			mapping: this.mapping,
 			channel: this.channel,
@@ -211,8 +216,9 @@ class Texture extends EventDispatcher {
 
 			generateMipmaps: this.generateMipmaps,
 			premultiplyAlpha: this.premultiplyAlpha,
-			unpackAlignment: this.unpackAlignment
+			unpackAlignment: this.unpackAlignment,
 
+			source_file: this.source_file // @VMD@
 		};
 
 		if ( Object.keys( this.userData ).length > 0 ) output.userData = this.userData;

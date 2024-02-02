@@ -4,7 +4,7 @@ import { Vector3 } from '../math/Vector3.js';
 
 class BoxGeometry extends BufferGeometry {
 
-	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
+	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1, offset={x:0,y:0,z:0} ) { // @VMD@
 
 		super();
 
@@ -90,7 +90,7 @@ class BoxGeometry extends BufferGeometry {
 
 					// now apply vector to vertex buffer
 
-					vertices.push( vector.x, vector.y, vector.z );
+					vertices.push( vector.x + offset.x, vector.y + offset.y, vector.z + offset.z); // @VMD@
 
 					// set values to correct vector component
 

@@ -94,6 +94,17 @@ class Frustum {
 
 		}
 
+		// TODO: intersection code
+		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		const geometry = object.geometry;
+		if (object.__getActualMatrixWorld__) {
+			_sphere$2.copy( geometry.boundingSphere ).applyMatrix4( object.__getActualMatrixWorld__() );
+		} else {
+			_sphere$2.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
+		}
+		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+
+
 		return this.intersectsSphere( _sphere );
 
 	}

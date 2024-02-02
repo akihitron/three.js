@@ -77,6 +77,12 @@ class Material extends EventDispatcher {
 
 		this._alphaTest = 0;
 
+
+		{ // Extensions
+			this.receiveDynamicEnvironment = true; // @VMD@
+			this.castDynamicEnvironment = true; // @VMD@
+			this.motionBlur = true; // @VMD@
+		}		
 	}
 
 	get alphaTest() {
@@ -339,6 +345,9 @@ class Material extends EventDispatcher {
 		data.stencilZFail = this.stencilZFail;
 		data.stencilZPass = this.stencilZPass;
 
+		if ( this.castDynamicEnvironment !== undefined) data.castDynamicEnvironment = this.castDynamicEnvironment; // @VMD@
+		if ( this.receiveDynamicEnvironment !== undefined) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @VMD@
+
 		// rotation (SpriteMaterial)
 		if ( this.rotation !== undefined && this.rotation !== 0 ) data.rotation = this.rotation;
 
@@ -484,6 +493,9 @@ class Material extends EventDispatcher {
 		this.visible = source.visible;
 
 		this.toneMapped = source.toneMapped;
+
+		this.castDynamicEnvironment = source.castDynamicEnvironment; // @VMD@
+		this.receiveDynamicEnvironment = source.receiveDynamicEnvironment; // @VMD@
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
