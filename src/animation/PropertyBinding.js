@@ -452,14 +452,14 @@ class PropertyBinding {
 
 					if ( ! targetObject.material ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to material as node does not have a material.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to material as node does not have a material.', this );
 						return;
 
 					}
 
 					if ( ! targetObject.material.materials ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to material.materials as node.material does not have a materials array.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to material.materials as node.material does not have a materials array.', this );
 						return;
 
 					}
@@ -472,7 +472,7 @@ class PropertyBinding {
 
 					if ( ! targetObject.skeleton ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to bones as node does not have a skeleton.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to bones as node does not have a skeleton.', this );
 						return;
 
 					}
@@ -507,14 +507,14 @@ class PropertyBinding {
 
 					if ( ! targetObject.material ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to material as node does not have a material.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to material as node does not have a material.', this );
 						return;
 
 					}
 
 					if ( ! targetObject.material.map ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to material.map as node.material does not have a map.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to material.map as node.material does not have a map.', this );
 						return;
 
 					}
@@ -526,7 +526,7 @@ class PropertyBinding {
 
 					if ( targetObject[ objectName ] === undefined ) {
 
-						console.error( 'THREE.PropertyBinding: Can not bind to objectName of node undefined.', this );
+						console.warn( 'THREE.PropertyBinding: Can not bind to objectName of node undefined.', this );
 						return;
 
 					}
@@ -540,7 +540,7 @@ class PropertyBinding {
 
 				if ( targetObject[ objectIndex ] === undefined ) {
 
-					console.error( 'THREE.PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
+					console.warn( 'THREE.PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
 					return;
 
 				}
