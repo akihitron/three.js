@@ -44,6 +44,7 @@ function Editor() {
 		spaceChanged: new Signal(),
 		rendererCreated: new Signal(),
 		rendererUpdated: new Signal(),
+		rendererDetectKTX2Support: new Signal(),
 
 		sceneBackgroundChanged: new Signal(),
 		sceneEnvironmentChanged: new Signal(),
@@ -83,6 +84,7 @@ function Editor() {
 		showGridChanged: new Signal(),
 		showHelpersChanged: new Signal(),
 		refreshSidebarObject3D: new Signal(),
+		refreshSidebarEnvironment: new Signal(),
 		historyChanged: new Signal(),
 
 		viewportCameraChanged: new Signal(),
@@ -622,11 +624,15 @@ Editor.prototype = {
 
 		var objects = this.scene.children;
 
+		this.signals.sceneGraphChanged.active = false;
+
 		while ( objects.length > 0 ) {
 
 			this.removeObject( objects[ 0 ] );
 
 		}
+
+		this.signals.sceneGraphChanged.active = true;
 
 		this.geometries = {};
 		this.materials = {};
@@ -662,6 +668,7 @@ Editor.prototype = {
 		if ( json.environment === 'ModelViewer' ) {
 
 			this.signals.sceneEnvironmentChanged.dispatch( json.environment );
+			this.signals.refreshSidebarEnvironment.dispatch();
 
 		}
 
