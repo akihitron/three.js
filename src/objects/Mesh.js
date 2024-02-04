@@ -77,7 +77,7 @@ class Mesh extends Object3D {
 		const geometry = this.geometry;
 
 
-		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		if (geometry.isMMDMorph) {
 			const morphAttributes = geometry.morphAttributes;
 			const morphs = geometry.morphs;
@@ -136,7 +136,7 @@ class Mesh extends Object3D {
 
 			}
 		}
-		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 		// const morphAttributes = geometry.morphAttributes;
 		// const keys = Object.keys( morphAttributes );

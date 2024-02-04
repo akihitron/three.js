@@ -116,7 +116,7 @@ class Object3D extends EventDispatcher {
 		this.userData = {};
 		
 
-		{ // @VMD@
+		{ // @DDD@
 			this.script = "";
 			this.script_mode = null;
 			this.isMosaicObject = false;

@@ -36,14 +36,14 @@ class LoaderUtils {
 
 	static extractUrlBase( url ) {
 
-		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		if (nodejs) {
 			if (nodejs.path.isAbsolute(url)) {
 				if (url.slice(-1) == "/") return url.replace(/\//g, "/");
 				return nodejs.path.dirname(url).replace(/\//g, "/") + "/";
 			}
 		}
-		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 		
 
 		const index = url.lastIndexOf( '/' );

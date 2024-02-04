@@ -21,11 +21,11 @@ class Camera extends Object3D {
 
 		this.coordinateSystem = WebGLCoordinateSystem;
 
-		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		this._camera_motion_vmd_distance = 0;
 		this._camera_motion_vmd_rotate = new Vector3();
 		this._camera_motion_vmd_euler = new Euler();
-		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<		
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<		
 		
 
 	}

@@ -915,6 +915,14 @@ class WebGLRenderer {
 
 			}
 
+			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+			if ( geometry.morphAttributes.position !== undefined || geometry.morphAttributes.normal !== undefined ) {
+
+				morphtargets.store( object, geometry );
+
+			}
+			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<		
+
 		};
 
 		// Compile
@@ -1567,25 +1575,30 @@ class WebGLRenderer {
 			object.modelViewMatrix.multiplyMatrices( camera.matrixWorldInverse, object.matrixWorld );
 			object.normalMatrix.getNormalMatrix( object.modelViewMatrix );
 
-			material.onBeforeRender( _this, scene, camera, geometry, object, group );
+			
+			const ret = material.onBeforeRender( _this, scene, camera, geometry, object, group ); // @DDD@
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if (ret == undefined || ret == true) { // @DDD@
+				if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false) {
 
-				material.side = BackSide;
-				material.needsUpdate = true;
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-
-				material.side = FrontSide;
-				material.needsUpdate = true;
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-
-				material.side = DoubleSide;
-
-			} else {
-
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-
+					material.side = BackSide;
+					material.needsUpdate = true;
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+	
+					material.side = FrontSide;
+					material.needsUpdate = true;
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+	
+					material.side = DoubleSide;
+	
+				} else {
+	
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+	
+				}
 			}
+
+			material.onAfterRender?.( _this, scene, camera, geometry, object, group ); // @DDD@
 
 			object.onAfterRender( _this, scene, camera, geometry, material, group );
 
@@ -1596,6 +1609,7 @@ class WebGLRenderer {
 			if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
 			const materialProperties = properties.get( material );
+			const currentRenderState = renderStates.get( scene ); // @DDD@
 
 			const lights = currentRenderState.state.lights;
 			const shadowsArray = currentRenderState.state.shadowsArray;
@@ -1696,8 +1710,23 @@ class WebGLRenderer {
 
 			}
 
-			materialProperties.currentProgram = program;
-			materialProperties.uniformsList = null;
+
+			if (window.debug && window.debug_performance) { // @DDD@
+				let tm = performance.now();
+				const progUniforms = program.getUniforms();
+				const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
+				if (performance.now()-tm>10) {
+					console.log(`getUniforms@"${material.name}"-${material.type}`, Math.floor(performance.now()-tm), "ms");
+				}
+				materialProperties.currentProgram = program;
+				materialProperties.uniformsList = uniformsList;
+		
+			} else {
+				
+				materialProperties.currentProgram = program;
+				materialProperties.uniformsList = null;
+	
+			}
 
 			return program;
 
@@ -1769,7 +1798,10 @@ class WebGLRenderer {
 			const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
 
 			const materialProperties = properties.get( material );
+			const currentRenderState = renderStates.get( scene ); // @DDD@
 			const lights = currentRenderState.state.lights;
+
+
 
 			if ( _clippingEnabled === true ) {
 
@@ -2008,7 +2040,7 @@ class WebGLRenderer {
 
 			if ( morphAttributes.position !== undefined || morphAttributes.normal !== undefined || ( morphAttributes.color !== undefined && capabilities.isWebGL2 === true ) ) {
 
-				morphtargets.update( object, geometry, program );
+				morphtargets.update( object, geometry, material, program ); // @DDD@
 
 			}
 

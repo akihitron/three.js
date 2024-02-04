@@ -1146,11 +1146,27 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				} else {
 
-					if ( useTexStorage ) {
+					// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+					
+					if (useTexStorage) {
 
-						if ( allocateMemory ) {
+						if (image.is_dummy) {
 
-							state.texStorage2D( _gl.TEXTURE_2D, levels, glInternalFormat, image.width, image.height );
+							if (allocateMemory) {
+
+								state.texStorage2D(_gl.TEXTURE_2D, levels, glInternalFormat, image.width, image.height);
+							}
+
+							state.texSubImage2D(_gl.TEXTURE_2D, 0, 0, 0, _gl.RGBA, _gl.UNSIGNED_BYTE, image.image_data);
+
+						} else {
+
+							if (allocateMemory) {
+
+								state.texStorage2D(_gl.TEXTURE_2D, levels, glInternalFormat, image.width, image.height);
+							}
+
+							state.texSubImage2D(_gl.TEXTURE_2D, 0, 0, 0, glFormat, glType, image);
 
 						}
 
@@ -1162,9 +1178,17 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 					} else {
 
-						state.texImage2D( _gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glType, image );
+						if (image.is_dummy) {
 
+							state.texImage2D(_gl.TEXTURE_2D, 0, glInternalFormat, image.width, image.height, 0, glFormat, glType, image.data);
+
+						} else {
+
+							state.texImage2D(_gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glType, image);
+						}
 					}
+
+					// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 				}
 

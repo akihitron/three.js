@@ -35,10 +35,10 @@ class Audio extends Object3D {
 
 		this.filters = [];
 
-		this.prepare(listener);//@VMD@
+		this.prepare(listener);//@DDD@
 	}
 
-	prepare(listener) {	//@VMD@
+	prepare(listener) {	//@DDD@
 
 		if (listener) {
 			this.listener = listener;
@@ -62,7 +62,7 @@ class Audio extends Object3D {
 		}
 	}
 
-	setVolume( value ) {// @VMD@
+	setVolume( value ) {// @DDD@
 		if (DMC?.sound_listener && this.source == null) this.prepare(context.sound_listener);
 		if (this.gain) this.gain.gain.setTargetAtTime( value, this.context.currentTime, 0.01 ); 
 		else console.warn("No gain.");
@@ -139,9 +139,9 @@ class Audio extends Object3D {
 		}
 
 		if (DMC?.sound_listener && this.source == null) this.prepare(context.sound_listener);
-		if (this.context == null) {console.warn("Audio object must prepare audio context before play.");return;}// @VMD@
-		const start_offset = - Math.min(delay,0); // @VMD@
-		delay = Math.max(delay, 0); // @VMD@
+		if (this.context == null) {console.warn("Audio object must prepare audio context before play.");return;}// @DDD@
+		const start_offset = - Math.min(delay,0); // @DDD@
+		delay = Math.max(delay, 0); // @DDD@
 
 		this._startedAt = this.context.currentTime + delay;
 
@@ -160,14 +160,14 @@ class Audio extends Object3D {
 		this.setDetune( this.detune );
 		this.setPlaybackRate( this.playbackRate );
 
-		if (this.__on_started_audio__) this.__on_started_audio__(); // @VMD@
+		if (this.__on_started_audio__) this.__on_started_audio__(); // @DDD@
 
 		return this.connect();
 
 	}
 
 
-	time() {// @VMD@
+	time() {// @DDD@
 		if ( this.isPlaying === true ) return this._progress + this.offset + Math.max( this.context.currentTime - this._startedAt, 0 ) * this.playbackRate;
 		return this._progress + this.offset;
 	}

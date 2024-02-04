@@ -331,7 +331,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 
 			dithering: material.dithering,
 
-			shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0,
+			shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0 && material.receiveShadow, // @DDD@
 			shadowMapType: renderer.shadowMap.type,
 
 			toneMapping: toneMapping,

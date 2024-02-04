@@ -95,11 +95,11 @@ class Frustum {
 		}
 
 		// TODO: intersection code
-		// @VMD Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		if (object.__getActualMatrixWorld__) {
 			_sphere.copy( geometry.boundingSphere ).applyMatrix4( object.__getActualMatrixWorld__() );
 		}
-		// @VMD Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 
 		return this.intersectsSphere( _sphere );

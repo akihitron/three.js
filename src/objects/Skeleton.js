@@ -140,7 +140,8 @@ class Skeleton {
 			const matrix = bones[ i ] ? bones[ i ].matrixWorld : _identityMatrix;
 
 			_offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
-			_offsetMatrix.toArray( boneMatrices, i * 16 );
+			// _offsetMatrix.toArray( boneMatrices, i * 16 );
+			boneMatrices.set(_offsetMatrix.elements, i * 16); // @DDD@
 
 		}
 

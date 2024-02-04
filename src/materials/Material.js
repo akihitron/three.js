@@ -82,9 +82,9 @@ class Material extends EventDispatcher {
 
 
 		{ // Extensions
-			this.receiveDynamicEnvironment = true; // @VMD@
-			this.castDynamicEnvironment = true; // @VMD@
-			this.motionBlur = true; // @VMD@
+			this.receiveDynamicEnvironment = true; // @DDD@
+			this.castDynamicEnvironment = true; // @DDD@
+			this.motionBlur = true; // @DDD@
 		}		
 	}
 
@@ -357,8 +357,8 @@ class Material extends EventDispatcher {
 		if ( this.stencilZPass !== KeepStencilOp ) data.stencilZPass = this.stencilZPass;
 		if ( this.stencilWrite === true ) data.stencilWrite = this.stencilWrite;
 
-		if ( this.castDynamicEnvironment !== undefined) data.castDynamicEnvironment = this.castDynamicEnvironment; // @VMD@
-		if ( this.receiveDynamicEnvironment !== undefined) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @VMD@
+		if ( this.castDynamicEnvironment !== undefined) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
+		if ( this.receiveDynamicEnvironment !== undefined) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
 
 		// rotation (SpriteMaterial)
 		if ( this.rotation !== undefined && this.rotation !== 0 ) data.rotation = this.rotation;
@@ -508,8 +508,8 @@ class Material extends EventDispatcher {
 
 		this.toneMapped = source.toneMapped;
 
-		this.castDynamicEnvironment = source.castDynamicEnvironment; // @VMD@
-		this.receiveDynamicEnvironment = source.receiveDynamicEnvironment; // @VMD@
+		this.castDynamicEnvironment = source.castDynamicEnvironment; // @DDD@
+		this.receiveDynamicEnvironment = source.receiveDynamicEnvironment; // @DDD@
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 

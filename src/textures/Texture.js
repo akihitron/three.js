@@ -72,15 +72,15 @@ class Texture extends EventDispatcher {
 		this.isRenderTargetTexture = false; // indicates whether a texture belongs to a render target or not
 		this.needsPMREMUpdate = false; // indicates whether this texture should be processed by PMREMGenerator or not (only relevant for render target textures)
 
-		{ // @VMD@
+		{ // @DDD@
 			this.source_file = null;
 		}
 
 	}
 
-	get width () { return this.source.data?.naturalWidth || this.source.data?.width; } // @VMD@
+	get width () { return this.source.data?.naturalWidth || this.source.data?.width; } // @DDD@
 	
-	get height () { return this.source.data?.naturalHeight || this.source.data?.height; } // @VMD@
+	get height () { return this.source.data?.naturalHeight || this.source.data?.height; } // @DDD@
 
 
 	get image() {
@@ -147,7 +147,7 @@ class Texture extends EventDispatcher {
 
 		this.needsUpdate = true;
 
-		this.source_file = source.source_file; // @VMD@
+		this.source_file = source.source_file; // @DDD@
 
 
 		return this;
@@ -176,7 +176,7 @@ class Texture extends EventDispatcher {
 			name: this.name,
 
 			// image: this.source.toJSON( meta ).uuid,
-			image: this.source.uuid, // @VMD@
+			image: this.source.uuid, // @DDD@
 
 
 			mapping: this.mapping,
@@ -204,7 +204,7 @@ class Texture extends EventDispatcher {
 			premultiplyAlpha: this.premultiplyAlpha,
 			unpackAlignment: this.unpackAlignment,
 
-			source_file: this.source_file // @VMD@
+			source_file: this.source_file // @DDD@
 		};
 
 		if ( Object.keys( this.userData ).length > 0 ) output.userData = this.userData;
