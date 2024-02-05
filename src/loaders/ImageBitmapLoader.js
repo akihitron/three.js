@@ -107,7 +107,7 @@ class ImageBitmapLoader extends Loader {
 		}
 	}
 
-	_load( url, onLoad, onProgress, onError ) { // @DDD@
+	_load_( url, onLoad, onProgress, onError ) { // @DDD@
 
 		if ( url === undefined ) url = '';
 
