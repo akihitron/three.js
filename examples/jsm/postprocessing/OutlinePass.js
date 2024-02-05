@@ -292,8 +292,24 @@ class OutlinePass extends Pass {
 
 	}
 
+	_renderToScreen_(renderer, readBuffer) { // @DDD@
+		if ( this.renderToScreen ) {
+
+			this.fsQuad.material = this.materialCopy;
+			this.copyUniforms[ 'tDiffuse' ].value = readBuffer.texture;
+			renderer.setRenderTarget( null );
+			this.fsQuad.render( renderer );
+
+		}
+	}
+
 	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
 
+		if (DMC.playing_state == DMC.PLAYING_STATE.PLAYING) { // @DDD@
+			this._renderToScreen_(renderer, readBuffer);
+			return;
+		}
+		
 		if ( this.selectedObjects.length > 0 ) {
 
 			renderer.getClearColor( this._oldClearColor );

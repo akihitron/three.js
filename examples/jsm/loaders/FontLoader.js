@@ -22,7 +22,20 @@ class FontLoader extends Loader {
 		loader.setWithCredentials( this.withCredentials );
 		loader.load( url, function ( text ) {
 
-			const font = scope.parse( JSON.parse( text ) );
+			let json;
+
+			try {
+
+				if (text instanceof ArrayBuffer) text = new TextDecoder().decode(text); // @DDD@
+				
+				json = JSON.parse( text );
+
+			} catch ( e ) {
+
+				console.warn( 'THREE.FontLoader: typeface.js support is being deprecated. Use typeface.json instead.' );
+				json = JSON.parse( text.substring( 65, text.length - 2 ) );
+
+			}
 
 			if ( onLoad ) onLoad( font );
 

@@ -178,13 +178,13 @@ class KTX2Loader extends Loader {
 		if ( ! this.transcoderPending ) {
 
 			// Load transcoder wrapper.
-			const jsLoader = new FileLoader( this.manager );
+			const jsLoader = new FileLoader( this.manager, { file_system: 'system' }); // @DDD@
 			jsLoader.setPath( this.transcoderPath );
 			jsLoader.setWithCredentials( this.withCredentials );
 			const jsContent = jsLoader.loadAsync( 'basis_transcoder.js' );
 
 			// Load transcoder WASM binary.
-			const binaryLoader = new FileLoader( this.manager );
+			const binaryLoader = new FileLoader( this.manager, { file_system: 'system' }); // @DDD@
 			binaryLoader.setPath( this.transcoderPath );
 			binaryLoader.setResponseType( 'arraybuffer' );
 			binaryLoader.setWithCredentials( this.withCredentials );
@@ -256,23 +256,97 @@ class KTX2Loader extends Loader {
 		loader.setResponseType( 'arraybuffer' );
 		loader.setWithCredentials( this.withCredentials );
 
-		loader.load( url, ( buffer ) => {
 
-			// Check for an existing task using this buffer. A transferred buffer cannot be transferred
-			// again from this thread.
-			if ( _taskCache.has( buffer ) ) {
-
-				const cachedTask = _taskCache.get( buffer );
-
-				return cachedTask.promise.then( onLoad ).catch( onError );
-
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		const texture = new CompressedTexture();
+		let use_default = true;
+		if (window.is_data_url(url) == false) {
+			if (window.external_io) {
+				use_default = false;
+			} else if (window.is_electron) {
+				use_default = false;
 			}
+		}
 
-			this._createTexture( buffer )
-				.then( ( texture ) => onLoad ? onLoad( texture ) : null )
-				.catch( onError );
+		if (use_default == false) {
+			(async ()=>{
+				try {
+					let buffer = await window.cross_file_system.read(url);
 
-		}, onProgress, onError );
+					if ( _taskCache.has( buffer ) ) {
+		
+						const cachedTask = _taskCache.get( buffer );
+		
+						return cachedTask.promise.then( onLoad ).catch( onError );
+		
+					}
+					
+					this._createTexture( buffer )
+					.then( function ( _texture ) {
+		
+						texture.copy( _texture );
+						texture.needsUpdate = true;
+	
+						if ( onLoad ) onLoad( texture );
+					} ).catch( onError );
+	
+				} catch(e) {
+					if(onError) onError(e);
+				}
+
+
+			})();
+		} else { // http://, c:/
+
+
+			loader.load( url, ( buffer ) => {
+
+				// Check for an existing task using this buffer. A transferred buffer cannot be transferred
+				// again from this thread.
+				if ( _taskCache.has( buffer ) ) {
+	
+					const cachedTask = _taskCache.get( buffer );
+	
+					return cachedTask.promise.then( onLoad ).catch( onError );
+	
+				}
+	
+				this._createTexture( buffer )
+				.then( function ( _texture ) {
+	
+					texture.copy( _texture );
+					texture.needsUpdate = true;
+
+					if ( onLoad ) onLoad( texture );
+				} ).catch( onError );
+	
+			}, onProgress, onError );
+			// loader.load( url, ( buffer ) => {
+			// 	// Check for an existing task using this buffer. A transferred buffer cannot be transferred
+			// 	// again from this thread.
+			// 	if ( _taskCache.has( buffer ) ) {
+	
+			// 		const cachedTask = _taskCache.get( buffer );
+	
+			// 		return cachedTask.promise.then( onLoad ).catch( onError );
+	
+			// 	}
+	
+			// 	this._createTexture( [ buffer ] , {}, url )
+			// 		.then( function ( _texture ) {
+	
+			// 			texture.copy( _texture );
+			// 			texture.needsUpdate = true;
+	
+			// 			if ( onLoad ) onLoad( texture );
+	
+			// 		} )
+			// 		.catch( onError );
+	
+			// }, onProgress, onError );
+		}
+		return texture;
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	}
 

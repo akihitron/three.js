@@ -68,6 +68,8 @@ class PLYLoader extends Loader {
 
 			try {
 
+				if (text instanceof Uint8Array) text = new TextDecoder().decode(text); // @DDD@
+
 				onLoad( scope.parse( text ) );
 
 			} catch ( e ) {

@@ -2627,6 +2627,33 @@ class GLTFParser {
 
 			} ) ).then( function () {
 
+				// @DDD@
+				// *.bin
+				result.source_dependencies = [];
+				for (const b of json.buffers) if (b.uri) result.source_dependencies.push(b.uri);
+				result.source_dependencies = [json.buffers[0].uri];
+				result.scene.traverse(o=>{
+					if(o.material){
+						function detect_dependencies(m) {
+							for (const k in m) {
+								const v = m[k];
+								if (v instanceof Texture) {
+									if (v.__tmp_uri__) {
+										result.source_dependencies.push(v.__tmp_uri__);
+										delete v.__tmp_uri__;
+									}
+								}
+							}
+						}
+						if (Array.isArray(o)) {
+							for (const m of o.material) detect_dependencies(m);
+						} else {
+							detect_dependencies(o.material);
+						}
+					}
+				})
+				// @DDD@
+
 				onLoad( result );
 
 			} );
@@ -3188,7 +3215,8 @@ class GLTFParser {
 	}
 
 	loadImageSource( sourceIndex, loader ) {
-
+		const scope = this; // @DDD@
+		
 		const parser = this;
 		const json = this.json;
 		const options = this.options;
@@ -3225,9 +3253,11 @@ class GLTFParser {
 
 		}
 
+		let replaced_sourceURI = sourceURI; // @DDD@
+
 		const promise = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
 
-			return new Promise( function ( resolve, reject ) {
+			return new Promise( async function ( resolve, reject ) { // @DDD@
 
 				let onLoad = resolve;
 
@@ -3244,7 +3274,35 @@ class GLTFParser {
 
 				}
 
-				loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
+				let use_ktx2 = false;
+				if (true) { // @DDD@
+					if (window.is_data_url(sourceURI) == false) {
+						if (sourceURI.indexOf("file:///")>=0) {
+							replaced_sourceURI = sourceURI = decodeURI(sourceURI).slice("file:///".length);
+						}
+						const d_path = C.DPath(sourceURI);
+						const ktx2_path = C.DPathJoin(d_path.dirname, d_path.name + ".ktx2");
+						const abs_path = C.DPath(ktx2_path).is_absolute_path? ktx2_path: C.DPathJoin(options.path, ktx2_path);
+						if (await window.cross_file_system.exists(abs_path)) {
+							replaced_sourceURI = abs_path;
+							use_ktx2 = true;
+						}
+					}
+				}
+				if (use_ktx2 && scope.options.ktx2Loader) {// @DDD@
+					if (window.debug) console.log(replaced_sourceURI);
+					scope.options.ktx2Loader.load( replaced_sourceURI, resolve, undefined, reject );
+				} else {
+					if (window.debug) console.log(replaced_sourceURI);
+					let t_path = LoaderUtils.resolveURL( replaced_sourceURI, options.path );
+					if (C.DPath(replaced_sourceURI).is_absolute_path) { // @DDD@
+						t_path = replaced_sourceURI;
+					}
+					replaced_sourceURI = t_path;
+					loader.load( t_path, onLoad, undefined, reject );
+				}
+
+				// loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
 
 			} );
 
@@ -3256,6 +3314,14 @@ class GLTFParser {
 
 				URL.revokeObjectURL( sourceURI );
 
+			}
+
+			let texture = _texture;
+
+			if (texture instanceof ImageBitmap) texture = new THREE.CanvasTexture( texture ); // @DDD@
+
+			if (window.is_data_url(sourceURI) == false) {
+				texture.__tmp_uri__ = decodeURIComponent(sourceURI); // @DDD@ 
 			}
 
 			texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
@@ -3424,7 +3490,8 @@ class GLTFParser {
 
 	getMaterialType( /* materialIndex */ ) {
 
-		return MeshStandardMaterial;
+		return MeshPhysicalMaterial; // @DDD@
+		// return MeshStandardMaterial;
 
 	}
 
@@ -3730,7 +3797,9 @@ class GLTFParser {
 					// .isSkinnedMesh isn't in glTF spec. See ._markDefs()
 					mesh = meshDef.isSkinnedMesh === true
 						? new SkinnedMesh( geometry, material )
-						: new Mesh( geometry, material );
+						: new InstancedMesh( geometry, material, 1024); // @DDD@
+					if (mesh instanceof InstancedMesh) mesh.count = 1; // @DDD@
+
 
 					if ( mesh.isSkinnedMesh === true ) {
 
@@ -3784,6 +3853,9 @@ class GLTFParser {
 				if ( primitive.extensions ) addUnknownExtensionsToUserData( extensions, mesh, primitive );
 
 				parser.assignFinalMaterial( mesh );
+
+				mesh._original_mesh_name_ = meshDef.name; // @DDD@
+				mesh.name = PropertyBinding.sanitizeNodeName(material.name); // @DDD@
 
 				meshes.push( mesh );
 

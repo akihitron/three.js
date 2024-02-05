@@ -74,7 +74,7 @@ class DRACOLoader extends Loader {
 		loader.setRequestHeader( this.requestHeader );
 		loader.setWithCredentials( this.withCredentials );
 
-		loader.load( url, ( buffer ) => {
+		loader._load_( url, ( buffer ) => { // @DDD@
 
 			this.parse( buffer, onLoad, onError );
 
@@ -251,7 +251,7 @@ class DRACOLoader extends Loader {
 
 		return new Promise( ( resolve, reject ) => {
 
-			loader.load( url, resolve, undefined, reject );
+			loader._load_( url, resolve, undefined, reject );// @DDD@
 
 		} );
 

@@ -30,6 +30,8 @@ class OrbitControls extends EventDispatcher {
 	constructor( object, domElement ) {
 
 		super();
+		
+		const thiz = this; // @DDD@ Decorator Overwrite@
 
 		this.object = object;
 		this.domElement = domElement;

@@ -455,6 +455,8 @@ class OBJLoader extends Loader {
 
 			try {
 
+				if (text instanceof Uint8Array) text = new TextDecoder().decode(text); // @DDD@
+
 				onLoad( scope.parse( text ) );
 
 			} catch ( e ) {
@@ -803,7 +805,9 @@ class OBJLoader extends Loader {
 
 						} else {
 
-							material = new MeshPhongMaterial();
+							// material = new MeshPhongMaterial();
+							material = new MeshPhysicalMaterial(); // @DDD@
+
 
 						}
 

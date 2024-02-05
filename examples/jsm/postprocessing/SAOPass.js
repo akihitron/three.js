@@ -68,7 +68,6 @@ class SAOPass extends Pass {
 		this.normalRenderTarget = new WebGLRenderTarget( this.resolution.x, this.resolution.y, {
 			minFilter: NearestFilter,
 			magFilter: NearestFilter,
-			type: HalfFloatType,
 			depthTexture: depthTexture
 		} );
 

@@ -75,8 +75,9 @@ class SSAARenderPass extends Pass {
 
 	}
 
-	render( renderer, writeBuffer, readBuffer ) {
-
+	render( renderer, writeBuffer, readBuffer , deltaTime, maskActive, params ) { // @DDD@
+		const effect_composer = params.effect_composer; // @DDD@
+		
 		if ( ! this.sampleRenderTarget ) {
 
 			this.sampleRenderTarget = new WebGLRenderTarget( readBuffer.width, readBuffer.height, { type: HalfFloatType } );
@@ -145,10 +146,23 @@ class SSAARenderPass extends Pass {
 
 			this.copyUniforms[ 'opacity' ].value = sampleWeight;
 			renderer.setClearColor( this.clearColor, this.clearAlpha );
-			renderer.setRenderTarget( this.sampleRenderTarget );
-			renderer.clear();
-			renderer.render( this.scene, this.camera );
 
+
+			if (i===0) { // @DDD@
+				renderer.setRenderTarget( effect_composer.renderTarget3 );
+			} else {
+				renderer.setRenderTarget( this.sampleRenderTarget );
+			}
+			renderer.clear();
+
+			DMC.start_gpu_status_check(); // @DDD@
+			renderer.render( this.scene, this.camera );
+			if (this.outline_effect) this.outline_effect.render(this.scene, this.camera); // @DDD@
+			DMC.end_gpu_status_check(); // @DDD@
+
+			if (i===0) { // @DDD@
+				this.copy_pass.render(renderer, this.sampleRenderTarget, effect_composer.renderTarget3);
+			}
 			renderer.setRenderTarget( this.renderToScreen ? null : writeBuffer );
 
 			if ( i === 0 ) {

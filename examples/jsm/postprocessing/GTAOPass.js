@@ -69,6 +69,26 @@ class GTAOPass extends Pass {
 
 		this.normalMaterial = new MeshNormalMaterial();
 		this.normalMaterial.blending = NoBlending;
+		// @DDD@
+		this.normalMaterial.onBeforeRender = function(_this/*WebGLRender*/, scene, camera, geometry, object, group ) {
+			let object_material = null;
+			if (group) { // MultiMaterial
+				const materialIndex = group.materialIndex;
+				object_material = object.material[materialIndex];
+			} else { // SingleMaterial
+				object_material = object.material;
+			}
+
+			if (this.opacity != object_material.opacity) this.opacity = object_material.opacity;
+			if (this.alphaTest != object_material.alphaTest) this.alphaTest = object_material.alphaTest;
+			if (this.alphaMap != object_material.alphaMap) this.alphaMap = object_material.alphaMap;
+			if (this.side != object_material.side) this.side = object_material.side;
+			// normalMaterial.map = normalMaterial.alphaMap;//TODO
+			if (object_material.visible == false || object_material.opacity < object_material.alphaTest || object_material.depthWrite == false) {
+				return false;
+			}
+			return true;
+		};
 
 		this.pdMaterial = new ShaderMaterial( {
 			defines: Object.assign( {}, PoissonDenoiseShader.defines ),
@@ -228,6 +248,12 @@ class GTAOPass extends Pass {
 	}
 
 	updateGtaoMaterial( parameters ) {
+
+		// @DDD@
+		if ( parameters.blendIntensity !== undefined ) {
+			this.blendMaterial.uniforms.intensity.value = this.blendIntensity = parameters.blendIntensity;
+		}
+
 
 		if ( parameters.radius !== undefined ) {
 

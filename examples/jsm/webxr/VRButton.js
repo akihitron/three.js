@@ -1,6 +1,6 @@
 class VRButton {
 
-	static createButton( renderer ) {
+	static createButton( renderer, options, callback ) { // @DDD@
 
 		const button = document.createElement( 'button' );
 
@@ -17,6 +17,7 @@ class VRButton {
 
 				currentSession = session;
 
+				callback("started"); // @DDD@
 			}
 
 			function onSessionEnded( /*event*/ ) {
@@ -27,6 +28,8 @@ class VRButton {
 
 				currentSession = null;
 
+				callback("ended"); // @DDD@
+				
 			}
 
 			//
