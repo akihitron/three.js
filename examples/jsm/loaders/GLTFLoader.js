@@ -3275,30 +3275,31 @@ class GLTFParser {
 				}
 
 				let use_ktx2 = false;
+				sourceURI = await sourceURI;
 				if (true) { // @DDD@
 					if (window.is_data_url(sourceURI) == false) {
 						if (sourceURI.indexOf("file:///")>=0) {
-							replaced_sourceURI = sourceURI = decodeURI(sourceURI).slice("file:///".length);
+							sourceURI = decodeURI(sourceURI).slice("file:///".length);
 						}
 						const d_path = C.DPath(sourceURI);
 						const ktx2_path = C.DPathJoin(d_path.dirname, d_path.name + ".ktx2");
 						const abs_path = C.DPath(ktx2_path).is_absolute_path? ktx2_path: C.DPathJoin(options.path, ktx2_path);
 						if (await window.cross_file_system.exists(abs_path)) {
-							replaced_sourceURI = abs_path;
+							sourceURI = abs_path;
 							use_ktx2 = true;
 						}
 					}
 				}
 				if (use_ktx2 && scope.options.ktx2Loader) {// @DDD@
-					if (window.debug) console.log(replaced_sourceURI);
-					scope.options.ktx2Loader.load( replaced_sourceURI, resolve, undefined, reject );
+					if (window.debug) console.log(sourceURI);
+					scope.options.ktx2Loader.load( sourceURI, resolve, undefined, reject );
 				} else {
-					if (window.debug) console.log(replaced_sourceURI);
-					let t_path = LoaderUtils.resolveURL( replaced_sourceURI, options.path );
-					if (C.DPath(replaced_sourceURI).is_absolute_path) { // @DDD@
-						t_path = replaced_sourceURI;
+					if (window.debug) console.log(sourceURI);
+					let t_path = LoaderUtils.resolveURL( sourceURI, options.path );
+					if (C.DPath(sourceURI).is_absolute_path) { // @DDD@
+						t_path = sourceURI;
 					}
-					replaced_sourceURI = t_path;
+					sourceURI = t_path;
 					loader.load( t_path, onLoad, undefined, reject );
 				}
 
@@ -3306,7 +3307,7 @@ class GLTFParser {
 
 			} );
 
-		} ).then( function ( texture ) {
+		} ).then( function ( _texture ) {
 
 			// Clean up resources and configure Texture.
 
@@ -3316,17 +3317,15 @@ class GLTFParser {
 
 			}
 
-			let texture = _texture;
-
-			if (texture instanceof ImageBitmap) texture = new THREE.CanvasTexture( texture ); // @DDD@
+			if (_texture instanceof ImageBitmap) _texture = new THREE.CanvasTexture( _texture ); // @DDD@
 
 			if (window.is_data_url(sourceURI) == false) {
-				texture.__tmp_uri__ = decodeURIComponent(sourceURI); // @DDD@ 
+				_texture.__tmp_uri__ = decodeURIComponent(sourceURI); // @DDD@ 
 			}
 
-			texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
+			_texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
 
-			return texture;
+			return _texture;
 
 		} ).catch( function ( error ) {
 

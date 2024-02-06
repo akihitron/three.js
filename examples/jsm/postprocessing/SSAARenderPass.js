@@ -8,6 +8,7 @@ import {
 } from 'three';
 import { Pass, FullScreenQuad } from './Pass.js';
 import { CopyShader } from '../shaders/CopyShader.js';
+import { ShaderPass } from './ShaderPass.js'; // @DDD@
 
 /**
 *
@@ -51,7 +52,7 @@ class SSAARenderPass extends Pass {
 		} );
 
 		this.fsQuad = new FullScreenQuad( this.copyMaterial );
-
+		this.copy_pass = new ShaderPass(CopyShader); // @DDD@
 	}
 
 	dispose() {
