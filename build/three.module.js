@@ -18162,7 +18162,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 			for ( let i = 0; i < tmp_influences.length; i ++ ) { // @DDD@
 
-				morphInfluencesSum += tmp_influences[ i ]; // @DDD@
+				morphInflencesSuum += tmp_influences[ i ]; // @DDD@
 
 			}
 

@@ -1606,6 +1606,8 @@ class WebGLRenderer {
 
 		function getProgram( material, scene, object ) {
 
+			let tm = performance.now(); // @DDD@
+
 			if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
 			const materialProperties = properties.get( material );
@@ -1712,20 +1714,19 @@ class WebGLRenderer {
 
 
 			if (window.debug && window.debug_performance) { // @DDD@
-				let tm = performance.now();
 				const progUniforms = program.getUniforms();
-				const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
-				if (performance.now()-tm>10) {
-					console.log(`getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor(performance.now()-tm), "ms");
+				const uniformsList = WebGLUniforms.seqWithValue(progUniforms.seq, uniforms);
+				if (performance.now() - tm > 10) {
+					console.log(`getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor(performance.now() - tm), "ms");
 				}
 				materialProperties.currentProgram = program;
 				materialProperties.uniformsList = uniformsList;
-		
+
 			} else {
-				
+
 				materialProperties.currentProgram = program;
 				materialProperties.uniformsList = null;
-	
+
 			}
 
 			return program;
