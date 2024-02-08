@@ -54,7 +54,7 @@ const BleachBypassShader = {
 			mixRGB += ( ( 1.0 - A2 ) * base.rgb );
 
 			// TODO
-			mixRGB = clamp(mixRGB,0.0, 1.0) +  base.rgb;//max(mixRGB, base.rgb); // @VMD@
+			mixRGB = clamp(mixRGB,0.0, 1.0) +  base.rgb;//max(mixRGB, base.rgb); // @DDD@
 
 
 			gl_FragColor = vec4( mix(base.rgb,mixRGB,opacity), base.a );

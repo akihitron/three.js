@@ -1716,7 +1716,7 @@ class WebGLRenderer {
 				const progUniforms = program.getUniforms();
 				const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
 				if (performance.now()-tm>10) {
-					console.log(`getUniforms@"${material.name}"-${material.type}`, Math.floor(performance.now()-tm), "ms");
+					console.log(`getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor(performance.now()-tm), "ms");
 				}
 				materialProperties.currentProgram = program;
 				materialProperties.uniformsList = uniformsList;

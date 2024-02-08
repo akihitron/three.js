@@ -526,7 +526,7 @@ class PropertyBinding {
 
 					if ( targetObject[ objectName ] === undefined ) {
 
-						console.warn( 'THREE.PropertyBinding: Can not bind to objectName of node undefined.', this );
+						if ( window.debug ) console.warn( 'THREE.PropertyBinding: Can not bind to objectName of node undefined.', this );
 						return;
 
 					}
@@ -540,7 +540,7 @@ class PropertyBinding {
 
 				if ( targetObject[ objectIndex ] === undefined ) {
 
-					console.warn( 'THREE.PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
+					if ( window.debug ) console.warn( 'THREE.PropertyBinding: Trying to bind to objectIndex of objectName, but is undefined.', this, targetObject );
 					return;
 
 				}

@@ -5,6 +5,7 @@ import * as MathUtils from '../math/MathUtils.js';
 
 let _materialId = 0;
 
+
 class Material extends EventDispatcher {
 
 	constructor() {
@@ -17,7 +18,15 @@ class Material extends EventDispatcher {
 
 		this.uuid = MathUtils.generateUUID();
 
-		this.name = '';
+		this.name = "";
+		for (const i = 5;i>=3;i--) {
+			const s = window.CALLER_LINE( 5 ).split( '/' ).pop();
+			if (s.indexOf("undefined") === -1) {
+				this.name = s;
+				break;
+			}
+		}
+		
 		this.type = 'Material';
 
 		this.blending = NormalBlending;
@@ -84,6 +93,7 @@ class Material extends EventDispatcher {
 		{ // Extensions
 			this.receiveDynamicEnvironment = true; // @DDD@
 			this.castDynamicEnvironment = true; // @DDD@
+			this.receiveShadow = true;// @DDD@
 			this.motionBlur = true; // @DDD@
 		}		
 	}

@@ -229,6 +229,41 @@ class SAOPass extends Pass {
 
 	}
 
+	update_parameter() { // @DDD@
+		this.saoMaterial.uniforms[ 'bias' ].value = this.params.saoBias;
+		this.saoMaterial.uniforms[ 'intensity' ].value = this.params.saoIntensity;
+		this.saoMaterial.uniforms[ 'scale' ].value = this.params.saoScale;
+		this.saoMaterial.uniforms[ 'kernelRadius' ].value = this.params.saoKernelRadius;
+		this.saoMaterial.uniforms[ 'minResolution' ].value = this.params.saoMinResolution;
+		this.saoMaterial.uniforms[ 'cameraNear' ].value = this.camera.near;
+		this.saoMaterial.uniforms[ 'cameraFar' ].value = this.camera.far;
+		// this.saoMaterial.uniforms['randomSeed'].value = Math.random();
+
+		const depthCutoff = this.params.saoBlurDepthCutoff * ( this.camera.far - this.camera.near );
+		this.vBlurMaterial.uniforms[ 'depthCutoff' ].value = depthCutoff;
+		this.hBlurMaterial.uniforms[ 'depthCutoff' ].value = depthCutoff;
+
+		this.vBlurMaterial.uniforms[ 'cameraNear' ].value = this.camera.near;
+		this.vBlurMaterial.uniforms[ 'cameraFar' ].value = this.camera.far;
+		this.hBlurMaterial.uniforms[ 'cameraNear' ].value = this.camera.near;
+		this.hBlurMaterial.uniforms[ 'cameraFar' ].value = this.camera.far;
+
+
+		let outputMaterial = this.materialCopy;
+
+		if ( this.params.output === 0 ) {
+
+			outputMaterial.blending = CustomBlending;
+
+		} else {
+                                                                                                                                                    
+			outputMaterial.blending = NoBlending;
+
+		}
+
+	}
+
+
 	renderPass( renderer, passMaterial, renderTarget, clearColor, clearAlpha ) {
 
 		// save original state

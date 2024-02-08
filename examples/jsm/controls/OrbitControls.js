@@ -30,7 +30,7 @@ class OrbitControls extends EventDispatcher {
 	constructor( object, domElement ) {
 
 		super();
-		
+
 		const thiz = this; // @DDD@ Decorator Overwrite@
 
 		this.object = object;
@@ -505,6 +505,7 @@ class OrbitControls extends EventDispatcher {
 
 			const normalizedDelta = Math.abs( delta * 0.01 );
 			return Math.pow( 0.95, scope.zoomSpeed * normalizedDelta );
+			// return Math.pow( 0.95, scope.zoomSpeed ); // @DDD@ Older
 
 		}
 
@@ -741,15 +742,59 @@ class OrbitControls extends EventDispatcher {
 
 			updateZoomParameters( event.clientX, event.clientY );
 
+			// if ( event.deltaY < 0 ) {
+
+			// 	dollyIn( getZoomScale( event.deltaY ) );
+
+			// } else if ( event.deltaY > 0 ) {
+
+			// 	dollyOut( getZoomScale( event.deltaY ) );
+
+			// }
+
+			// @DDD@ Decorator Overwrite@ >>>>>>>>>>>>>>>>>>>>>>
 			if ( event.deltaY < 0 ) {
 
-				dollyIn( getZoomScale( event.deltaY ) );
+				if ( event.shiftKey ) {
+
+					const unit = new THREE.Vector3();
+					unit.copy( scope.target );
+					// unit.set(scope.target.x,scope.target.y,scope.target.z);
+					unit.sub( scope.object.position );
+					unit.normalize();
+					unit.multiplyScalar( 10 );
+					scope.target.add( unit );
+					scope.object.position.add( unit );
+
+				} else {
+
+					dollyIn( getZoomScale( event.deltaY ) );
+
+				}
+
 
 			} else if ( event.deltaY > 0 ) {
 
-				dollyOut( getZoomScale( event.deltaY ) );
+				if ( event.shiftKey ) {
+
+					const unit = new THREE.Vector3();
+					unit.copy( scope.target );
+					// unit.set(scope.target.x,scope.target.y,scope.target.z);
+					unit.sub( scope.object.position );
+					unit.normalize();
+					unit.multiplyScalar( - 10 );
+					scope.target.add( unit );
+					scope.object.position.add( unit );
+
+				} else {
+
+					dollyOut( getZoomScale( event.deltaY ) );
+
+				}
 
 			}
+			// @DDD@ Decorator Overwrite@ <<<<<<<<<<<<<<<<<<<<<<
+
 
 			scope.update();
 
@@ -1043,6 +1088,8 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
+			if ( thiz.onUpdated ) thiz.onUpdated(); // @DDD@ Decorator Overwrite@
+
 		}
 
 		function onPointerUp( event ) {
@@ -1075,6 +1122,10 @@ class OrbitControls extends EventDispatcher {
 					break;
 
 			}
+
+			if ( scope.event_listener ) scope.event_listener( 'mouseup', event ); // @DDD@ Decorator Overwrite@
+			if ( thiz.onUpdateFinished ) thiz.onUpdateFinished(); // @DDD@ Decorator Overwrite@
+
 
 		}
 
@@ -1173,6 +1224,8 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
+			if ( scope.event_listener ) scope.event_listener( 'mousedown', event ); // @DDD@ Decorator Overwrite@
+
 		}
 
 		function onMouseMove( event ) {
@@ -1205,6 +1258,8 @@ class OrbitControls extends EventDispatcher {
 
 			}
 
+			if ( scope.event_listener ) scope.event_listener( 'mousemove', event ); // @DDD@ Decorator Overwrite@
+
 		}
 
 		function onMouseWheel( event ) {
@@ -1218,6 +1273,8 @@ class OrbitControls extends EventDispatcher {
 			handleMouseWheel( customWheelEvent( event ) );
 
 			scope.dispatchEvent( _endEvent );
+
+			if ( scope.event_listener ) scope.event_listener( 'mousewheel', event ); // @DDD@ Decorator Overwrite@
 
 		}
 
