@@ -18,15 +18,26 @@ class Material extends EventDispatcher {
 
 		this.uuid = MathUtils.generateUUID();
 
-		this.name = "";
-		for (const i = 5;i>=3;i--) {
-			const s = window.CALLER_LINE( 5 ).split( '/' ).pop();
-			if (s.indexOf("undefined") === -1) {
-				this.name = s;
-				break;
-			}
-		}
-		
+		this.name = '';
+
+        if ( window.CALLER_LINE ) {
+
+            for ( let i = 5; i >= 3; i -- ) {
+
+                const s = window.CALLER_LINE( 5 ).split( '/' ).pop();
+    
+                if ( s.indexOf( 'undefined' ) === - 1 ) {
+    
+                    this.name = s;
+    
+                    break;
+    
+                }
+    
+            }
+    
+        }
+
 		this.type = 'Material';
 
 		this.blending = NormalBlending;
