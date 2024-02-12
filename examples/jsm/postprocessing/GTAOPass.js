@@ -25,6 +25,8 @@ import { generateMagicSquareNoise, GTAOShader, GTAODepthShader, GTAOBlendShader 
 import { generatePdSamplePointInitializer, PoissonDenoiseShader } from '../shaders/PoissonDenoiseShader.js';
 import { CopyShader } from '../shaders/CopyShader.js';
 import { SimplexNoise } from '../math/SimplexNoise.js';
+import { MaterialReplacer } from './MaterialReplacer.js';
+
 
 class GTAOPass extends Pass {
 
@@ -69,6 +71,8 @@ class GTAOPass extends Pass {
 
 		this.normalMaterial = new MeshNormalMaterial();
 		this.normalMaterial.blending = NoBlending;
+
+		this.materialReplacer = new MaterialReplacer();
 
 		this.pdMaterial = new ShaderMaterial( {
 			defines: Object.assign( {}, PoissonDenoiseShader.defines ),
@@ -341,15 +345,22 @@ class GTAOPass extends Pass {
 
 	}
 
+	
+
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		// render normals and depth (honor only meshes, points and lines do not contribute to AO)
 
 		if ( this._renderGBuffer ) {
 
-			this.overrideVisibility();
-			this.renderOverride( renderer, this.normalMaterial, this.normalRenderTarget, 0x7777ff, 1.0 );
-			this.restoreVisibility();
+			// this.overrideVisibility();
+			// this.renderOverride( renderer, this.normalMaterial, this.normalRenderTarget, 0x7777ff, 1.0 );
+			// this.restoreVisibility();
+
+			const replacer = this.materialReplacer; // @DDD@
+			replacer.replaceMaterials(this.scene, MeshNormalMaterial);
+			replacer.renderPass(this.scene, this.camera, renderer, this.normalRenderTarget, 0x7777ff, 1.0);
+			replacer.restoreMaterials(this.scene);
 
 		}
 
