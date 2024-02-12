@@ -56,27 +56,6 @@ class MeshNormalMaterial extends Material {
 
 	}
 
-	onBeforeRender(_this/*WebGLRender*/, scene, camera, geometry, object, group ) {  // @DDD@
-		let object_material = null;
-		if (group) { // MultiMaterial
-			const materialIndex = group.materialIndex;
-			object_material = object.material[materialIndex];
-		} else { // SingleMaterial
-			object_material = object.material;
-		}
-
-		if (this.opacity != object_material.opacity) this.opacity = object_material.opacity;
-		if (this.alphaTest != object_material.alphaTest) this.alphaTest = object_material.alphaTest;
-		if (this.alphaMap != object_material.alphaMap) this.alphaMap = object_material.alphaMap;
-		if (this.side != object_material.side) this.side = object_material.side;
-		if (this.transparent != object_material.transparent) this.side = object_material.transparent;
-		// normalMaterial.map = normalMaterial.alphaMap;//TODO
-		if (object_material.visible == false || object_material.opacity < object_material.alphaTest || object_material.depthWrite == false) {
-			return false;
-		}
-		return true;
-	};
-
 }
 
 export { MeshNormalMaterial };
