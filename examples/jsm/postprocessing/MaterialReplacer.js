@@ -5,13 +5,23 @@ import {
 
 class MaterialReplacer {
 
-	materialCacheTable = new WeakMap;
-	originalClearColor = new Color();
-	scene = null;
-	camera = null;
+	constructor() {
+
+		this.materialCacheTable = new WeakMap();
+		this.originalClearColor = new Color();
+		this.scene = null;
+		this.camera = null;
+		this.finalizer = new window.FinalizationRegistry( ( material ) => {
+
+			material.dispose();
+			console.log(`Disposed material ${material.name}`);
+
+		} );
+
+	}
 
 
-	_updateMaterial(c, m) {
+	_updateMaterial( c, m ) {
 
 		let needsUpdate = false;
 		let shouldVisible = m.visible;
@@ -40,22 +50,6 @@ class MaterialReplacer {
 			needsUpdate = true;
 		}
 
-		if (c.map !== m.map) {
-			c.map = m.map;
-			needsUpdate = true;
-		}
-		if (c.alphaMap !== m.alphaMap) {
-			c.alphaMap = m.alphaMap;
-			needsUpdate = true;
-		}
-		if (c.normalMap !== m.normalMap) {
-			c.normalMap = m.normalMap;
-			needsUpdate = true;
-		}
-		if (c.displacementMap != m.displacementMap) {
-			c.displacementMap = m.displacementMap;
-			needsUpdate = true;
-		}
 
 		if (c.alphaHash !== m.alphaHash) {
 			c.alphaHash = m.alphaHash;
@@ -82,17 +76,34 @@ class MaterialReplacer {
 			needsUpdate = true;
 		}
 
-		if (m.normalScale !== undefined) c.normalScale.copy(m.normalScale);
-		if (m.displacementScale !== undefined) c.displacementScale = m.displacementScale;
+		if (c.map !== m.map) {
+			c.map = m.map;
+			needsUpdate = true;
+		}
+		if (c.alphaMap !== m.alphaMap) {
+			c.alphaMap = m.alphaMap;
+			needsUpdate = true;
+		}
+		if (c.normalMap !== undefined && c.normalMap !== m.normalMap) {
+			c.normalMap = m.normalMap;
+			needsUpdate = true;
+		}
+		if (c.displacementMap !== undefined && c.displacementMap != m.displacementMap) {
+			c.displacementMap = m.displacementMap;
+			needsUpdate = true;
+		}
+
+		if (m.normalScale !== undefined && c.normalScale) c.normalScale.copy(m.normalScale);
+		if (m.displacementScale !== undefined && c.displacementScale != undefined) c.displacementScale = m.displacementScale;
 		if (m.opacity !== undefined) c.opacity = m.opacity;
 		if (m.alphaTest !== undefined) c.alphaTest = m.alphaTest;
-		if (m.displacementBias !== undefined) c.displacementBias = m.displacementBias;
+		if (m.displacementBias !== undefined && c.displacementBias != undefined) c.displacementBias = m.displacementBias;
 
 		if (needsUpdate) c.needsUpdate = true;
 
 	}
 
-	_makeMaterial(m, material_type) {
+	_makeMaterial(m, material_type, initialize_callback) {
 
 		let cached = this.materialCacheTable.get(m);
 
@@ -100,8 +111,9 @@ class MaterialReplacer {
 
 			cached = new material_type();
 			cached.blending = NoBlending;
-			this.materialCacheTable.set(m, cached); // TODO finalizer
-
+			if (initialize_callback) initialize_callback(cached);
+			this.materialCacheTable.set(m, cached);
+			this.finalizer.register(m, cached); // TODO finalizer
 		}
 
 		this._updateMaterial(cached, m);
@@ -109,7 +121,7 @@ class MaterialReplacer {
 		return cached;
 	}
 
-	replaceMaterials(o, material_type) {
+	replaceMaterials(o, material_type, initialize_callback=null) {
 
 		if (o.material) {
 
@@ -138,19 +150,19 @@ class MaterialReplacer {
 
 				for (let i = 0; i < ms.length; ++i) {
 
-					o.material[i] = this._makeMaterial(ms[i], material_type);
+					o.material[i] = this._makeMaterial(ms[i], material_type, initialize_callback);
 
 				}
 
 			} else {
 
-				o.material = this._makeMaterial(o._original_material_, material_type);
+				o.material = this._makeMaterial(o._original_material_, material_type, initialize_callback);
 
 			}
 
 		}
 
-		for (const c of o.children) this.replaceMaterials(c, material_type);
+		for (const c of o.children) this.replaceMaterials(c, material_type, initialize_callback);
 
 	}
 

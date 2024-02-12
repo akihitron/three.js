@@ -358,9 +358,9 @@ class GTAOPass extends Pass {
 			// this.restoreVisibility();
 
 			const replacer = this.materialReplacer; // @DDD@
-			replacer.replaceMaterials(this.scene, MeshNormalMaterial);
-			replacer.renderPass(this.scene, this.camera, renderer, this.normalRenderTarget, 0x7777ff, 1.0);
-			replacer.restoreMaterials(this.scene);
+			replacer.replaceMaterials( this.scene, MeshNormalMaterial );
+			replacer.renderPass( this.scene, this.camera, renderer, this.normalRenderTarget, 0x7777ff, 1.0 );
+			replacer.restoreMaterials( this.scene );
 
 		}
 
