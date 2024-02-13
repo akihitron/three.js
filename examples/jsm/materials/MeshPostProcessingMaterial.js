@@ -25,7 +25,7 @@ import { MeshPhysicalMaterial } from 'three';
 
 class MeshPostProcessingMaterial extends MeshPhysicalMaterial {
 
-	constructor( parameters ) {
+	constructor( parameters = {} ) {
 
 		const aoPassMap = parameters.aoPassMap;
 		const aoPassMapScale = parameters.aoPassMapScale || 1.0;
