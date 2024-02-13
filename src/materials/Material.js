@@ -20,23 +20,23 @@ class Material extends EventDispatcher {
 
 		this.name = '';
 
-        if ( window.CALLER_LINE ) {
+		if ( window.CALLER_LINE ) {
 
-            for ( let i = 5; i >= 3; i -- ) {
+			for ( let i = 5; i >= 3; i -- ) {
 
-                const s = window.CALLER_LINE( 5 ).split( '/' ).pop();
-    
-                if ( s.indexOf( 'undefined' ) === - 1 ) {
-    
-                    this.name = s;
-    
-                    break;
-    
-                }
-    
-            }
-    
-        }
+				const s = window.CALLER_LINE( 5 ).split( '/' ).pop();
+
+				if ( s.indexOf( 'undefined' ) === - 1 ) {
+
+					this.name = s;
+
+					break;
+
+				}
+
+			}
+
+		}
 
 		this.type = 'Material';
 
@@ -102,11 +102,14 @@ class Material extends EventDispatcher {
 
 
 		{ // Extensions
+
 			this.receiveDynamicEnvironment = true; // @DDD@
 			this.castDynamicEnvironment = true; // @DDD@
 			this.receiveShadow = true;// @DDD@
 			this.motionBlur = true; // @DDD@
-		}		
+
+		}
+
 	}
 
 	get alphaTest() {
@@ -378,8 +381,8 @@ class Material extends EventDispatcher {
 		if ( this.stencilZPass !== KeepStencilOp ) data.stencilZPass = this.stencilZPass;
 		if ( this.stencilWrite === true ) data.stencilWrite = this.stencilWrite;
 
-		if ( this.castDynamicEnvironment !== undefined) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
-		if ( this.receiveDynamicEnvironment !== undefined) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
+		if ( this.castDynamicEnvironment !== undefined ) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
+		if ( this.receiveDynamicEnvironment !== undefined ) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
 
 		// rotation (SpriteMaterial)
 		if ( this.rotation !== undefined && this.rotation !== 0 ) data.rotation = this.rotation;

@@ -62,8 +62,12 @@ import {
  * };
  */
 
-let vec_p = new THREE.Vector3();	 //@DDD@
-let vec_p2 = new THREE.Vector3();	 //@DDD@
+//@DDD@
+const vec_p = new THREE.Vector3();
+const vec_p2 = new THREE.Vector3();
+const quat = new THREE.Quaternion();
+const quat2 = new THREE.Quaternion();
+const vec_s = new THREE.Vector3();
 
 class OutlineEffect {
 
@@ -288,11 +292,11 @@ class OutlineEffect {
 			// just in case
 			if ( originalMaterial === undefined ) return;
 
-			updateUniforms(this, camera,  material, originalMaterial ); // @DDD@
+			updateUniforms( this, camera, material, originalMaterial ); // @DDD@
 
 		}
 
-		function updateUniforms(object, camera,  material, originalMaterial ) { // @DDD@
+		function updateUniforms( object, camera, material, originalMaterial ) { // @DDD@
 
 			const outlineParameters = originalMaterial.userData.outlineParameters;
 
@@ -301,32 +305,45 @@ class OutlineEffect {
 			if ( outlineParameters !== undefined ) {
 
 				if ( outlineParameters.thickness !== undefined ) {
+
 					let coef = 1;
-					if (object.skeleton.bones) {
-						if (object.skeleton.bone_name_table == null) {
+					if ( object.skeleton.bones ) {
+
+						if ( object.skeleton.bone_name_table == null ) {
+
 							object.skeleton.bone_name_table = {};
-							for (let b of object.skeleton.bones) {
-								object.skeleton.bone_name_table[b.name] = b;
+							for ( const b of object.skeleton.bones ) {
+
+								object.skeleton.bone_name_table[ b.name ] = b;
+
 							}
+
 						}
-						let bone = object.skeleton.bone_name_table["首"];
-						if (bone == null) object.skeleton.bone_name_table["センター"]; 
-						if (bone) {
-							camera.matrixWorld.decompose(vec_p, quat2, vec_s);
-							bone.matrixWorld.decompose(vec_p, quat, vec_s);
-							vec_p.copy(vec_p);
-							vec_s.copy(vec_p);
-							vec_p2.set(1,0,0)
-							vec_p2.applyQuaternion(quat2);
-							vec_s.add(vec_p2);
-							vec_p.project(camera);
-							vec_s.project(camera);
-							let distance = vec_p.distanceTo(vec_s);
-							coef = Math.pow(distance,0.75)*3;
+
+						const bone = object.skeleton.bone_name_table[ '首' ];
+						if ( bone == null ) object.skeleton.bone_name_table[ 'センター' ];
+						if ( bone ) {
+
+							camera.matrixWorld.decompose( vec_p, quat2, vec_s );
+							bone.matrixWorld.decompose( vec_p, quat, vec_s );
+							vec_p.copy( vec_p );
+							vec_s.copy( vec_p );
+							vec_p2.set( 1, 0, 0 );
+							vec_p2.applyQuaternion( quat2 );
+							vec_s.add( vec_p2 );
+							vec_p.project( camera );
+							vec_s.project( camera );
+							const distance = vec_p.distanceTo( vec_s );
+							coef = Math.pow( distance, 0.75 ) * 3;
+
 						}
+
 					}
+
 					material.uniforms.outlineThickness.value = outlineParameters.thickness * coef;
+
 				}
+
 				if ( outlineParameters.color !== undefined ) material.uniforms.outlineColor.value.fromArray( outlineParameters.color );
 				if ( outlineParameters.alpha !== undefined ) material.uniforms.outlineAlpha.value = outlineParameters.alpha;
 

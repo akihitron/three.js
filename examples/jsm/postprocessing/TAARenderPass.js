@@ -58,7 +58,7 @@ class TAARenderPass extends SSAARenderPass {
 
 		if ( this.accumulateIndex === - 1 ) {
 
-			super.render( renderer, this.holdRenderTarget, readBuffer, deltaTime );
+			super.render( renderer, this.holdRenderTarget, readBuffer, deltaTime, maskActive, params ); // @DDD@
 
 			this.accumulateIndex = 0;
 

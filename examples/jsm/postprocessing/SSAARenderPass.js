@@ -52,7 +52,8 @@ class SSAARenderPass extends Pass {
 		} );
 
 		this.fsQuad = new FullScreenQuad( this.copyMaterial );
-		this.copy_pass = new ShaderPass(CopyShader); // @DDD@
+		this.copy_pass = new ShaderPass( CopyShader ); // @DDD@
+
 	}
 
 	dispose() {
@@ -76,9 +77,10 @@ class SSAARenderPass extends Pass {
 
 	}
 
-	render( renderer, writeBuffer, readBuffer , deltaTime, maskActive, params ) { // @DDD@
+	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive, params ) { // @DDD@
+
 		const effect_composer = params.effect_composer; // @DDD@
-		
+
 		if ( ! this.sampleRenderTarget ) {
 
 			this.sampleRenderTarget = new WebGLRenderTarget( readBuffer.width, readBuffer.height, { type: HalfFloatType } );
@@ -149,21 +151,29 @@ class SSAARenderPass extends Pass {
 			renderer.setClearColor( this.clearColor, this.clearAlpha );
 
 
-			if (i===0) { // @DDD@
+			if ( i === 0 ) { // @DDD@
+
 				renderer.setRenderTarget( effect_composer.renderTarget3 );
+
 			} else {
+
 				renderer.setRenderTarget( this.sampleRenderTarget );
+
 			}
+
 			renderer.clear();
 
 			DMC.start_gpu_status_check(); // @DDD@
 			renderer.render( this.scene, this.camera );
-			if (this.outline_effect) this.outline_effect.render(this.scene, this.camera); // @DDD@
+			if ( this.outline_effect ) this.outline_effect.render( this.scene, this.camera ); // @DDD@
 			DMC.end_gpu_status_check(); // @DDD@
 
-			if (i===0) { // @DDD@
-				this.copy_pass.render(renderer, this.sampleRenderTarget, effect_composer.renderTarget3);
+			if ( i === 0 ) { // @DDD@
+
+				this.copy_pass.render( renderer, this.sampleRenderTarget, effect_composer.renderTarget3 );
+
 			}
+
 			renderer.setRenderTarget( this.renderToScreen ? null : writeBuffer );
 
 			if ( i === 0 ) {

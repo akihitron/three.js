@@ -14,23 +14,28 @@ class AudioLoader extends Loader {
 
 		const scope = this;
 
-		if (window.nodejs && window.external_io == null) { // @DDD@
+		if ( window.nodejs && window.external_io == null ) { // @DDD@
+
 			try {
-				let buffer = nodejs.to_array_buffer(nodejs.fs.readFileSync(url));
+
+				const buffer = window.nodejs.to_array_buffer( window.nodejs.fs.readFileSync( url ) );
 
 
 				const context = AudioContext.getContext();
 				context.decodeAudioData( buffer, function ( audioBuffer ) {
-	
-					onLoad( audioBuffer );
-	
-				},onError);
-			} catch (e) {
 
-				onError(e);
-			} 
+					onLoad( audioBuffer );
+
+				}, onError );
+
+			} catch ( e ) {
+
+				onError( e );
+
+			}
 
 			return;
+
 		}
 
 		const loader = new FileLoader( this.manager );

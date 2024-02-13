@@ -235,7 +235,9 @@ class GTAOPass extends Pass {
 
 		// @DDD@
 		if ( parameters.blendIntensity !== undefined ) {
+
 			this.blendMaterial.uniforms.intensity.value = this.blendIntensity = parameters.blendIntensity;
+
 		}
 
 
@@ -345,8 +347,6 @@ class GTAOPass extends Pass {
 
 	}
 
-	
-
 	render( renderer, writeBuffer, readBuffer /*, deltaTime, maskActive */ ) {
 
 		// render normals and depth (honor only meshes, points and lines do not contribute to AO)
@@ -358,7 +358,14 @@ class GTAOPass extends Pass {
 			// this.restoreVisibility();
 
 			const replacer = this.materialReplacer; // @DDD@
-			replacer.replaceMaterials( this.scene, MeshNormalMaterial );
+			replacer.replaceMaterials( this.scene, () => {
+
+				const m = new MeshNormalMaterial();
+				m.blending = NoBlending;
+
+				return m;
+
+			} );
 			replacer.renderPass( this.scene, this.camera, renderer, this.normalRenderTarget, 0x7777ff, 1.0 );
 			replacer.restoreMaterials( this.scene );
 
