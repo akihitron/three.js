@@ -199,24 +199,30 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 			}
 
-			//
-
 			let morphInfluencesSum = 0;
 
-			for ( let i = 0; i < tmp_influences.length; i ++ ) { // @DDD@
+			if ( object.isInstancedMesh === true && object.morphTexture !== null ) {
 
-				morphInfluencesSum += tmp_influences[ i ]; // @DDD@
+				program.getUniforms().setValue( gl, 'morphTexture', object.morphTexture, textures );
+
+
+			} else {
+
+
+				for ( let i = 0; i < tmp_influences.length; i ++ ) { // @DDD@
+
+					morphInfluencesSum += tmp_influences[ i ]; // @DDD@
+	
+				}
+	
+				const morphBaseInfluence = geometry.morphTargetsRelative ? 1 : 1 - morphInfluencesSum;
+	
+				program.getUniforms().setValue( gl, 'morphTargetBaseInfluence', morphBaseInfluence );
+				if (tmp_influences.length > 0)  program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
 
 			}
-
-			const morphBaseInfluence = geometry.morphTargetsRelative ? 1 : 1 - morphInfluencesSum;
-
-			program.getUniforms().setValue( gl, 'morphTargetBaseInfluence', morphBaseInfluence );
-			if (tmp_influences.length > 0)  program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
-
 			program.getUniforms().setValue( gl, 'morphTargetsTexture', entry.texture, textures );
 			program.getUniforms().setValue( gl, 'morphTargetsTextureSize', entry.size );
-
 
 		} else {
 

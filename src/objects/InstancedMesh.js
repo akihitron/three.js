@@ -3,6 +3,8 @@ import { Mesh } from './Mesh.js';
 import { Box3 } from '../math/Box3.js';
 import { Matrix4 } from '../math/Matrix4.js';
 import { Sphere } from '../math/Sphere.js';
+import { DataTexture } from '../textures/DataTexture.js';
+import { FloatType, RedFormat } from '../constants.js';
 
 const _instanceLocalMatrix = /*@__PURE__*/ new Matrix4();
 const _instanceWorldMatrix = /*@__PURE__*/ new Matrix4();
@@ -36,6 +38,7 @@ class InstancedMesh extends Mesh {
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 		
 		this.instanceColor = null;
+		this.morphTexture = null;
 
 		this.count = count;
 
@@ -141,6 +144,24 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	getMorphAt( index, object ) {
+
+		const objectInfluences = object.morphTargetInfluences;
+
+		const array = this.morphTexture.source.data.data;
+
+		const len = objectInfluences.length + 1; // All influences + the baseInfluenceSum
+
+		const dataIndex = index * len + 1; // Skip the baseInfluenceSum at the beginning
+
+		for ( let i = 0; i < objectInfluences.length; i ++ ) {
+
+			objectInfluences[ i ] = array[ dataIndex + i ];
+
+		}
+
+	}
+
 	raycast( raycaster, intersects ) {
 
 		const matrixWorld = this.matrixWorld;
@@ -208,6 +229,38 @@ class InstancedMesh extends Mesh {
 	setMatrixAt( index, matrix ) {
 
 		matrix.toArray( this.instanceMatrix.array, index * 16 );
+
+	}
+
+	setMorphAt( index, object ) {
+
+		const objectInfluences = object.morphTargetInfluences;
+
+		const len = objectInfluences.length + 1; // morphBaseInfluence + all influences
+
+		if ( this.morphTexture === null ) {
+
+			this.morphTexture = new DataTexture( new Float32Array( len * this.count ), len, this.count, RedFormat, FloatType );
+
+		}
+
+		const array = this.morphTexture.source.data.data;
+
+		let morphInfluencesSum = 0;
+
+		for ( let i = 0; i < objectInfluences.length; i ++ ) {
+
+			morphInfluencesSum += objectInfluences[ i ];
+
+		}
+
+		const morphBaseInfluence = this.geometry.morphTargetsRelative ? 1 : 1 - morphInfluencesSum;
+
+		const dataIndex = len * index;
+
+		array[ dataIndex ] = morphBaseInfluence;
+
+		array.set( objectInfluences, dataIndex + 1 );
 
 	}
 

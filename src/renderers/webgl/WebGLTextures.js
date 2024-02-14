@@ -173,6 +173,17 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
+		if ( glFormat === _gl.RG_INTEGER ) {
+
+			if ( glType === _gl.UNSIGNED_BYTE ) internalFormat = _gl.RG8UI;
+			if ( glType === _gl.UNSIGNED_SHORT ) internalFormat = _gl.RG16UI;
+			if ( glType === _gl.UNSIGNED_INT ) internalFormat = _gl.RG32UI;
+			if ( glType === _gl.BYTE ) internalFormat = _gl.RG8I;
+			if ( glType === _gl.SHORT ) internalFormat = _gl.RG16I;
+			if ( glType === _gl.INT ) internalFormat = _gl.RG32I;
+
+		}
+
 		if ( glFormat === _gl.RGBA ) {
 
 			const transfer = forceLinearTransfer ? LinearTransfer : ColorManagement.getTransfer( colorSpace );
@@ -320,18 +331,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 	function deallocateRenderTarget( renderTarget ) {
 
-		const texture = renderTarget.texture;
-
 		const renderTargetProperties = properties.get( renderTarget );
-		const textureProperties = properties.get( texture );
-
-		if ( textureProperties.__webglTexture !== undefined ) {
-
-			_gl.deleteTexture( textureProperties.__webglTexture );
-
-			info.memory.textures --;
-
-		}
 
 		if ( renderTarget.depthTexture ) {
 
@@ -386,27 +386,24 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		}
 
-		if ( renderTarget.isWebGLMultipleRenderTargets ) {
+		const textures = renderTarget.textures;
 
-			for ( let i = 0, il = texture.length; i < il; i ++ ) {
+		for ( let i = 0, il = textures.length; i < il; i ++ ) {
 
-				const attachmentProperties = properties.get( texture[ i ] );
+			const attachmentProperties = properties.get( textures[ i ] );
 
-				if ( attachmentProperties.__webglTexture ) {
+			if ( attachmentProperties.__webglTexture ) {
 
-					_gl.deleteTexture( attachmentProperties.__webglTexture );
+				_gl.deleteTexture( attachmentProperties.__webglTexture );
 
-					info.memory.textures --;
-
-				}
-
-				properties.remove( texture[ i ] );
+				info.memory.textures --;
 
 			}
 
+			properties.remove( textures[ i ] );
+
 		}
 
-		properties.remove( texture );
 		properties.remove( renderTarget );
 
 	}
@@ -626,8 +623,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( extensions.has( 'EXT_texture_filter_anisotropic' ) === true ) {
 
-			const extension = extensions.get( 'EXT_texture_filter_anisotropic' );
-
 			if ( texture.magFilter === NearestFilter ) return;
 			if ( texture.minFilter !== NearestMipmapLinearFilter && texture.minFilter !== LinearMipmapLinearFilter ) return;
 			if ( texture.type === FloatType && extensions.has( 'OES_texture_float_linear' ) === false ) return; // verify extension for WebGL 1 and WebGL 2
@@ -635,6 +630,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			if ( texture.anisotropy > 1 || properties.get( texture ).__currentAnisotropy ) {
 
+				const extension = extensions.get( 'EXT_texture_filter_anisotropic' );
 				_gl.texParameterf( textureType, extension.TEXTURE_MAX_ANISOTROPY_EXT, Math.min( texture.anisotropy, capabilities.getMaxAnisotropy() ) );
 				properties.get( texture ).__currentAnisotropy = texture.anisotropy;
 
@@ -1560,7 +1556,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		} else {
 
-			const textures = renderTarget.isWebGLMultipleRenderTargets === true ? renderTarget.texture : [ renderTarget.texture ];
+			const textures = renderTarget.textures;
 
 			for ( let i = 0; i < textures.length; i ++ ) {
 
@@ -1724,7 +1720,13 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		renderTarget.addEventListener( 'dispose', onRenderTargetDispose );
 
-		if ( renderTarget.isWebGLMultipleRenderTargets !== true ) {
+		const textures = renderTarget.textures;
+
+		const isCube = ( renderTarget.isWebGLCubeRenderTarget === true );
+		const isMultipleRenderTargets = ( textures.length > 1 );
+		const supportsMips = isPowerOfTwo( renderTarget ) || isWebGL2;
+
+		if ( ! isMultipleRenderTargets ) {
 
 			if ( textureProperties.__webglTexture === undefined ) {
 
@@ -1736,10 +1738,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			info.memory.textures ++;
 
 		}
-
-		const isCube = ( renderTarget.isWebGLCubeRenderTarget === true );
-		const isMultipleRenderTargets = ( renderTarget.isWebGLMultipleRenderTargets === true );
-		const supportsMips = isPowerOfTwo( renderTarget ) || isWebGL2;
 
 		// Setup framebuffer
 
@@ -1789,8 +1787,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				if ( capabilities.drawBuffers ) {
 
-					const textures = renderTarget.texture;
-
 					for ( let i = 0, il = textures.length; i < il; i ++ ) {
 
 						const attachmentProperties = properties.get( textures[ i ] );
@@ -1814,8 +1810,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			}
 
 			if ( ( isWebGL2 && renderTarget.samples > 0 ) && useMultisampledRTT( renderTarget ) === false ) {
-
-				const textures = isMultipleRenderTargets ? texture : [ texture ];
 
 				renderTargetProperties.__webglMultisampledFramebuffer = _gl.createFramebuffer();
 				renderTargetProperties.__webglColorRenderbuffer = [];
@@ -1888,8 +1882,6 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 			state.unbindTexture();
 
 		} else if ( isMultipleRenderTargets ) {
-
-			const textures = renderTarget.texture;
 
 			for ( let i = 0, il = textures.length; i < il; i ++ ) {
 
@@ -1969,7 +1961,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const supportsMips = isPowerOfTwo( renderTarget ) || isWebGL2;
 
-		const textures = renderTarget.isWebGLMultipleRenderTargets === true ? renderTarget.texture : [ renderTarget.texture ];
+		const textures = renderTarget.textures;
 
 		for ( let i = 0, il = textures.length; i < il; i ++ ) {
 
@@ -1994,14 +1986,14 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( ( isWebGL2 && renderTarget.samples > 0 ) && useMultisampledRTT( renderTarget ) === false ) {
 
-			const textures = renderTarget.isWebGLMultipleRenderTargets ? renderTarget.texture : [ renderTarget.texture ];
+			const textures = renderTarget.textures;
 			const width = renderTarget.width;
 			const height = renderTarget.height;
 			let mask = _gl.COLOR_BUFFER_BIT;
 			const invalidationArray = [];
 			const depthStyle = renderTarget.stencilBuffer ? _gl.DEPTH_STENCIL_ATTACHMENT : _gl.DEPTH_ATTACHMENT;
 			const renderTargetProperties = properties.get( renderTarget );
-			const isMultipleRenderTargets = ( renderTarget.isWebGLMultipleRenderTargets === true );
+			const isMultipleRenderTargets = ( textures.length > 1 );
 
 			// If MRT we need to remove FBO attachments
 			if ( isMultipleRenderTargets ) {

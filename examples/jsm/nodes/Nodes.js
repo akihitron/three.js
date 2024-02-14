@@ -5,7 +5,6 @@
 export * from './core/constants.js';
 
 // core
-export { default as ArrayUniformNode /* @TODO: arrayUniform */ } from './core/ArrayUniformNode.js';
 export { default as AssignNode, assign } from './core/AssignNode.js';
 export { default as AttributeNode, attribute } from './core/AttributeNode.js';
 export { default as BypassNode, bypass } from './core/BypassNode.js';
@@ -56,7 +55,7 @@ export { default as DiscardNode, discard } from './utils/DiscardNode.js';
 export { default as EquirectUVNode, equirectUV } from './utils/EquirectUVNode.js';
 export { default as FunctionOverloadingNode, overloadingFn } from './utils/FunctionOverloadingNode.js';
 export { default as JoinNode } from './utils/JoinNode.js';
-export { default as LoopNode, loop } from './utils/LoopNode.js';
+export { default as LoopNode, loop, Continue, Break } from './utils/LoopNode.js';
 export { default as MatcapUVNode, matcapUV } from './utils/MatcapUVNode.js';
 export { default as MaxMipLevelNode, maxMipLevel } from './utils/MaxMipLevelNode.js';
 export { default as OscNode, oscSine, oscSquare, oscTriangle, oscSawtooth } from './utils/OscNode.js';
@@ -77,6 +76,8 @@ export { default as ReflectorNode, reflector } from './utils/ReflectorNode.js';
 export * from './shadernode/ShaderNode.js';
 
 // accessors
+export { TBNViewMatrix } from './accessors/AccessorsUtils.js';
+export { default as UniformsNode, uniforms } from './accessors/UniformsNode.js';
 export { default as BitangentNode, bitangentGeometry, bitangentLocal, bitangentView, bitangentWorld, transformedBitangentView, transformedBitangentWorld } from './accessors/BitangentNode.js';
 export { default as BufferAttributeNode, bufferAttribute, dynamicBufferAttribute, instancedBufferAttribute, instancedDynamicBufferAttribute } from './accessors/BufferAttributeNode.js';
 export { default as BufferNode, buffer } from './accessors/BufferNode.js';
@@ -98,7 +99,7 @@ export { default as ReferenceNode, reference, referenceIndex } from './accessors
 export { default as ReflectVectorNode, reflectVector } from './accessors/ReflectVectorNode.js';
 export { default as SkinningNode, skinning } from './accessors/SkinningNode.js';
 export { default as SceneNode, backgroundBlurriness, backgroundIntensity } from './accessors/SceneNode.js';
-export { default as StorageBufferNode, storage } from './accessors/StorageBufferNode.js';
+export { default as StorageBufferNode, storage, storageObject } from './accessors/StorageBufferNode.js';
 export { default as TangentNode, tangentGeometry, tangentLocal, tangentView, tangentWorld, transformedTangentView, transformedTangentWorld } from './accessors/TangentNode.js';
 export { default as TextureNode, texture, textureLoad, /*textureLevel,*/ sampler } from './accessors/TextureNode.js';
 export { default as TextureStoreNode, textureStore } from './accessors/TextureStoreNode.js';
@@ -111,7 +112,7 @@ export { default as BumpMapNode, bumpMap } from './display/BumpMapNode.js';
 export { default as ColorAdjustmentNode, saturation, vibrance, hue, lumaCoeffs, luminance, threshold } from './display/ColorAdjustmentNode.js';
 export { default as ColorSpaceNode, linearToColorSpace, colorSpaceToLinear, linearTosRGB, sRGBToLinear } from './display/ColorSpaceNode.js';
 export { default as FrontFacingNode, frontFacing, faceDirection } from './display/FrontFacingNode.js';
-export { default as NormalMapNode, normalMap, TBNViewMatrix } from './display/NormalMapNode.js';
+export { default as NormalMapNode, normalMap } from './display/NormalMapNode.js';
 export { default as PosterizeNode, posterize } from './display/PosterizeNode.js';
 export { default as ToneMappingNode, toneMapping } from './display/ToneMappingNode.js';
 export { default as ViewportNode, viewport, viewportCoordinate, viewportResolution, viewportTopLeft, viewportBottomLeft, viewportTopRight, viewportBottomRight } from './display/ViewportNode.js';

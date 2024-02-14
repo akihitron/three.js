@@ -422,15 +422,33 @@ class WebGLBackend extends Backend {
 		gl.bindTransformFeedback( gl.TRANSFORM_FEEDBACK, transformFeedbackGPU );
 		gl.beginTransformFeedback( gl.POINTS );
 
-		gl.drawArraysInstanced( gl.POINTS, 0, 1, computeNode.count );
+		if ( attributes[ 0 ].isStorageInstancedBufferAttribute ) {
+
+			gl.drawArraysInstanced( gl.POINTS, 0, 1, computeNode.count );
+
+		} else {
+
+			gl.drawArrays( gl.POINTS, 0, computeNode.count );
+
+		}
 
 		gl.endTransformFeedback();
 		gl.bindTransformFeedback( gl.TRANSFORM_FEEDBACK, null );
 
 		// switch active buffers
+
 		for ( let i = 0; i < transformBuffers.length; i ++ ) {
 
-			transformBuffers[ i ].switchBuffers();
+			const dualAttributeData = transformBuffers[ i ];
+
+			if ( dualAttributeData.pbo ) {
+
+				this.textureUtils.copyBufferToTexture( dualAttributeData.transformBuffer, dualAttributeData.pbo );
+
+			}
+
+			dualAttributeData.switchBuffers();
+
 
 		}
 
@@ -1222,7 +1240,7 @@ class WebGLBackend extends Backend {
 			gl.bindBuffer( gl.ARRAY_BUFFER, attributeData.bufferGPU );
 			gl.enableVertexAttribArray( i );
 
-			if ( attribute.isStorageBufferAttribute ) staticVao = false;
+			if ( attribute.isStorageBufferAttribute || attribute.isStorageInstancedBufferAttribute ) staticVao = false;
 
 			let stride, offset;
 

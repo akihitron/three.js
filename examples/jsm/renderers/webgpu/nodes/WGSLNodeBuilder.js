@@ -7,7 +7,6 @@ import { NodeSampledTexture, NodeSampledCubeTexture } from '../../common/nodes/N
 
 import UniformBuffer from '../../common/UniformBuffer.js';
 import StorageBuffer from '../../common/StorageBuffer.js';
-import { getVectorLength, getStrideLength } from '../../common/BufferUtils.js';
 
 import { NodeBuilder, CodeNode } from '../../../nodes/Nodes.js';
 
@@ -411,31 +410,9 @@ class WGSLNodeBuilder extends NodeBuilder {
 
 				}
 
-				if ( node.isArrayUniformNode === true ) {
+				uniformGPU = this.getNodeUniform( uniformNode, type );
 
-					uniformGPU = [];
-
-					for ( const uniformNode of node.nodes ) {
-
-						const uniformNodeGPU = this.getNodeUniform( uniformNode, type );
-
-						// fit bounds to buffer
-						uniformNodeGPU.boundary = getVectorLength( uniformNodeGPU.itemSize );
-						uniformNodeGPU.itemSize = getStrideLength( uniformNodeGPU.itemSize );
-
-						uniformsGroup.addUniform( uniformNodeGPU );
-
-						uniformGPU.push( uniformNodeGPU );
-
-					}
-
-				} else {
-
-					uniformGPU = this.getNodeUniform( uniformNode, type );
-
-					uniformsGroup.addUniform( uniformGPU );
-
-				}
+				uniformsGroup.addUniform( uniformGPU );
 
 			}
 
@@ -806,17 +783,7 @@ ${ flowData.code }
 					snippets: []
 				} );
 
-				if ( Array.isArray( uniform.value ) === true ) {
-
-					const length = uniform.value.length;
-
-					group.snippets.push( `uniform ${vectorType}[ ${length} ] ${uniform.name}` );
-
-				} else {
-
-					group.snippets.push( `\t${uniform.name} : ${ vectorType}` );
-
-				}
+				group.snippets.push( `\t${ uniform.name } : ${ vectorType }` );
 
 			}
 
