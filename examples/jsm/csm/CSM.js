@@ -54,6 +54,8 @@ export class CSM {
 
 	createLights() {
 
+		for (const light of this.lights) light.dispose();
+
 		for ( let i = 0; i < this.cascades; i ++ ) {
 
 			const light = new DirectionalLight( 0xffffff, this.lightIntensity );
@@ -69,6 +71,21 @@ export class CSM {
 			this.parent.add( light );
 			this.parent.add( light.target );
 			this.lights.push( light );
+
+		}
+
+	}
+
+	updateLights() { // @DDD@
+		
+		for ( let i = 0; i < this.cascades; i ++ ) {
+
+			const light = this.lights[ i ];
+
+			light.shadow.camera.near = this.lightNear;
+			light.shadow.camera.far = this.lightFar;
+			light.shadow.bias = this.shadowBias;
+			light.shadow.normalBias = this.shadowNormalBias;
 
 		}
 
@@ -242,6 +259,8 @@ export class CSM {
 			light.target.position.z += this.lightDirection.z;
 
 		}
+
+		this.updateLights(); // @DDD@
 
 	}
 
