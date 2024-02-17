@@ -36,6 +36,7 @@ export class CSM {
 		this.lightNear = data.lightNear || 1;
 		this.lightFar = data.lightFar || 2000;
 		this.lightMargin = data.lightMargin || 200;
+		this.shadowNormalBias = data.shadowNormalBias || 0.1; // @DDD@
 		this.customSplitsCallback = data.customSplitsCallback;
 		this.fade = false;
 		this.mainFrustum = new CSMFrustum();
@@ -63,6 +64,7 @@ export class CSM {
 			light.shadow.camera.near = this.lightNear;
 			light.shadow.camera.far = this.lightFar;
 			light.shadow.bias = this.shadowBias;
+			light.shadow.normalBias = this.shadowNormalBias; // @DDD@
 
 			this.parent.add( light );
 			this.parent.add( light.target );

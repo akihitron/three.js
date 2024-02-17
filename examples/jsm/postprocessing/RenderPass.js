@@ -3,9 +3,8 @@ import {
 } from 'three';
 import { Pass } from './Pass.js';
 
-// @DDD@ 
-import { ShaderPass } from '../../jsm/postprocessing/ShaderPass.js';
-import { CopyShader } from '../../jsm/shaders/CopyShader.js';
+import { ShaderPass } from './ShaderPass.js';
+import { CopyShader } from '../shaders/CopyShader.js';
 
 class RenderPass extends Pass {
 
