@@ -84,7 +84,7 @@ export class CSM {
 
 			light.shadow.camera.near = this.lightNear;
 			light.shadow.camera.far = this.lightFar;
-			light.shadow.bias = this.shadowBias;
+			light.shadow.bias = this.shadowBias * Math.exp( i );
 			light.shadow.normalBias = this.shadowNormalBias;
 
 		}
