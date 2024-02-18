@@ -75,8 +75,16 @@ class LoaderUtils {
 		// Blob URL
 		if ( /^blob:.*$/i.test( url ) ) return url;
 
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		let result = path + url;
+		const driver = window.external_io?.driver;
+		if (driver != 'http') {
+			result = decodeURI(result);
+		}
+
 		// Relative URL
-		return path + url;
+		return result;
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	}
 
