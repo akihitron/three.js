@@ -25,11 +25,13 @@ class RenderPass extends Pass {
 		this.needsSwap = false;
 		this._oldClearColor = new Color();
 
-		this.copy_pass = new ShaderPass(CopyShader); // @DDD@
+		this.copy_pass = new ShaderPass( CopyShader ); // @DDD@
+
 	}
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	render( renderer, writeBuffer, readBuffer , deltaTime, maskActive, params ) {
+	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive, params ) {
+
 		const effect_composer = params.effect_composer;
 
 		const oldAutoClear = renderer.autoClear;
@@ -67,7 +69,7 @@ class RenderPass extends Pass {
 
 		const render_target = this.renderToScreen ? null : effect_composer.renderTarget3;
 		renderer.setRenderTarget( render_target );
-		
+
 		if ( this.clear === true ) {
 
 			// TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
@@ -75,13 +77,16 @@ class RenderPass extends Pass {
 
 		}
 
-		DMC.start_gpu_status_check();
+		window.DMC.start_gpu_status_check();
 		renderer.render( this.scene, this.camera );
-		if (this.outline_effect) this.outline_effect.renderOutline(this.scene, this.camera);
-		if (effect_composer.renderTarget3 == render_target) {
-			this.copy_pass.render(renderer, readBuffer, effect_composer.renderTarget3);
+		if ( this.outline_effect ) this.outline_effect.renderOutline( this.scene, this.camera );
+		if ( effect_composer.renderTarget3 == render_target ) {
+
+			this.copy_pass.render( renderer, readBuffer, effect_composer.renderTarget3 );
+
 		}
-		DMC.end_gpu_status_check();
+
+		window.DMC.end_gpu_status_check();
 
 		// restore
 

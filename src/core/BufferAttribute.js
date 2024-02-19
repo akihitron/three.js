@@ -394,10 +394,14 @@ class Int8BufferAttribute extends BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
-		if (array instanceof Int8Array) { // @DDD@
-			super( new Int8Array( array.buffer.slice(0) ), itemSize, normalized );
+		if ( array instanceof Int8Array ) { // @DDD@
+
+			super( new Int8Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
 		} else {
+
 			super( new Int8Array( array ), itemSize, normalized );
+
 		}
 
 	}
@@ -408,10 +412,14 @@ class Uint8BufferAttribute extends BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
-		if (array instanceof Uint8Array) { // @DDD@
-			super( new Uint8Array( array.buffer.slice(0) ), itemSize, normalized );
+		if ( array instanceof Uint8Array ) { // @DDD@
+
+			super( new Uint8Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
 		} else {
+
 			super( new Uint8Array( array ), itemSize, normalized );
+
 		}
 
 	}
@@ -625,15 +633,22 @@ class Float32BufferAttribute extends BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
-		if (array.is_custom) {
+		if ( array.is_custom ) {
+
 			super( array.new_array, itemSize, normalized );
+
 		} else {
-			if (array instanceof Float32Array) { // @DDD@
-				super( new Float32Array( array.buffer.slice(0) ), itemSize, normalized );
+
+			if ( array instanceof Float32Array ) { // @DDD@
+
+				super( new Float32Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
 			} else {
+
 				super( new Float32Array( array ), itemSize, normalized );
+
 			}
-	
+
 		}
 
 	}
@@ -644,11 +659,16 @@ class Float64BufferAttribute extends BufferAttribute {
 
 	constructor( array, itemSize, normalized ) {
 
-		if (array instanceof Uint8Array) { // @DDD@
-			super( new Uint8Array( array.buffer.slice(0) ), itemSize, normalized );
+		if ( array instanceof Uint8Array ) { // @DDD@
+
+			super( new Uint8Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
 		} else {
+
 			super( new Uint8Array( array ), itemSize, normalized );
+
 		}
+
 		super( new Float64Array( array ), itemSize, normalized );
 
 	}

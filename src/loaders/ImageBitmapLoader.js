@@ -62,49 +62,66 @@ class ImageBitmapLoader extends Loader {
 
 		}
 
-		if (url.indexOf(":")==-1 && window.external_io) {
+		if ( url.indexOf( ':' ) == - 1 && window.external_io ) {
+
 			if ( url === undefined ) url = '';
 			if ( this.path !== undefined ) url = this.path + url;
 			url = this.manager.resolveURL( url );
 			const scope = this;
 			const cached = Cache.get( url );
 			if ( cached !== undefined ) {
+
 				scope.manager.itemStart( url );
 				setTimeout( function () {
+
 					if ( onLoad ) onLoad( cached );
 					scope.manager.itemEnd( url );
+
 				}, 0 );
 				return cached;
-			} else {
-				let io = window.external_io;
-				scope.manager.itemStart( url );
-				io.get(url).then(data=>{
-					let blob = new Blob([data], {type: 'application/octet-stream'});
-					createImageBitmap( blob, Object.assign( scope.options, { colorSpaceConversion: 'none' } ) ).
-					then(response=>{
-						console.warn(response);
-						Cache.add( url, response );
-						if ( onLoad ) onLoad( response );
-						scope.manager.itemEnd( url );
-					}).catch(error=>{
-						console.error(error);
-						if ( onError ) onError( error );
-						scope.manager.itemError( url );
-						scope.manager.itemEnd( url );
-					});
 
-				}).catch(error=>{
-					console.error(error);
+			} else {
+
+				const io = window.external_io;
+				scope.manager.itemStart( url );
+				io.get( url ).then( data=>{
+
+					const blob = new Blob( [ data ], { type: 'application/octet-stream' } );
+					createImageBitmap( blob, Object.assign( scope.options, { colorSpaceConversion: 'none' } ) ).
+						then( response=>{
+
+							console.warn( response );
+							Cache.add( url, response );
+							if ( onLoad ) onLoad( response );
+							scope.manager.itemEnd( url );
+
+						} ).catch( error=>{
+
+							console.error( error );
+							if ( onError ) onError( error );
+							scope.manager.itemError( url );
+							scope.manager.itemEnd( url );
+
+						} );
+
+				} ).catch( error=>{
+
+					console.error( error );
 					if ( onError ) onError( error );
 					scope.manager.itemError( url );
 					scope.manager.itemEnd( url );
-				});
+
+				} );
 				return null;
+
 			}
+
 		} else {
-			return this._load_(url, onLoad, onProgress, onError);
+
+			return this._load_( url, onLoad, onProgress, onError );
 
 		}
+
 	}
 
 	_load_( url, onLoad, onProgress, onError ) { // @DDD@

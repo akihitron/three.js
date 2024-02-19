@@ -50,7 +50,7 @@ class AnimationAction {
 		// scaled local time of the action
 		// gets clamped or wrapped to 0..clip.duration according to loop
 		this.time = 0;
-		
+
 		this.timeOffset = 0; // @DDD@
 
 

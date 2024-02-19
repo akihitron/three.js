@@ -12,10 +12,11 @@ class TextureLoader extends Loader {
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	load( url, onLoad, onProgress, onError ) {
-		let original_url = url;
+
+		const original_url = url;
 		const texture = new Texture();
-		const is_data_url = window.is_data_url(url);
-		if (!is_data_url) texture._source_file_ = (this.path + original_url).replace(/\\/g, "/");
+		const is_data_url = window.is_data_url( url );
+		if ( ! is_data_url ) texture._source_file_ = ( this.path + original_url ).replace( /\\/g, '/' );
 
 		// texture.image = {
 		// 	is_dummy: true,
@@ -29,31 +30,33 @@ class TextureLoader extends Loader {
 		// texture.image = await ImageData2ImageElement(new ImageData(new Uint8ClampedArray([255,255,255,255, 255,255,255,255, 255,255,255,255 ,255,255,255,255]), 2, 2));
 		// texture.image = new Image();
 		// texture.image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP8L/n/PwMQMMIYAEMrBi9x/4F7AAAAAElFTkSuQmCC";
-		
 
-		const loader = new ImageLoader(this.manager);
-		loader.setCrossOrigin(this.crossOrigin);
-		loader.setPath(this.path);
+
+		const loader = new ImageLoader( this.manager );
+		loader.setCrossOrigin( this.crossOrigin );
+		loader.setPath( this.path );
 
 		{
-			let url = this.path + original_url;
 
-			const tm = TimeDurationChecker(`TextureLoader:load-N: ${url.slice(0, 100).split("/").pop()}`);
+			const url = this.path + original_url;
 
-			loader.load(url, function (image) {
+			const tm = window.TimeDurationChecker( `TextureLoader:load-N: ${url.slice( 0, 100 ).split( '/' ).pop()}` );
+
+			loader.load( url, function ( image ) {
 
 				texture.image = image;
 				texture.needsUpdate = true;
 
-				if (onLoad !== undefined) {
+				if ( onLoad !== undefined ) {
 
-					onLoad(texture);
+					onLoad( texture );
 
 				}
 
 				tm.finish();
 
-			}, onProgress, onError);
+			}, onProgress, onError );
+
 		}
 
 		return texture;

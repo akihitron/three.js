@@ -292,7 +292,8 @@ class OutlinePass extends Pass {
 
 	}
 
-	_renderToScreen_(renderer, readBuffer) { // @DDD@
+	_renderToScreen_( renderer, readBuffer ) { // @DDD@
+
 		if ( this.renderToScreen ) {
 
 			this.fsQuad.material = this.materialCopy;
@@ -301,15 +302,18 @@ class OutlinePass extends Pass {
 			this.fsQuad.render( renderer );
 
 		}
+
 	}
 
 	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive ) {
 
-		if (DMC.playing_state == DMC.PLAYING_STATE.PLAYING) { // @DDD@
-			this._renderToScreen_(renderer, readBuffer);
+		if ( window.DMC.playing_state == window.DMC.PLAYING_STATE.PLAYING ) { // @DDD@
+
+			this._renderToScreen_( renderer, readBuffer );
 			return;
+
 		}
-		
+
 		if ( this.selectedObjects.length > 0 ) {
 
 			renderer.getClearColor( this._oldClearColor );

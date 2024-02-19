@@ -37,7 +37,8 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		let tmp_influences = null;
-		if (object.morphTargetInfluences_backup && object.morphTargetInfluences_cache) {
+		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
+
 			const morphTargetInfluences = object.morphTargetInfluences;
 			const backup = object.morphTargetInfluences_backup;
 			const cache = object.morphTargetInfluences_cache;
@@ -49,36 +50,46 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 			// 	if (tmp_influences == null) tmp_influences = new Float32Array(geometry.morphAttributes.position.length);
 			// 	objectMorphTemps.set(object, {tmp_influences});
 			// }
-			tmp_influences = objectMorphTemps.get(object)?.tmp_influences;
-			if (tmp_influences == null) tmp_influences = new Float32Array(geometry.morphAttributes.position.length);
-			objectMorphTemps.set(object, {tmp_influences});
-		
+			tmp_influences = objectMorphTemps.get( object )?.tmp_influences;
+			if ( tmp_influences == null ) tmp_influences = new Float32Array( geometry.morphAttributes.position.length );
+			objectMorphTemps.set( object, { tmp_influences } );
+
 			let m_index = 0;
 			const mask = geometry.influenceMasks;
-			if (mask) {
-				for (let i = 0,l=morphTargetInfluences.length;i<l;++i) {
-					const c = morphTargetInfluences[i];
-					backup[i] = c;
-					const r = result[i] = (c + cache[i]) * coef[i];
-					const m = mask[i];
-					const a = morphTargetInfluences[i] = r * m;
-					if (m > 0) tmp_influences[m_index++] = a;
+			if ( mask ) {
+
+				for ( let i = 0, l = morphTargetInfluences.length; i < l; ++ i ) {
+
+					const c = morphTargetInfluences[ i ];
+					backup[ i ] = c;
+					const r = result[ i ] = ( c + cache[ i ] ) * coef[ i ];
+					const m = mask[ i ];
+					const a = morphTargetInfluences[ i ] = r * m;
+					if ( m > 0 ) tmp_influences[ m_index ++ ] = a;
+
 				}
-	
+
 			} else {
-				for (let i = 0,l=morphTargetInfluences.length;i<l;++i) {
-					const c = morphTargetInfluences[i];
-					backup[i] = c;
-					const r = result[i] = (c + cache[i]) * coef[i];
-					const a = morphTargetInfluences[i] = r;
-					tmp_influences[m_index++] = a;
+
+				for ( let i = 0, l = morphTargetInfluences.length; i < l; ++ i ) {
+
+					const c = morphTargetInfluences[ i ];
+					backup[ i ] = c;
+					const r = result[ i ] = ( c + cache[ i ] ) * coef[ i ];
+					const a = morphTargetInfluences[ i ] = r;
+					tmp_influences[ m_index ++ ] = a;
+
 				}
+
 			}
+
 		} else {
+
 			tmp_influences = object.morphTargetInfluences;
+
 		}
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
-		
+
 
 		if ( capabilities.isWebGL2 === true ) {
 
@@ -212,15 +223,16 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 				for ( let i = 0; i < tmp_influences.length; i ++ ) { // @DDD@
 
 					morphInfluencesSum += tmp_influences[ i ]; // @DDD@
-	
+
 				}
-	
+
 				const morphBaseInfluence = geometry.morphTargetsRelative ? 1 : 1 - morphInfluencesSum;
-	
+
 				program.getUniforms().setValue( gl, 'morphTargetBaseInfluence', morphBaseInfluence );
-				if (tmp_influences.length > 0)  program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
+				if ( tmp_influences.length > 0 ) program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
 
 			}
+
 			program.getUniforms().setValue( gl, 'morphTargetsTexture', entry.texture, textures );
 			program.getUniforms().setValue( gl, 'morphTargetsTextureSize', entry.size );
 
@@ -340,17 +352,22 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	}
 
-	
+
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	function store(object, geometry) {
-		if (object.morphTargetInfluences_backup && object.morphTargetInfluences_cache) {
+	function store( object, geometry ) {
+
+		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
+
 			const morphTargetInfluences = object.morphTargetInfluences;
 			const backup = object.morphTargetInfluences_backup;
-			for (let i = 0,l=backup.length;i<l;i++) {
-				morphTargetInfluences[i] = backup[i];
+			for ( let i = 0, l = backup.length; i < l; i ++ ) {
+
+				morphTargetInfluences[ i ] = backup[ i ];
+
 			}
 
 		}
+
 	}
 
 	return {
@@ -360,6 +377,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	};
 	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 }
 
 

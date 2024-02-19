@@ -16,106 +16,126 @@ class HttpError extends Error {
 
 class FileLoader extends Loader {
 
-	constructor( manager, _params = {}) { //@DDD@
+	constructor( manager, _params = {} ) { //@DDD@
 
 		super( manager );
 
-		this.params = {file_system:"external_io"};
-		if (_params) Object.assign(this.params,_params);
+		this.params = { file_system: 'external_io' };
+		if ( _params ) Object.assign( this.params, _params );
 
 	}
 
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	load(url, onLoad, onProgress, onError) {
-		let scope = this;
-		if (window.external_io && window.is_data_url(url) == false && this.params.file_system == "external_io") {
+	load( url, onLoad, onProgress, onError ) {
+
+		if ( window.external_io && window.is_data_url( url ) == false && this.params.file_system == 'external_io' ) {
+
 			if ( url === undefined ) url = '';
 			if ( this.path !== undefined ) url = this.path + url;
 			url = this.manager.resolveURL( url );
 			const scope = this;
 			const cached = Cache.get( url );
 			if ( cached != null ) {
+
 				scope.manager.itemStart( url );
 				setTimeout( function () {
+
 					if ( onLoad ) onLoad( cached );
 					scope.manager.itemEnd( url );
+
 				}, 0 );
 				return cached;
+
 			} else {
-				let io = window.external_io;
-				io.get(url).then(data=>{
+
+				const io = window.external_io;
+				io.get( url ).then( data=>{
 
 					let response;
 					const responseType = ( scope.responseType || '' ).toLowerCase();
 					switch ( responseType ) {
-	
+
 						case 'arraybuffer':
 						case 'blob':
 							const view = data;
 							// const view = new Uint8Array( data.length );
-	
+
 							// for ( let i = 0; i < data.length; i ++ ) {
-	
+
 							// 	view[ i ] = data.charCodeAt( i );
-	
+
 							// }
 							if ( responseType === 'blob' ) {
-								let mimeType = "application/octet-stream";
+
+								const mimeType = 'application/octet-stream';
 								response = new Blob( [ view.buffer ], { type: mimeType } );
-	
+
 							} else {
-								if (view?.buffer instanceof ArrayBuffer) {
+
+								if ( view?.buffer instanceof ArrayBuffer ) {
+
 									response = view.buffer;
-								} else if (view instanceof ArrayBuffer) {
+
+								} else if ( view instanceof ArrayBuffer ) {
+
 									response = view;
+
 								}
-	
+
 							}
-	
+
 							break;
-	
+
 						case 'document':
-							console.error("Deprecated");
-							
+							console.error( 'Deprecated' );
+
 							// const parser = new DOMParser();
 							// response = parser.parseFromString( data, "application/octet-stream" );
-	
+
 							break;
-	
+
 						case 'json':
-							let txt = new TextDecoder().decode(data);
-	
+							const txt = new TextDecoder().decode( data );
+
 							response = JSON.parse( txt );
-	
+
 							break;
 						case 'text':
 
-							response = new TextDecoder().decode(data);
-	
+							response = new TextDecoder().decode( data );
+
 							break;
-		
+
 						default: // 'text' or other
-	
+
 							response = data;
-	
+
 							break;
-	
+
 					}
-	
+
 
 					Cache.add( url, response );
 					if ( onLoad ) onLoad( response );
 					scope.manager.itemEnd( url );
-				}).catch(error=>{
+
+				} ).catch( error=>{
+
 					if ( onError ) onError( error );
 					scope.manager.itemError( url );
 					scope.manager.itemEnd( url );
-				});
+
+				} );
+
 			}
+
 		} else {
-			return this._load_(url, onLoad, onProgress, onError);
+
+			return this._load_( url, onLoad, onProgress, onError );
+
 		}
+
 	}
 	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 

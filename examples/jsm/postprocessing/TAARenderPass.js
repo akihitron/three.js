@@ -28,12 +28,11 @@ class TAARenderPass extends SSAARenderPass {
 
 	}
 
-	render( renderer, writeBuffer, readBuffer , deltaTime, maskActive, params ) { // @DDD@
-		const effect_composer = params.effect_composer; // @DDD@
+	render( renderer, writeBuffer, readBuffer, deltaTime, maskActive, params ) { // @DDD@
 
 		if ( this.accumulate === false ) {
 
-			super.render( renderer, writeBuffer, readBuffer, deltaTime, maskActive, params);// @DDD@
+			super.render( renderer, writeBuffer, readBuffer, deltaTime, maskActive, params );// @DDD@
 
 			this.accumulateIndex = - 1;
 			return;
@@ -96,8 +95,8 @@ class TAARenderPass extends SSAARenderPass {
 				renderer.setClearColor( this.clearColor, this.clearAlpha );
 				renderer.clear();
 				renderer.render( this.scene, this.camera );
-				if (this.outline_effect) this.outline_effect.render(this.scene, this.camera); // @DDD@
-				
+				if ( this.outline_effect ) this.outline_effect.render( this.scene, this.camera ); // @DDD@
+
 				renderer.setRenderTarget( this.sampleRenderTarget );
 				if ( this.accumulateIndex === 0 ) {
 

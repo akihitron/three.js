@@ -96,9 +96,11 @@ class Frustum {
 
 		// TODO: intersection code
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-		if (object.__getActualMatrixWorld__) {
-			_sphere.copy( geometry.boundingSphere ).applyMatrix4( object.__getActualMatrixWorld__() );
-		}
+		// if ( object.__getActualMatrixWorld__ ) {
+
+		// 	_sphere.copy( geometry.boundingSphere ).applyMatrix4( object.__getActualMatrixWorld__() );
+
+		// }
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 

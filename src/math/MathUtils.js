@@ -19,7 +19,7 @@ function generateUUID() {
 			_lut[ d3 & 0xff ] + _lut[ d3 >> 8 & 0xff ] + _lut[ d3 >> 16 & 0xff ] + _lut[ d3 >> 24 & 0xff ];
 
 	// .toLowerCase() here flattens concatenated strings to save heap memory space.
-	return uuid.toLowerCase().replace(/-/g, ''); // @DDD@
+	return uuid.toLowerCase().replace( /-/g, '' ); // @DDD@
 
 }
 

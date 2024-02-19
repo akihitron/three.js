@@ -78,7 +78,8 @@ class Mesh extends Object3D {
 
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-		if (geometry.isMMDMorph) {
+		if ( geometry.isMMDMorph ) {
+
 			const morphAttributes = geometry.morphAttributes;
 			const morphs = geometry.morphs;
 			const keys = Object.keys( morphAttributes );
@@ -106,6 +107,7 @@ class Mesh extends Object3D {
 				}
 
 			}
+
 		} else {
 
 			const morphAttributes = geometry.morphAttributes;
@@ -135,6 +137,7 @@ class Mesh extends Object3D {
 				}
 
 			}
+
 		}
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 

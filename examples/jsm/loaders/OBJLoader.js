@@ -8,7 +8,7 @@ import {
 	Loader,
 	Material,
 	Mesh,
-	MeshPhongMaterial,
+	MeshPhysicalMaterial, // @DDD@
 	Points,
 	PointsMaterial,
 	Vector3,
@@ -455,7 +455,7 @@ class OBJLoader extends Loader {
 
 			try {
 
-				if (text instanceof Uint8Array) text = new TextDecoder().decode(text); // @DDD@
+				if ( text instanceof Uint8Array ) text = new TextDecoder().decode( text ); // @DDD@
 
 				onLoad( scope.parse( text ) );
 

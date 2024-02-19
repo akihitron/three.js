@@ -54,7 +54,7 @@ export class CSM {
 
 	createLights() {
 
-		for (const light of this.lights) light.dispose();
+		for ( const light of this.lights ) light.dispose();
 
 		for ( let i = 0; i < this.cascades; i ++ ) {
 
@@ -77,7 +77,7 @@ export class CSM {
 	}
 
 	updateLights() { // @DDD@
-		
+
 		for ( let i = 0; i < this.cascades; i ++ ) {
 
 			const light = this.lights[ i ];

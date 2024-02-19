@@ -25,8 +25,8 @@ class Camera extends Object3D {
 		this._camera_motion_vmd_distance = 0;
 		this._camera_motion_vmd_rotate = new Vector3();
 		this._camera_motion_vmd_euler = new Euler();
-		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<		
-		
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 
 	}
 

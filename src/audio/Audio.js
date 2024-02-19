@@ -35,37 +35,50 @@ class Audio extends Object3D {
 
 		this.filters = [];
 
-		this.prepare(listener);//@DDD@
+		this.prepare( listener );//@DDD@
+
 	}
 
-	prepare(listener) {	//@DDD@
+	prepare( listener ) {	//@DDD@
 
-		if (listener) {
+		if ( listener ) {
+
 			this.listener = listener;
 			this.context = listener.context;
+
 		}
-		if (this.source == null && this.context) { 
-	
+
+		if ( this.source == null && this.context ) {
+
 			this.gain = this.context.createGain();
 			this.gain.connect( listener.getInput() );
 
 			this.source = this.context.createBufferSource();
 			this.source.buffer = this.buffer;
-			if (this.buffer) {
+			if ( this.buffer ) {
+
 				try {
+
 					this.source.start( this._startedAt, this._progress + this.offset, this.duration );
 					this.source.stop();
-				} catch (e) {
-					console.error(e);
+
+				} catch ( e ) {
+
+					console.error( e );
+
 				}
+
 			}
+
 		}
+
 	}
 
-	setVolume( value ) {// @DDD@
-		if (DMC?.sound_listener && this.source == null) this.prepare(context.sound_listener);
-		if (this.gain) this.gain.gain.setTargetAtTime( value, this.context.currentTime, 0.01 ); 
-		else console.warn("No gain.");
+	setVolume( value ) { // @DDD@
+
+		if ( window.DMC?.sound_listener && this.source == null ) this.prepare( window.DMC.sound_listener );
+		if ( this.gain ) this.gain.gain.setTargetAtTime( value, this.context.currentTime, 0.01 );
+		else console.warn( 'No gain.' );
 		return this;
 
 	}
@@ -138,10 +151,14 @@ class Audio extends Object3D {
 
 		}
 
-		if (DMC?.sound_listener && this.source == null) this.prepare(context.sound_listener);
-		if (this.context == null) {console.warn("Audio object must prepare audio context before play.");return;}// @DDD@
-		const start_offset = - Math.min(delay,0); // @DDD@
-		delay = Math.max(delay, 0); // @DDD@
+		if ( window.DMC?.sound_listener && this.source == null ) this.prepare( window.DMC.sound_listener );
+		if ( this.context == null ) {
+
+			console.warn( 'Audio object must prepare audio context before play.' ); return;
+
+		}// @DDD@
+
+		delay = Math.max( delay, 0 ); // @DDD@
 
 		this._startedAt = this.context.currentTime + delay;
 
@@ -160,16 +177,18 @@ class Audio extends Object3D {
 		this.setDetune( this.detune );
 		this.setPlaybackRate( this.playbackRate );
 
-		if (this.__on_started_audio__) this.__on_started_audio__(); // @DDD@
+		if ( this.__on_started_audio__ ) this.__on_started_audio__(); // @DDD@
 
 		return this.connect();
 
 	}
 
 
-	time() {// @DDD@
+	time() { // @DDD@
+
 		if ( this.isPlaying === true ) return this._progress + this.offset + Math.max( this.context.currentTime - this._startedAt, 0 ) * this.playbackRate;
 		return this._progress + this.offset;
+
 	}
 
 

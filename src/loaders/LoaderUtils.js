@@ -37,14 +37,19 @@ class LoaderUtils {
 	static extractUrlBase( url ) {
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-		if (nodejs) {
-			if (nodejs.path.isAbsolute(url)) {
-				if (url.slice(-1) == "/") return url.replace(/\//g, "/");
-				return nodejs.path.dirname(url).replace(/\//g, "/") + "/";
+		const nodejs = window.nodejs;
+		if ( nodejs ) {
+
+			if ( nodejs.path.isAbsolute( url ) ) {
+
+				if ( url.slice( - 1 ) == '/' ) return url.replace( /\//g, '/' );
+				return nodejs.path.dirname( url ).replace( /\//g, '/' ) + '/';
+
 			}
+
 		}
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
-		
+
 
 		const index = url.lastIndexOf( '/' );
 
@@ -78,8 +83,10 @@ class LoaderUtils {
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		let result = path + url;
 		const driver = window.external_io?.driver;
-		if (driver != 'http') {
-			result = decodeURI(result);
+		if ( driver != 'http' ) {
+
+			result = decodeURI( result );
+
 		}
 
 		// Relative URL

@@ -32,7 +32,6 @@ import {
 	Material,
 	MathUtils,
 	Matrix4,
-	Mesh,
 	MeshBasicMaterial,
 	MeshPhysicalMaterial,
 	MeshStandardMaterial,
@@ -2630,28 +2629,45 @@ class GLTFParser {
 				// @DDD@
 				// *.bin
 				result.source_dependencies = [];
-				for (const b of json.buffers) if (b.uri) result.source_dependencies.push(b.uri);
-				result.source_dependencies = [json.buffers[0].uri];
-				result.scene.traverse(o=>{
-					if(o.material){
-						function detect_dependencies(m) {
-							for (const k in m) {
-								const v = m[k];
-								if (v instanceof Texture) {
-									if (v.__tmp_uri__) {
-										result.source_dependencies.push(v.__tmp_uri__);
+				for ( const b of json.buffers ) if ( b.uri ) result.source_dependencies.push( b.uri );
+				result.source_dependencies = [ json.buffers[ 0 ].uri ];
+				result.scene.traverse( o=>{
+
+					if ( o.material ) {
+
+						function detect_dependencies( m ) {
+
+							for ( const k in m ) {
+
+								const v = m[ k ];
+								if ( v instanceof Texture ) {
+
+									if ( v.__tmp_uri__ ) {
+
+										result.source_dependencies.push( v.__tmp_uri__ );
 										delete v.__tmp_uri__;
+
 									}
+
 								}
+
 							}
+
 						}
-						if (Array.isArray(o)) {
-							for (const m of o.material) detect_dependencies(m);
+
+						if ( Array.isArray( o ) ) {
+
+							for ( const m of o.material ) detect_dependencies( m );
+
 						} else {
-							detect_dependencies(o.material);
+
+							detect_dependencies( o.material );
+
 						}
+
 					}
-				})
+
+				} );
 				// @DDD@
 
 				onLoad( result );
@@ -3215,8 +3231,9 @@ class GLTFParser {
 	}
 
 	loadImageSource( sourceIndex, loader ) {
+
 		const scope = this; // @DDD@
-		
+
 		const parser = this;
 		const json = this.json;
 		const options = this.options;
@@ -3253,8 +3270,6 @@ class GLTFParser {
 
 		}
 
-		let replaced_sourceURI = sourceURI; // @DDD@
-
 		const promise = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
 
 			return new Promise( async function ( resolve, reject ) { // @DDD@
@@ -3276,31 +3291,49 @@ class GLTFParser {
 
 				let use_ktx2 = false;
 				sourceURI = await sourceURI;
-				if (true) { // @DDD@
-					if (window.is_data_url(sourceURI) == false) {
-						if (sourceURI.indexOf("file:///")>=0) {
-							sourceURI = decodeURI(sourceURI).slice("file:///".length);
+				if ( true ) { // @DDD@
+
+					if ( window.is_data_url( sourceURI ) == false ) {
+
+						if ( sourceURI.indexOf( 'file:///' ) >= 0 ) {
+
+							sourceURI = decodeURI( sourceURI ).slice( 'file:///'.length );
+
 						}
-						const d_path = C.DPath(sourceURI);
-						const ktx2_path = C.DPathJoin(d_path.dirname, d_path.name + ".ktx2");
-						const abs_path = C.DPath(ktx2_path).is_absolute_path? ktx2_path: C.DPathJoin(options.path, ktx2_path);
-						if (await window.cross_file_system.exists(abs_path)) {
+
+						const C = window.C;
+						const d_path = C.DPath( sourceURI );
+						const ktx2_path = C.DPathJoin( d_path.dirname, d_path.name + '.ktx2' );
+						const abs_path = C.DPath( ktx2_path ).is_absolute_path ? ktx2_path : C.DPathJoin( options.path, ktx2_path );
+						if ( await window.cross_file_system.exists( abs_path ) ) {
+
 							sourceURI = abs_path;
 							use_ktx2 = true;
+
 						}
+
 					}
+
 				}
-				if (use_ktx2 && scope.options.ktx2Loader) {// @DDD@
-					if (window.debug) console.log(sourceURI);
+
+				if ( use_ktx2 && scope.options.ktx2Loader ) { // @DDD@
+
+					if ( window.debug ) console.log( sourceURI );
 					scope.options.ktx2Loader.load( sourceURI, resolve, undefined, reject );
+
 				} else {
-					if (window.debug) console.log(sourceURI);
+
+					if ( window.debug ) console.log( sourceURI );
 					let t_path = LoaderUtils.resolveURL( sourceURI, options.path );
-					if (C.DPath(sourceURI).is_absolute_path) { // @DDD@
+					if ( window.C.DPath( sourceURI ).is_absolute_path ) { // @DDD@
+
 						t_path = sourceURI;
+
 					}
+
 					sourceURI = t_path;
 					loader.load( t_path, onLoad, undefined, reject );
+
 				}
 
 				// loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
@@ -3317,10 +3350,12 @@ class GLTFParser {
 
 			}
 
-			if (_texture instanceof ImageBitmap) _texture = new THREE.CanvasTexture( _texture ); // @DDD@
+			if ( _texture instanceof ImageBitmap ) _texture = new THREE.CanvasTexture( _texture ); // @DDD@
 
-			if (window.is_data_url(sourceURI) == false) {
-				_texture.__tmp_uri__ = decodeURIComponent(sourceURI); // @DDD@ 
+			if ( window.is_data_url( sourceURI ) == false ) {
+
+				_texture.__tmp_uri__ = decodeURIComponent( sourceURI ); // @DDD@
+
 			}
 
 			_texture.userData.mimeType = sourceDef.mimeType || getImageURIMimeType( sourceDef.uri );
@@ -3796,8 +3831,8 @@ class GLTFParser {
 					// .isSkinnedMesh isn't in glTF spec. See ._markDefs()
 					mesh = meshDef.isSkinnedMesh === true
 						? new SkinnedMesh( geometry, material )
-						: new InstancedMesh( geometry, material, 1024); // @DDD@
-					if (mesh instanceof InstancedMesh) mesh.count = 1; // @DDD@
+						: new InstancedMesh( geometry, material, 1024 ); // @DDD@
+					if ( mesh instanceof InstancedMesh ) mesh.count = 1; // @DDD@
 
 
 					if ( mesh.isSkinnedMesh === true ) {
@@ -3854,7 +3889,7 @@ class GLTFParser {
 				parser.assignFinalMaterial( mesh );
 
 				mesh._original_mesh_name_ = meshDef.name; // @DDD@
-				mesh.name = PropertyBinding.sanitizeNodeName(material.name); // @DDD@
+				mesh.name = PropertyBinding.sanitizeNodeName( material.name ); // @DDD@
 
 				meshes.push( mesh );
 

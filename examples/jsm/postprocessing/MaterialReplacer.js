@@ -6,11 +6,11 @@ class MaterialReplacer {
 
 	constructor() {
 
-        this.materialCacheTable = new Map();
+		this.materialCacheTable = new Map();
 		this.originalClearColor = new Color();
 		this.scene = null;
 		this.camera = null;
-        this.current = 0;
+		this.current = 0;
 
 	}
 
@@ -147,11 +147,12 @@ class MaterialReplacer {
 		if ( cached == null ) {
 
 			const mat = material_constructor();
-            cached = { material: mat };
+			cached = { material: mat };
 			this.materialCacheTable.set( m, cached );
 
 		}
-        cached.current = this.current;
+
+		cached.current = this.current;
 
 		this._updateMaterial( cached.material, m );
 
@@ -205,17 +206,24 @@ class MaterialReplacer {
 	}
 
 	restoreMaterials( o, is_root = true ) {
-        if (is_root) {
-            const cache_table = this.materialCacheTable;
-            cache_table.forEach((v, k) => {
-                if (v.current !== this.current) {
-                    v.material.dispose();
-                    cache_table.delete(k);
-                    console.log("Drop:", v.material.name);
-                }
-            });
-            this.current++;
-        }
+
+		if ( is_root ) {
+
+			const cache_table = this.materialCacheTable;
+			cache_table.forEach( ( v, k ) => {
+
+				if ( v.current !== this.current ) {
+
+					v.material.dispose();
+					cache_table.delete( k );
+					console.log( 'Drop:', v.material.name );
+
+				}
+
+			} );
+			this.current ++;
+
+		}
 
 		if ( o._original_material_ ) {
 
@@ -238,10 +246,12 @@ class MaterialReplacer {
 		}
 
 		for ( const c of o.children ) this.restoreMaterials( c, false );
+
 	}
 
 
 	renderPass( scene, camera, renderer, renderTarget, clearColor, clearAlpha ) {
+
 		// save original state
 		renderer.getClearColor( this.originalClearColor );
 		const originalClearAlpha = renderer.getClearAlpha();

@@ -123,22 +123,29 @@ class ProgressiveLightMap {
 
 			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 			let copied = [];
-			if (Array.isArray( object.material)) {
-				for (let material of object.material ) {
+			if ( Array.isArray( object.material ) ) {
+
+				for ( const material of object.material ) {
+
 					material.lightMap = this.progressiveLightMap2.texture;
 					material.dithering = true;
-					copied.push(material);
+					copied.push( material );
+
 				}
+
 			} else {
+
 				copied = object.material;
 				object.material.lightMap = this.progressiveLightMap2.texture;
 				object.material.dithering = true;
+
 			}
+
 			this.lightMapContainers.push( {
 				copied: copied,
 				basicMat: object.material,
 				object: object
-			} );			
+			} );
 			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 			this.compiled = false;
@@ -208,17 +215,24 @@ class ProgressiveLightMap {
 			this.uvMat.uniforms.averagingWindow = { value: blendWindow };
 
 			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-			if (Array.isArray(this.lightMapContainers[ l ].object.material)) {
-				let copied = this.lightMapContainers[ l ].copied;
-				for (let i = 0;i<copied.length;i++) {
-					copied[i] = this.uvMat;
+			if ( Array.isArray( this.lightMapContainers[ l ].object.material ) ) {
+
+				const copied = this.lightMapContainers[ l ].copied;
+				for ( let i = 0; i < copied.length; i ++ ) {
+
+					copied[ i ] = this.uvMat;
+
 				}
+
 				this.lightMapContainers[ l ].object.material = copied;
+
 			} else {
+
 				this.lightMapContainers[ l ].object.material = this.uvMat;
+
 			}
 			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
-						
+
 			this.lightMapContainers[ l ].object.oldFrustumCulled =
 				this.lightMapContainers[ l ].object.frustumCulled;
 			this.lightMapContainers[ l ].object.frustumCulled = false;

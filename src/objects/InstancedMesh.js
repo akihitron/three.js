@@ -25,18 +25,18 @@ class InstancedMesh extends Mesh {
 		this.isInstancedMesh = true;
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-		const arr = new Float32Array(count * 16);
+		const arr = new Float32Array( count * 16 );
 		const unit = [
 			1, 0, 0, 0,
 			0, 1, 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		];
-		for (let i = 0; i < count * 16; i += 16) for (let j = 0; j < 16; ++j)arr[i + j] = unit[j];
-		this.instanceMatrix = new InstancedBufferAttribute(arr, 16);
+		for ( let i = 0; i < count * 16; i += 16 ) for ( let j = 0; j < 16; ++ j )arr[ i + j ] = unit[ j ];
+		this.instanceMatrix = new InstancedBufferAttribute( arr, 16 );
 		this.max_count = count;
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
-		
+
 		this.instanceColor = null;
 		this.morphTexture = null;
 

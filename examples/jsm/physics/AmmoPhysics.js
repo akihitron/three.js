@@ -209,7 +209,7 @@ async function AmmoPhysics() {
 			const delta = ( time - lastTime ) / 1000;
 
 			// world.stepSimulation( delta, 10 );
-			world.stepSimulation( delta, 1, 0.016); // @DDD@ TODO: 
+			world.stepSimulation( delta, 1, 0.016 ); // @DDD@ TODO:
 
 			//
 

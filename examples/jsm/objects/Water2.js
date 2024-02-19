@@ -160,7 +160,7 @@ class Water extends Mesh {
 
 			const delta = clock.getDelta();
 			const config = scope.material.uniforms[ 'config' ];
-			if (config == null) return; // @DDD@
+			if ( config == null ) return; // @DDD@
 			config.value.x += flowSpeed * delta; // flowMapOffset0
 			config.value.y = config.value.x + halfCycle; // flowMapOffset1
 

@@ -141,7 +141,7 @@ class Skeleton {
 
 			_offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
 			// _offsetMatrix.toArray( boneMatrices, i * 16 );
-			boneMatrices.set(_offsetMatrix.elements, i * 16); // @DDD@
+			boneMatrices.set( _offsetMatrix.elements, i * 16 ); // @DDD@
 
 		}
 

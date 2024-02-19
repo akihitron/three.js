@@ -20,8 +20,8 @@ class XYZLoader extends Loader {
 
 			try {
 
-				if (text instanceof Uint8Array) text = new TextDecoder().decode(text); // @DDD@
-				
+				if ( text instanceof Uint8Array ) text = new TextDecoder().decode( text ); // @DDD@
+
 				onLoad( scope.parse( text ) );
 
 			} catch ( e ) {

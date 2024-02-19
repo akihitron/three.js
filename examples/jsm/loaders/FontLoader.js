@@ -14,8 +14,6 @@ class FontLoader extends Loader {
 
 	load( url, onLoad, onProgress, onError ) {
 
-		const scope = this;
-
 		const loader = new FileLoader( this.manager );
 		loader.setPath( this.path );
 		loader.setRequestHeader( this.requestHeader );
@@ -26,8 +24,8 @@ class FontLoader extends Loader {
 
 			try {
 
-				if (text instanceof ArrayBuffer) text = new TextDecoder().decode(text); // @DDD@
-				
+				if ( text instanceof ArrayBuffer ) text = new TextDecoder().decode( text ); // @DDD@
+
 				json = JSON.parse( text );
 
 			} catch ( e ) {

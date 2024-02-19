@@ -921,7 +921,7 @@ class WebGLRenderer {
 				morphtargets.store( object, geometry );
 
 			}
-			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<		
+			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 		};
 
@@ -1575,27 +1575,29 @@ class WebGLRenderer {
 			object.modelViewMatrix.multiplyMatrices( camera.matrixWorldInverse, object.matrixWorld );
 			object.normalMatrix.getNormalMatrix( object.modelViewMatrix );
 
-			
+
 			const ret = material.onBeforeRender( _this, scene, camera, geometry, object, group ); // @DDD@
 
-			if (ret == undefined || ret == true) { // @DDD@
-				if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false) {
+			if ( ret == undefined || ret == true ) { // @DDD@
+
+				if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
 					material.side = BackSide;
 					material.needsUpdate = true;
 					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-	
+
 					material.side = FrontSide;
 					material.needsUpdate = true;
 					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-	
+
 					material.side = DoubleSide;
-	
+
 				} else {
-	
+
 					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
-	
+
 				}
+
 			}
 
 			material.onAfterRender?.( _this, scene, camera, geometry, object, group ); // @DDD@
@@ -1606,7 +1608,7 @@ class WebGLRenderer {
 
 		function getProgram( material, scene, object ) {
 
-			let tm = performance.now(); // @DDD@
+			const tm = performance.now(); // @DDD@
 
 			if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
@@ -1713,12 +1715,16 @@ class WebGLRenderer {
 			}
 
 
-			if (window.debug && window.debug_performance) { // @DDD@
+			if ( window.debug && window.debug_performance ) { // @DDD@
+
 				const progUniforms = program.getUniforms();
-				const uniformsList = WebGLUniforms.seqWithValue(progUniforms.seq, uniforms);
-				if (performance.now() - tm > 10) {
-					console.log(`getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor(performance.now() - tm), "ms");
+				const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
+				if ( performance.now() - tm > 10 ) {
+
+					console.log( `getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor( performance.now() - tm ), 'ms' );
+
 				}
+
 				materialProperties.currentProgram = program;
 				materialProperties.uniformsList = uniformsList;
 

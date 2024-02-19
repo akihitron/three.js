@@ -43,7 +43,7 @@ async function RapierPhysics() {
 
 	}
 
-	// Docs: https://rapier.rs/docs/api/javascript/JavaScript3D/	
+	// Docs: https://rapier.rs/docs/api/javascript/JavaScript3D/
 
 	const gravity = new Vector3( 0.0, - 9.81, 0.0 );
 	const world = new RAPIER.World( gravity );
@@ -85,8 +85,8 @@ async function RapierPhysics() {
 		shape.setRestitution( restitution );
 
 		const body = mesh.isInstancedMesh
-							? createInstancedBody( mesh, mass, shape )
-							: createBody( mesh.position, mesh.quaternion, mass, shape );
+			? createInstancedBody( mesh, mass, shape )
+			: createBody( mesh.position, mesh.quaternion, mass, shape );
 
 		if ( mass > 0 ) {
 

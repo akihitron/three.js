@@ -230,6 +230,7 @@ class SAOPass extends Pass {
 	}
 
 	update_parameter() { // @DDD@
+
 		this.saoMaterial.uniforms[ 'bias' ].value = this.params.saoBias;
 		this.saoMaterial.uniforms[ 'intensity' ].value = this.params.saoIntensity;
 		this.saoMaterial.uniforms[ 'scale' ].value = this.params.saoScale;
@@ -249,14 +250,14 @@ class SAOPass extends Pass {
 		this.hBlurMaterial.uniforms[ 'cameraFar' ].value = this.camera.far;
 
 
-		let outputMaterial = this.materialCopy;
+		const outputMaterial = this.materialCopy;
 
 		if ( this.params.output === 0 ) {
 
 			outputMaterial.blending = CustomBlending;
 
 		} else {
-                                                                                                                                                    
+
 			outputMaterial.blending = NoBlending;
 
 		}
