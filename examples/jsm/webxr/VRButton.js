@@ -35,11 +35,15 @@ class VRButton {
 
 			//
 
-			button.style.display = '';
+			button.style.display = 'flex';
 
 			button.style.cursor = 'pointer';
 			button.style.left = 'calc(50% - 50px)';
 			button.style.width = '100px';
+			button.style.height = '18px';
+			button.style.fontSize = '10px';
+			button.style.justifyContent = 'center';
+			button.style.alignItems = 'center';
 
 			button.textContent = 'ENTER VR';
 
@@ -114,7 +118,7 @@ class VRButton {
 
 		function disableButton() {
 
-			button.style.display = '';
+			button.style.display = 'flex';
 
 			button.style.cursor = 'auto';
 			button.style.left = 'calc(50% - 75px)';
