@@ -262,7 +262,7 @@ class TransformControls extends Object3D {
 
 		if ( this.object === undefined || this.dragging === true ) return;
 
-		_raycaster.setFromCamera( pointer, this.camera );
+		if ( pointer !== null ) _raycaster.setFromCamera( pointer, this.camera );
 
 		const intersect = intersectObjectWithRay( this._gizmo.picker[ this.mode ], _raycaster );
 
@@ -280,13 +280,13 @@ class TransformControls extends Object3D {
 
 	pointerDown( pointer ) {
 
-		if ( this.object === undefined || this.dragging === true || pointer.button !== 0 ) return;
+		if ( this.object === undefined || this.dragging === true || ( pointer != null && pointer.button !== 0 ) ) return;
 
 		if ( this.axis !== null ) {
 
 			this.lazy_init(); // @DDD@
 
-			_raycaster.setFromCamera( pointer, this.camera );
+			if ( pointer !== null ) _raycaster.setFromCamera( pointer, this.camera );
 
 			const planeIntersect = intersectObjectWithRay( this._plane, _raycaster, true );
 
@@ -332,9 +332,9 @@ class TransformControls extends Object3D {
 
 		}
 
-		if ( object === undefined || axis === null || this.dragging === false || pointer.button !== - 1 ) return;
+		if ( object === undefined || axis === null || this.dragging === false || ( pointer !== null && pointer.button !== - 1 ) ) return;
 
-		_raycaster.setFromCamera( pointer, this.camera );
+		if ( pointer !== null ) _raycaster.setFromCamera( pointer, this.camera );
 
 		const planeIntersect = intersectObjectWithRay( this._plane, _raycaster, true );
 
@@ -584,7 +584,7 @@ class TransformControls extends Object3D {
 
 		if ( ! this.already_init ) return; // @DDD@
 
-		if ( pointer.button !== 0 ) return;
+		if ( pointer !== null && pointer.button !== 0 ) return;
 
 		if ( this.dragging && ( this.axis !== null ) ) {
 

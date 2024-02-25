@@ -7,8 +7,8 @@ import { modelViewProjection } from '../accessors/ModelViewProjectionNode.js';
 import { transformedNormalView } from '../accessors/NormalNode.js';
 import { instance } from '../accessors/InstanceNode.js';
 import { positionLocal, positionView } from '../accessors/PositionNode.js';
-import { skinning } from '../accessors/SkinningNode.js';
-import { morph } from '../accessors/MorphNode.js';
+import { skinningReference } from '../accessors/SkinningNode.js';
+import { morphReference } from '../accessors/MorphNode.js';
 import { texture } from '../accessors/TextureNode.js';
 import { cubeTexture } from '../accessors/CubeTextureNode.js';
 import { lightsNode } from '../lighting/LightsNode.js';
@@ -20,6 +20,7 @@ import EnvironmentNode from '../lighting/EnvironmentNode.js';
 import { depthPixel } from '../display/ViewportDepthNode.js';
 import { cameraLogDepth } from '../accessors/CameraNode.js';
 import { clipping, clippingAlpha } from '../accessors/ClippingNode.js';
+import { faceDirection } from '../display/FrontFacingNode.js';
 
 const NodeMaterials = new Map();
 
@@ -188,13 +189,13 @@ class NodeMaterial extends ShaderMaterial {
 
 		if ( geometry.morphAttributes.position || geometry.morphAttributes.normal || geometry.morphAttributes.color ) {
 
-			morph( object ).append();
+			morphReference( object ).append();
 
 		}
 
 		if ( object.isSkinnedMesh === true ) {
 
-			skinning( object ).append();
+			skinningReference( object ).append();
 
 		}
 
@@ -266,13 +267,13 @@ class NodeMaterial extends ShaderMaterial {
 
 			const normalNode = positionView.dFdx().cross( positionView.dFdy() ).normalize();
 
-			transformedNormalView.assign( normalNode );
+			transformedNormalView.assign( normalNode.mul( faceDirection ) );
 
 		} else {
 
 			const normalNode = this.normalNode ? vec3( this.normalNode ) : materialNormal;
 
-			transformedNormalView.assign( normalNode );
+			transformedNormalView.assign( normalNode.mul( faceDirection ) );
 
 		}
 

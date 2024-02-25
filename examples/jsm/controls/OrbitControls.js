@@ -426,6 +426,9 @@ class OrbitControls extends EventDispatcher {
 			scope.domElement.removeEventListener( 'pointermove', onPointerMove );
 			scope.domElement.removeEventListener( 'pointerup', onPointerUp );
 
+			const document = scope.domElement.getRootNode(); // offscreen canvas compatibility
+
+			document.removeEventListener( 'keydown', interceptControlDown, { capture: true } );
 
 			if ( scope._domElementKeyEvents !== null ) {
 
@@ -1060,6 +1063,10 @@ class OrbitControls extends EventDispatcher {
 
 			//
 
+			if ( isTrackingPointer( event ) ) return;
+
+			//
+
 			addPointer( event );
 
 			if ( event.pointerType === 'touch' ) {
@@ -1516,6 +1523,18 @@ class OrbitControls extends EventDispatcher {
 				}
 
 			}
+
+		}
+
+		function isTrackingPointer( event ) {
+
+			for ( let i = 0; i < pointers.length; i ++ ) {
+
+				if ( pointers[ i ] == event.pointerId ) return true;
+
+			}
+
+			return false;
 
 		}
 
