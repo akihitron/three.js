@@ -23,6 +23,17 @@ function generateUUID() {
 
 }
 
+function generateShortID( d = 26 ) {
+
+	const ret = [];
+	const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+	for ( let i = 0; i < d; ++ i ) ret.push( characters[ Math.floor( Math.random() * characters.length ) ] );
+	return ret.join( '' );
+
+}
+
+
 function clamp( value, min, max ) {
 
 	return Math.max( min, Math.min( max, value ) );
@@ -337,6 +348,7 @@ const MathUtils = {
 export {
 	DEG2RAD,
 	RAD2DEG,
+	generateShortID,
 	generateUUID,
 	clamp,
 	euclideanModulo,
