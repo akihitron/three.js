@@ -80,7 +80,12 @@ class VRButton {
 
 				if ( currentSession === null ) {
 
-					navigator.xr.requestSession( 'immersive-vr', sessionOptions ).then( onSessionStarted );
+					navigator.xr.requestSession( 'immersive-vr', sessionOptions ).then( onSessionStarted ).catch( ( err ) => {
+
+						button.textContent = 'ACCESS DENIED';
+						console.warn( 'requestSession failed', err );
+
+					} );
 
 				} else {
 
@@ -135,7 +140,9 @@ class VRButton {
 
 			disableButton();
 
-			button.textContent = 'VR NOT SUPPORTED';
+			button.textContent = 'VR NOT AVAILABLE';
+
+			callback( 'not_supported' ); // @DDD@
 
 		}
 
@@ -146,6 +153,8 @@ class VRButton {
 			console.warn( 'Exception when trying to call xr.isSessionSupported', exception );
 
 			button.textContent = 'VR NOT ALLOWED';
+
+			callback( 'not_allowed' ); // @DDD@
 
 		}
 
@@ -208,6 +217,8 @@ class VRButton {
 			message.style.textDecoration = 'none';
 
 			stylizeElement( message );
+
+			callback( 'not_available' ); // @DDD@
 
 			return message;
 
