@@ -80,10 +80,13 @@ class VRButton {
 
 				if ( currentSession === null ) {
 
+					callback( 'before_start' );
+
 					navigator.xr.requestSession( 'immersive-vr', sessionOptions ).then( onSessionStarted ).catch( ( err ) => {
 
 						button.textContent = 'ACCESS DENIED';
 						console.warn( 'requestSession failed', err );
+						callback( 'not_allowed' );
 
 					} );
 
@@ -108,6 +111,8 @@ class VRButton {
 			};
 
 			if ( navigator.xr.offerSession !== undefined ) {
+
+				callback( 'available' );
 
 				navigator.xr.offerSession( 'immersive-vr', sessionOptions )
 					.then( onSessionStarted )
