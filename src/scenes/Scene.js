@@ -22,6 +22,8 @@ class Scene extends Object3D {
 
 		this.overrideMaterial = null;
 
+		this.isVRMode = false; // @DDD@
+
 		if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 			__THREE_DEVTOOLS__.dispatchEvent( new CustomEvent( 'observe', { detail: this } ) );
