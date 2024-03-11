@@ -39,13 +39,14 @@ class VRButton {
 
 			button.style.cursor = 'pointer';
 			button.style.left = 'calc(50% - 50px)';
-			button.style.width = '100px';
+			button.style.width = '120px';
 			button.style.height = '18px';
 			button.style.fontSize = '10px';
 			button.style.justifyContent = 'center';
 			button.style.alignItems = 'center';
 
 			button.textContent = 'ENTER VR';
+			callback( 'initialize' ); // @DDD@
 
 			// WebXR's requestReferenceSpace only works if the corresponding feature
 			// was requested at session creation time. For simplicity, just ask for
