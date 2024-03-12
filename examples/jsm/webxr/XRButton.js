@@ -1,8 +1,9 @@
 class XRButton {
 
-	static createButton( renderer, sessionInit = {} ) {
+	static createButton( renderer, sessionInit = {}, callback ) { // @DDD@
 
 		const button = document.createElement( 'button' );
+		let TYPE = 'XR';
 
 		function showStartXR( mode ) {
 
@@ -14,9 +15,11 @@ class XRButton {
 
 				await renderer.xr.setSession( session );
 
-				button.textContent = 'STOP XR';
+				button.textContent = 'STOP ' + TYPE;
 
 				currentSession = session;
+
+				callback( 'started' ); // @DDD@
 
 			}
 
@@ -24,9 +27,11 @@ class XRButton {
 
 				currentSession.removeEventListener( 'end', onSessionEnded );
 
-				button.textContent = 'START XR';
+				button.textContent = 'START ' + TYPE;
 
 				currentSession = null;
+
+				callback( 'ended' ); // @DDD@
 
 			}
 
@@ -38,7 +43,9 @@ class XRButton {
 			button.style.left = 'calc(50% - 50px)';
 			button.style.width = '100px';
 
-			button.textContent = 'START XR';
+			button.textContent = 'START ' + TYPE;
+
+			callback( 'initialize' ); // @DDD@
 
 			const sessionOptions = {
 				...sessionInit,
@@ -64,10 +71,18 @@ class XRButton {
 
 			button.onclick = function () {
 
+				callback( 'before_start' );
+
 				if ( currentSession === null ) {
 
 					navigator.xr.requestSession( mode, sessionOptions )
-						.then( onSessionStarted );
+						.then( onSessionStarted ).catch( ( err ) => {
+
+							button.textContent = 'ACCESS DENIED';
+							console.warn( 'requestSession failed', err );
+							callback( 'not_allowed' );
+
+						} );
 
 				} else {
 
@@ -80,6 +95,7 @@ class XRButton {
 							.catch( ( err ) => {
 
 								console.warn( err );
+								callback( 'not_allowed' );
 
 							} );
 
@@ -91,11 +107,14 @@ class XRButton {
 
 			if ( navigator.xr.offerSession !== undefined ) {
 
+				callback( 'available' );
+
 				navigator.xr.offerSession( mode, sessionOptions )
 					.then( onSessionStarted )
 					.catch( ( err ) => {
 
 						console.warn( err );
+						callback( 'not_allowed' );
 
 					} );
 
@@ -122,7 +141,9 @@ class XRButton {
 
 			disableButton();
 
-			button.textContent = 'XR NOT SUPPORTED';
+			button.textContent = TYPE + ' NOT SUPPORTED';
+
+			callback( 'not_supported' ); // @DDD@
 
 		}
 
@@ -132,7 +153,9 @@ class XRButton {
 
 			console.warn( 'Exception when trying to call xr.isSessionSupported', exception );
 
-			button.textContent = 'XR NOT ALLOWED';
+			button.textContent = TYPE + ' NOT ALLOWED';
+
+			callback( 'not_allowed' ); // @DDD@
 
 		}
 
@@ -165,6 +188,8 @@ class XRButton {
 
 					if ( supported ) {
 
+						TYPE = 'AR';
+
 						showStartXR( 'immersive-ar' );
 
 					} else {
@@ -173,6 +198,8 @@ class XRButton {
 							.then( function ( supported ) {
 
 								if ( supported ) {
+
+									TYPE = 'VR';
 
 									showStartXR( 'immersive-vr' );
 
@@ -211,6 +238,8 @@ class XRButton {
 			message.style.textDecoration = 'none';
 
 			stylizeElement( message );
+
+			callback( 'not_available' ); // @DDD@
 
 			return message;
 

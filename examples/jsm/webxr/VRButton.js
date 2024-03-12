@@ -13,6 +13,7 @@ class VRButton {
 				session.addEventListener( 'end', onSessionEnded );
 
 				await renderer.xr.setSession( session );
+
 				button.textContent = 'EXIT VR';
 
 				currentSession = session;
@@ -79,9 +80,9 @@ class VRButton {
 
 			button.onclick = function () {
 
-				if ( currentSession === null ) {
+				callback( 'before_start' );
 
-					callback( 'before_start' );
+				if ( currentSession === null ) {
 
 					navigator.xr.requestSession( 'immersive-vr', sessionOptions ).then( onSessionStarted ).catch( ( err ) => {
 
@@ -103,6 +104,8 @@ class VRButton {
 
 								console.warn( err );
 
+								callback( 'not_allowed' );
+
 							} );
 
 					}
@@ -120,6 +123,8 @@ class VRButton {
 					.catch( ( err ) => {
 
 						console.warn( err );
+
+						callback( 'not_allowed' );
 
 					} );
 
