@@ -22,7 +22,7 @@ class Scene extends Object3D {
 
 		this.overrideMaterial = null;
 
-		this.isVRMode = false; // @DDD@
+		this.isXRMode = false; // @DDD@
 
 		if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 

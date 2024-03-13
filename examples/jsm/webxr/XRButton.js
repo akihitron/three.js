@@ -71,9 +71,9 @@ class XRButton {
 
 			button.onclick = function () {
 
-				callback( 'before_start' );
-
 				if ( currentSession === null ) {
+
+					callback( 'before_start' );
 
 					navigator.xr.requestSession( mode, sessionOptions )
 						.then( onSessionStarted ).catch( ( err ) => {
@@ -89,6 +89,8 @@ class XRButton {
 					currentSession.end();
 
 					if ( navigator.xr.offerSession !== undefined ) {
+
+						callback( 'before_start' );
 
 						navigator.xr.offerSession( mode, sessionOptions )
 							.then( onSessionStarted )
