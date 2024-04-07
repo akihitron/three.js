@@ -302,6 +302,8 @@ class KTX2Loader extends Loader {
 
 				} catch ( e ) {
 
+					console.error( e );
+
 					if ( onError ) onError( e );
 
 				}

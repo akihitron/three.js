@@ -19,7 +19,7 @@ class XRButton {
 
 				currentSession = session;
 
-				callback( 'started' ); // @DDD@
+				callback( 'started', session ); // @DDD@
 
 			}
 
@@ -40,8 +40,8 @@ class XRButton {
 			button.style.display = '';
 
 			button.style.cursor = 'pointer';
-			button.style.left = 'calc(50% - 50px)';
-			button.style.width = '100px';
+			// button.style.left = 'calc(50% - 50px)';
+			// button.style.width = '100px';
 
 			button.textContent = 'START ' + TYPE;
 
@@ -128,9 +128,9 @@ class XRButton {
 
 			button.style.display = '';
 
-			button.style.cursor = 'auto';
-			button.style.left = 'calc(50% - 75px)';
-			button.style.width = '150px';
+			// button.style.cursor = 'auto';
+			// button.style.left = 'calc(50% - 75px)';
+			// button.style.width = '150px';
 
 			button.onmouseenter = null;
 			button.onmouseleave = null;
@@ -185,7 +185,25 @@ class XRButton {
 
 			stylizeElement( button );
 
-			navigator.xr.isSessionSupported( 'immersive-ar' )
+			if (sessionInit.mode === 'VR') {
+				navigator.xr.isSessionSupported( 'immersive-vr' )
+							.then( function ( supported ) {
+
+								if ( supported ) {
+
+									TYPE = 'VR';
+
+									showStartXR( 'immersive-vr' );
+
+								} else {
+
+									showXRNotSupported();
+
+								}
+
+							} ).catch( showXRNotAllowed );
+			} else {
+				navigator.xr.isSessionSupported( 'immersive-ar' )
 				.then( function ( supported ) {
 
 					if ( supported ) {
@@ -216,6 +234,8 @@ class XRButton {
 					}
 
 				} ).catch( showXRNotAllowed );
+			}
+
 
 			return button;
 
@@ -235,8 +255,8 @@ class XRButton {
 
 			}
 
-			message.style.left = 'calc(50% - 90px)';
-			message.style.width = '180px';
+			// message.style.left = 'calc(50% - 90px)';
+			// message.style.width = '180px';
 			message.style.textDecoration = 'none';
 
 			stylizeElement( message );

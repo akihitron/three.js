@@ -29,12 +29,14 @@ class FileLoader extends Loader {
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	load( url, onLoad, onProgress, onError ) {
 
-		if ( window.external_io && window.is_data_url( url ) == false && this.params.file_system == 'external_io' ) {
+		const scope = this;
+		const isDataURL = window.is_data_url( url );
+		const file_system = scope.params.file_system;
+		if ( window.external_io && isDataURL == false && file_system == 'external_io' ) {
 
 			if ( url === undefined ) url = '';
 			if ( this.path !== undefined ) url = this.path + url;
 			url = this.manager.resolveURL( url );
-			const scope = this;
 			const cached = Cache.get( url );
 			if ( cached != null ) {
 
@@ -131,6 +133,43 @@ class FileLoader extends Loader {
 			}
 
 		} else {
+
+			if ( window.nodejs && ! window.external_io && isDataURL == false && file_system == 'system_resource' ) {
+
+				url = scope.manager.resolveURL( url );
+				const cached = Cache.get( url );
+				if ( cached != null ) {
+
+					scope.manager.itemStart( url );
+					setTimeout( function () {
+
+						if ( onLoad ) onLoad( cached );
+						scope.manager.itemEnd( url );
+
+					}, 0 );
+					return cached;
+
+				}
+
+				const nodejs = window.nodejs;
+				try {
+
+					const buffer = nodejs.fs.readFileSync( url );
+					Cache.add( url, buffer );
+					if ( onLoad ) onLoad( buffer );
+					scope.manager.itemEnd( url );
+
+				} catch ( e ) {
+
+					console.error( 'FileLoader: ', e );
+					onError( e );
+
+				}
+
+				scope.manager.itemEnd( url );
+				return;
+
+			}
 
 			return this._load_( url, onLoad, onProgress, onError );
 
