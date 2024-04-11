@@ -185,55 +185,59 @@ class XRButton {
 
 			stylizeElement( button );
 
-			if (sessionInit.mode === 'VR') {
+			if ( sessionInit.mode === 'VR' ) {
+
 				navigator.xr.isSessionSupported( 'immersive-vr' )
-							.then( function ( supported ) {
+					.then( function ( supported ) {
 
-								if ( supported ) {
+						if ( supported ) {
 
-									TYPE = 'VR';
+							TYPE = 'VR';
 
-									showStartXR( 'immersive-vr' );
+							showStartXR( 'immersive-vr' );
 
-								} else {
+						} else {
 
-									showXRNotSupported();
+							showXRNotSupported();
 
-								}
+						}
 
-							} ).catch( showXRNotAllowed );
+					} ).catch( showXRNotAllowed );
+
 			} else {
+
 				navigator.xr.isSessionSupported( 'immersive-ar' )
-				.then( function ( supported ) {
+					.then( function ( supported ) {
 
-					if ( supported ) {
+						if ( supported ) {
 
-						TYPE = 'AR';
+							TYPE = 'AR';
 
-						showStartXR( 'immersive-ar' );
+							showStartXR( 'immersive-ar' );
 
-					} else {
+						} else {
 
-						navigator.xr.isSessionSupported( 'immersive-vr' )
-							.then( function ( supported ) {
+							navigator.xr.isSessionSupported( 'immersive-vr' )
+								.then( function ( supported ) {
 
-								if ( supported ) {
+									if ( supported ) {
 
-									TYPE = 'VR';
+										TYPE = 'VR';
 
-									showStartXR( 'immersive-vr' );
+										showStartXR( 'immersive-vr' );
 
-								} else {
+									} else {
 
-									showXRNotSupported();
+										showXRNotSupported();
 
-								}
+									}
 
-							} ).catch( showXRNotAllowed );
+								} ).catch( showXRNotAllowed );
 
-					}
+						}
 
-				} ).catch( showXRNotAllowed );
+					} ).catch( showXRNotAllowed );
+
 			}
 
 
