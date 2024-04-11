@@ -2670,6 +2670,13 @@ class GLTFParser {
 				} );
 				// @DDD@
 
+				for ( const scene of result.scenes ) {
+
+					scene.updateMatrixWorld();
+
+				}
+
+
 				onLoad( result );
 
 			} );

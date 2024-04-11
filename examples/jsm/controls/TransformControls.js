@@ -187,8 +187,8 @@ class TransformControls extends Object3D {
 
 	}
 
-	// updateMatrixWorld  updates key transformation variables
-	updateMatrixWorld() {
+	// updateMatrixWorld updates key transformation variables
+	updateMatrixWorld( force ) {
 
 		if ( ! this.already_init ) return; // @DDD@
 
@@ -252,7 +252,7 @@ class TransformControls extends Object3D {
 
 		}
 
-		super.updateMatrixWorld( this );
+		super.updateMatrixWorld( force );
 
 	}
 

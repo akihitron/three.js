@@ -1,6 +1,6 @@
 import { Clock, Vector3, Quaternion, Matrix4 } from 'three';
 
-const RAPIER_PATH = 'https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.11.2';
+const RAPIER_PATH = 'https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.12.0';
 
 const frameRate = 60;
 
@@ -9,7 +9,7 @@ const ZERO = new Vector3();
 
 let RAPIER = null;
 
-function getCollider( geometry ) {
+function getShape( geometry ) {
 
 	const parameters = geometry.parameters;
 
@@ -77,7 +77,7 @@ async function RapierPhysics() {
 
 	function addMesh( mesh, mass = 0, restitution = 0 ) {
 
-		const shape = getCollider( mesh.geometry );
+		const shape = getShape( mesh.geometry );
 
 		if ( shape === null ) return;
 
