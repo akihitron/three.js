@@ -3410,6 +3410,8 @@ class GLTFParser {
 
 			}
 
+			assignExtrasToUserData( _texture, sourceDef );
+
 			if ( _texture instanceof ImageBitmap ) _texture = new THREE.CanvasTexture( _texture ); // @DDD@
 
 			if ( window.is_data_url( sourceURI ) == false ) {
