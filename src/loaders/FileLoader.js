@@ -229,196 +229,154 @@ class FileLoader extends Loader {
 			onError: onError,
 		} );
 
-		// create request
-		const req = new Request( url, {
-			headers: new Headers( this.requestHeader ),
-			credentials: this.withCredentials ? 'include' : 'same-origin',
-			// An abort controller could be added within a future PR
-		} );
+		// const req = new Request( url, {
+		// 	headers: new Headers( this.requestHeader ),
+		// 	credentials: this.withCredentials ? 'include' : 'same-origin',
+		// 	// An abort controller could be added within a future PR
+		// } );
 
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		
 		// record states ( avoid data race )
 		const mimeType = this.mimeType;
 		const responseType = this.responseType;
 
+
 		// start the fetch
-		fetch( req )
-			.then( response => {
-
-				if ( response.status === 200 || response.status === 0 ) {
-
-					// Some browsers return HTTP Status 0 when using non-http protocol
-					// e.g. 'file://' or 'data://'. Handle as success.
-
-					if ( response.status === 0 ) {
-
-						console.warn( 'THREE.FileLoader: HTTP Status 0 received.' );
-
-					}
-
-					// Workaround: Checking if response.body === undefined for Alipay browser #23548
-
-					if ( typeof ReadableStream === 'undefined' || response.body === undefined || response.body.getReader === undefined ) {
-
-						return response;
-
-					}
-
-					const callbacks = loading[ url ];
-					const reader = response.body.getReader();
-
-					// Nginx needs X-File-Size check
-					// https://serverfault.com/questions/482875/why-does-nginx-remove-content-length-header-for-chunked-content
-					const contentLength = response.headers.get( 'X-File-Size' ) || response.headers.get( 'Content-Length' );
-					const total = contentLength ? parseInt( contentLength ) : 0;
-					const lengthComputable = total !== 0;
-					let loaded = 0;
-
-					// periodically read data into the new stream tracking while download progress
-					const stream = new ReadableStream( {
-						start( controller ) {
-
-							readData();
-
+		fetch( url, {
+			headers: this.requestHeader,
+			credentials: this.withCredentials ? 'include' : 'same-origin',
+			// An abort controller could be added within a future PR
+		} )
+		.then(response => {
+			if (response.status === 200 || response.status === 0) {
+				if (response.status === 0) {
+					console.warn('THREE.FileLoader: HTTP Status 0 received.');
+				}
+	
+				if (typeof ReadableStream === 'undefined' || response.body === undefined || response.body.getReader === undefined) {
+					return response;
+				}
+	
+				const callbacks = loading[url];
+				const reader = response.body.getReader();
+				const contentLength = response.headers.get('X-File-Size') || response.headers.get('Content-Length');
+				const total = contentLength ? parseInt(contentLength) : 0;
+				const lengthComputable = total !== 0;
+				let loaded = 0;
+				const chunks = [];
+	
+				return new Promise((resolve, reject) => {
+					const stream = new ReadableStream({
+						start(controller) {
 							function readData() {
-
-								reader.read().then( ( { done, value } ) => {
-
-									if ( done ) {
-
+								reader.read().then(({ done, value }) => {
+									if (done) {
 										controller.close();
-
+										const blob = new Blob(chunks);
+										resolve(blob);
 									} else {
-
 										loaded += value.byteLength;
-
-										const event = new ProgressEvent( 'progress', { lengthComputable, loaded, total } );
-										for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
-
-											const callback = callbacks[ i ];
-											if ( callback.onProgress ) callback.onProgress( event );
-
-										}
-
-										controller.enqueue( value );
+										const event = new ProgressEvent('progress', { lengthComputable, loaded, total });
+										callbacks.forEach(callback => {
+											if (callback.onProgress) callback.onProgress(event);
+										});
+										chunks.push(value);
+										controller.enqueue(value);
 										readData();
-
 									}
-
-								}, ( e ) => {
-
-									controller.error( e );
-
-								} );
-
+								}).catch(error => {
+									reject(error);
+								});
 							}
-
+							readData();
 						}
+					});
+				});
+			} else {
+				throw new Error(`fetch for "${response.url}" responded with ${response.status}: ${response.statusText}`);
+			}
+		})
+		.then(blob => {
+			let dataPromise;
+			switch (responseType) {
+				case 'arraybuffer':
+					dataPromise = blob.arrayBuffer();
+					break;
+				case 'blob':
+					dataPromise = Promise.resolve(blob);
+					break;
+				case 'document':
+					dataPromise = blob.text().then(text => {
+						const parser = new DOMParser();
+						return parser.parseFromString(text, mimeType);
+					});
+					break;
+				case 'json':
+					dataPromise = blob.text().then(text => JSON.parse(text));
+					break;
+				default:
+					if (mimeType === undefined) {
+						dataPromise = blob.text();
+					} else {
+						const re = /charset="?([^;"\s]*)"?/i;
+						const exec = re.exec(mimeType);
+						const label = exec && exec[1] ? exec[1].toLowerCase() : undefined;
+						const decoder = new TextDecoder(label);
+						dataPromise = blob.arrayBuffer().then(ab => decoder.decode(ab));
+					}
+			}
+			return dataPromise;
+		})
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+		.then( data => {
 
-					} );
+			// Add to cache only on HTTP success, so that we do not cache
+			// error response bodies as proper responses to requests.
+			Cache.add( url, data );
 
-					return new Response( stream );
+			const callbacks = loading[ url ];
+			delete loading[ url ];
 
-				} else {
+			for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
 
-					throw new HttpError( `fetch for "${response.url}" responded with ${response.status}: ${response.statusText}`, response );
+				const callback = callbacks[ i ];
+				if ( callback.onLoad ) callback.onLoad( data );
 
-				}
+			}
 
-			} )
-			.then( response => {
+		} )
+		.catch( err => {
 
-				switch ( responseType ) {
+			// Abort errors and other errors are handled the same
 
-					case 'arraybuffer':
+			const callbacks = loading[ url ];
 
-						return response.arrayBuffer();
+			if ( callbacks === undefined ) {
 
-					case 'blob':
-
-						return response.blob();
-
-					case 'document':
-
-						return response.text()
-							.then( text => {
-
-								const parser = new DOMParser();
-								return parser.parseFromString( text, mimeType );
-
-							} );
-
-					case 'json':
-
-						return response.json();
-
-					default:
-
-						if ( mimeType === undefined ) {
-
-							return response.text();
-
-						} else {
-
-							// sniff encoding
-							const re = /charset="?([^;"\s]*)"?/i;
-							const exec = re.exec( mimeType );
-							const label = exec && exec[ 1 ] ? exec[ 1 ].toLowerCase() : undefined;
-							const decoder = new TextDecoder( label );
-							return response.arrayBuffer().then( ab => decoder.decode( ab ) );
-
-						}
-
-				}
-
-			} )
-			.then( data => {
-
-				// Add to cache only on HTTP success, so that we do not cache
-				// error response bodies as proper responses to requests.
-				Cache.add( url, data );
-
-				const callbacks = loading[ url ];
-				delete loading[ url ];
-
-				for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
-
-					const callback = callbacks[ i ];
-					if ( callback.onLoad ) callback.onLoad( data );
-
-				}
-
-			} )
-			.catch( err => {
-
-				// Abort errors and other errors are handled the same
-
-				const callbacks = loading[ url ];
-
-				if ( callbacks === undefined ) {
-
-					// When onLoad was called and url was deleted in `loading`
-					this.manager.itemError( url );
-					throw err;
-
-				}
-
-				delete loading[ url ];
-
-				for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
-
-					const callback = callbacks[ i ];
-					if ( callback.onError ) callback.onError( err );
-
-				}
-
+				// When onLoad was called and url was deleted in `loading`
 				this.manager.itemError( url );
+				throw err;
 
-			} )
-			.finally( () => {
+			}
 
-				this.manager.itemEnd( url );
+			delete loading[ url ];
 
-			} );
+			for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+
+				const callback = callbacks[ i ];
+				if ( callback.onError ) callback.onError( err );
+
+			}
+
+			this.manager.itemError( url );
+
+		} )
+		.finally( () => {
+
+			this.manager.itemEnd( url );
+
+		} );
 
 		this.manager.itemStart( url );
 
