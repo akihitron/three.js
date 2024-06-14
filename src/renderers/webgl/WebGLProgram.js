@@ -616,7 +616,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.skinning ? '#define USE_SKINNING' : '',
 
-			parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
+			parameters.morphTargetsCount > 0 && parameters.morphTargets ? '#define USE_MORPHTARGETS' : '', // @DDD@
 			parameters.morphNormals && parameters.flatShading === false ? '#define USE_MORPHNORMALS' : '',
 			( parameters.morphColors ) ? '#define USE_MORPHCOLORS' : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_TEXTURE_STRIDE ' + parameters.morphTextureStride : '',
