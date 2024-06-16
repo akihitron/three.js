@@ -1625,7 +1625,7 @@ class WebGLRenderer {
 			if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
 			const materialProperties = properties.get( material );
-			// const currentRenderState = renderStates.get( scene ); // @DDD@
+			const currentRenderState = renderStates.get( scene ); // @DDD@
 
 			const lights = currentRenderState.state.lights;
 			const shadowsArray = currentRenderState.state.shadowsArray;
@@ -1820,7 +1820,7 @@ class WebGLRenderer {
 			const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
 
 			const materialProperties = properties.get( material );
-			//const currentRenderState = renderStates.get( scene ); // @DDD@
+			const currentRenderState = renderStates.get( scene ); // @DDD@ prevent null.
 			const lights = currentRenderState.state.lights;
 
 
