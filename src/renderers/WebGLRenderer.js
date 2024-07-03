@@ -200,6 +200,8 @@ class WebGLRenderer {
 
 		const _vector3 = new Vector3();
 
+		const _vector4 = new Vector4();
+
 		const _emptyScene = { background: null, fog: null, environment: null, overrideMaterial: null, isScene: true };
 
 		let _renderBackground = false;
@@ -857,7 +859,25 @@ class WebGLRenderer {
 
 				} else {
 
-					renderer.renderMultiDraw( object._multiDrawStarts, object._multiDrawCounts, object._multiDrawCount );
+					if ( ! extensions.get( 'WEBGL_multi_draw' ) ) {
+
+						const starts = object._multiDrawStarts;
+						const counts = object._multiDrawCounts;
+						const drawCount = object._multiDrawCount;
+						const bytesPerElement = index ? attributes.get( index ).bytesPerElement : 1;
+						const uniforms = properties.get( material ).currentProgram.getUniforms();
+						for ( let i = 0; i < drawCount; i ++ ) {
+
+							uniforms.setValue( _gl, '_gl_DrawID', i );
+							renderer.render( starts[ i ] / bytesPerElement, counts[ i ] );
+
+						}
+
+					} else {
+
+						renderer.renderMultiDraw( object._multiDrawStarts, object._multiDrawCounts, object._multiDrawCount );
+
+					}
 
 				}
 
@@ -1321,7 +1341,7 @@ class WebGLRenderer {
 
 						if ( sortObjects ) {
 
-							_vector3.setFromMatrixPosition( object.matrixWorld )
+							_vector4.setFromMatrixPosition( object.matrixWorld )
 								.applyMatrix4( _projScreenMatrix );
 
 						}
@@ -1331,7 +1351,7 @@ class WebGLRenderer {
 
 						if ( material.visible ) {
 
-							currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
+							currentRenderList.push( object, geometry, material, groupOrder, _vector4.z, null );
 
 						}
 
@@ -1349,16 +1369,16 @@ class WebGLRenderer {
 							if ( object.boundingSphere !== undefined ) {
 
 								if ( object.boundingSphere === null ) object.computeBoundingSphere();
-								_vector3.copy( object.boundingSphere.center );
+								_vector4.copy( object.boundingSphere.center );
 
 							} else {
 
 								if ( geometry.boundingSphere === null ) geometry.computeBoundingSphere();
-								_vector3.copy( geometry.boundingSphere.center );
+								_vector4.copy( geometry.boundingSphere.center );
 
 							}
 
-							_vector3
+							_vector4
 								.applyMatrix4( object.matrixWorld )
 								.applyMatrix4( _projScreenMatrix );
 
@@ -1375,7 +1395,7 @@ class WebGLRenderer {
 
 								if ( groupMaterial && groupMaterial.visible ) {
 
-									currentRenderList.push( object, geometry, groupMaterial, groupOrder, _vector3.z, group );
+									currentRenderList.push( object, geometry, groupMaterial, groupOrder, _vector4.z, group );
 
 								}
 
@@ -1383,7 +1403,7 @@ class WebGLRenderer {
 
 						} else if ( material.visible ) {
 
-							currentRenderList.push( object, geometry, material, groupOrder, _vector3.z, null );
+							currentRenderList.push( object, geometry, material, groupOrder, _vector4.z, null );
 
 						}
 
@@ -1672,8 +1692,6 @@ class WebGLRenderer {
 			} else {
 
 				parameters.uniforms = programCache.getUniforms( material );
-
-				material.onBuild( object, parameters, _this );
 
 				material.onBeforeCompile( parameters, _this );
 
@@ -2063,6 +2081,9 @@ class WebGLRenderer {
 
 				p_uniforms.setOptional( _gl, object, 'batchingTexture' );
 				p_uniforms.setValue( _gl, 'batchingTexture', object._matricesTexture, textures );
+
+				p_uniforms.setOptional( _gl, object, 'batchingIdTexture' );
+				p_uniforms.setValue( _gl, 'batchingIdTexture', object._indirectTexture, textures );
 
 				p_uniforms.setOptional( _gl, object, 'batchingColorTexture' );
 				if ( object._colorsTexture !== null ) {
@@ -2620,7 +2641,7 @@ class WebGLRenderer {
 
 				} else {
 
-					_gl.texSubImage2D( _gl.TEXTURE_2D, level, dstX, dstY, glFormat, glType, image );
+					_gl.texSubImage2D( _gl.TEXTURE_2D, level, dstX, dstY, width, height, glFormat, glType, image );
 
 				}
 

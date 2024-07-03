@@ -11,7 +11,7 @@ export { default as BypassNode, bypass } from './core/BypassNode.js';
 export { default as CacheNode, cache } from './core/CacheNode.js';
 export { default as ConstNode } from './core/ConstNode.js';
 export { default as ContextNode, context, label } from './core/ContextNode.js';
-export { default as IndexNode, vertexIndex, instanceIndex } from './core/IndexNode.js';
+export { default as IndexNode, vertexIndex, instanceIndex, drawIndex } from './core/IndexNode.js';
 export { default as LightingModel } from './core/LightingModel.js';
 export { default as Node, addNodeClass, createNodeFromType } from './core/Node.js';
 export { default as VarNode, temp } from './core/VarNode.js';
@@ -38,7 +38,7 @@ import * as NodeUtils from './core/NodeUtils.js';
 export { NodeUtils };
 
 // math
-export { default as MathNode, PI, PI2, EPSILON, INFINITY, radians, degrees, exp, exp2, log, log2, sqrt, inverseSqrt, floor, ceil, normalize, fract, sin, cos, tan, asin, acos, atan, abs, sign, length, lengthSq, negate, oneMinus, dFdx, dFdy, round, reciprocal, trunc, fwidth, bitcast, atan2, min, max, mod, step, reflect, distance, difference, dot, cross, pow, pow2, pow3, pow4, transformDirection, mix, clamp, saturate, refract, smoothstep, faceForward, cbrt, all, any, equals } from './math/MathNode.js';
+export { default as MathNode, PI, PI2, EPSILON, INFINITY, radians, degrees, exp, exp2, log, log2, sqrt, inverseSqrt, floor, ceil, normalize, fract, sin, cos, tan, asin, acos, atan, abs, sign, length, lengthSq, negate, oneMinus, dFdx, dFdy, round, reciprocal, trunc, fwidth, bitcast, atan2, min, max, mod, step, reflect, distance, difference, dot, cross, pow, pow2, pow3, pow4, transformDirection, mix, clamp, saturate, refract, smoothstep, faceForward, cbrt, transpose, all, any, equals } from './math/MathNode.js';
 
 export { default as OperatorNode, add, sub, mul, div, remainder, equal, lessThan, greaterThan, lessThanEqual, greaterThanEqual, and, or, not, xor, bitAnd, bitNot, bitOr, bitXor, shiftLeft, shiftRight } from './math/OperatorNode.js';
 export { default as CondNode, cond } from './math/CondNode.js';
@@ -51,7 +51,7 @@ export { triNoise3D } from './math/TriNoise3D.js';
 // utils
 export { default as ArrayElementNode } from './utils/ArrayElementNode.js';
 export { default as ConvertNode } from './utils/ConvertNode.js';
-export { default as DiscardNode, discard } from './utils/DiscardNode.js';
+export { default as DiscardNode, discard, Return } from './utils/DiscardNode.js';
 export { default as EquirectUVNode, equirectUV } from './utils/EquirectUVNode.js';
 export { default as FunctionOverloadingNode, overloadingFn } from './utils/FunctionOverloadingNode.js';
 export { default as JoinNode } from './utils/JoinNode.js';
@@ -98,12 +98,13 @@ export { default as PointUVNode, pointUV } from './accessors/PointUVNode.js';
 export * from './accessors/PositionNode.js';
 export { default as ReferenceNode, reference, referenceBuffer } from './accessors/ReferenceNode.js';
 export * from './accessors/ReflectVectorNode.js';
-export { default as SkinningNode, skinning } from './accessors/SkinningNode.js';
+export { default as SkinningNode, skinning, skinningReference } from './accessors/SkinningNode.js';
 export { default as SceneNode, backgroundBlurriness, backgroundIntensity } from './accessors/SceneNode.js';
 export { default as StorageBufferNode, storage, storageObject } from './accessors/StorageBufferNode.js';
 export * from './accessors/TangentNode.js';
 export { default as TextureNode, texture, textureLoad, /*textureLevel,*/ sampler } from './accessors/TextureNode.js';
-export { default as StorageTextureNode, storageTexture, textureStore, storageTextureReadOnly, storageTextureReadWrite } from './accessors/StorageTextureNode.js';
+export { default as TextureSizeNode, textureSize } from './accessors/TextureSizeNode.js';
+export { default as StorageTextureNode, storageTexture, textureStore } from './accessors/StorageTextureNode.js';
 export { default as Texture3DNode, texture3D } from './accessors/Texture3DNode.js';
 export * from './accessors/UVNode.js';
 export { default as UserDataNode, userData } from './accessors/UserDataNode.js';
@@ -121,10 +122,14 @@ export { default as ViewportNode, viewport, viewportCoordinate, viewportResoluti
 export { default as ViewportTextureNode, viewportTexture, viewportMipTexture } from './display/ViewportTextureNode.js';
 export { default as ViewportSharedTextureNode, viewportSharedTexture } from './display/ViewportSharedTextureNode.js';
 export { default as ViewportDepthTextureNode, viewportDepthTexture } from './display/ViewportDepthTextureNode.js';
-export { default as ViewportDepthNode, viewZToOrthographicDepth, orthographicDepthToViewZ, viewZToPerspectiveDepth, perspectiveDepthToViewZ, depth, depthTexture, depthPixel } from './display/ViewportDepthNode.js';
+export { default as ViewportDepthNode, viewZToOrthographicDepth, orthographicDepthToViewZ, viewZToPerspectiveDepth, perspectiveDepthToViewZ, depth, linearDepth, viewportLinearDepth } from './display/ViewportDepthNode.js';
 export { default as GaussianBlurNode, gaussianBlur } from './display/GaussianBlurNode.js';
 export { default as AfterImageNode, afterImage } from './display/AfterImageNode.js';
 export { default as AnamorphicNode, anamorphic } from './display/AnamorphicNode.js';
+export { default as SobelOperatorNode, sobel } from './display/SobelOperatorNode.js';
+export { default as DepthOfFieldNode, dof } from './display/DepthOfFieldNode.js';
+export { default as DotScreenNode, dotScreen } from './display/DotScreenNode.js';
+export { default as RGBShiftNode, rgbShift } from './display/RGBShiftNode.js';
 
 export { default as PassNode, pass, texturePass, depthPass } from './display/PassNode.js';
 
@@ -151,6 +156,7 @@ export { default as ComputeNode, compute } from './gpgpu/ComputeNode.js';
 export { default as LightNode, lightTargetDirection } from './lighting/LightNode.js';
 export { default as PointLightNode } from './lighting/PointLightNode.js';
 export { default as DirectionalLightNode } from './lighting/DirectionalLightNode.js';
+export { default as RectAreaLightNode } from './lighting/RectAreaLightNode.js';
 export { default as SpotLightNode } from './lighting/SpotLightNode.js';
 export { default as IESSpotLightNode } from './lighting/IESSpotLightNode.js';
 export { default as AmbientLightNode } from './lighting/AmbientLightNode.js';
