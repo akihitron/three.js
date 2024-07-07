@@ -560,7 +560,7 @@ class Material extends EventDispatcher {
 
 	onBeforeRender( /* renderer, scene, camera, geometry, object, group */ ) {
 
-		console.warn( 'Material: onBeforeRender() has been removed.' ); // @deprecated, r166
+		// console.warn( 'Material: onBeforeRender() has been removed.' ); // @deprecated, r166 // @DDD@
 
 	}
 
