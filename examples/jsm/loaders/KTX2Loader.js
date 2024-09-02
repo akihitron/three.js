@@ -306,6 +306,7 @@ class KTX2Loader extends Loader {
 
 		} else { // http://, c:/
 
+			// this.parse( buffer, onLoad, onError);
 
 			loader.load( url, ( buffer ) => {
 
@@ -330,36 +331,45 @@ class KTX2Loader extends Loader {
 					} ).catch( onError );
 
 			}, onProgress, onError );
-			// loader.load( url, ( buffer ) => {
-			// 	// Check for an existing task using this buffer. A transferred buffer cannot be transferred
-			// 	// again from this thread.
-			// 	if ( _taskCache.has( buffer ) ) {
-
-			// 		const cachedTask = _taskCache.get( buffer );
-
-			// 		return cachedTask.promise.then( onLoad ).catch( onError );
-
-			// 	}
-
-			// 	this._createTexture( [ buffer ] , {}, url )
-			// 		.then( function ( _texture ) {
-
-			// 			texture.copy( _texture );
-			// 			texture.needsUpdate = true;
-
-			// 			if ( onLoad ) onLoad( texture );
-
-			// 		} )
-			// 		.catch( onError );
-
-			// }, onProgress, onError );
 
 		}
 
+
 		return texture;
-		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+	}
+
+	parse( buffer, onLoad, onError ) {
+
+		if ( this.workerConfig === null ) {
+
+			throw new Error( 'THREE.KTX2Loader: Missing initialization with `.detectSupport( renderer )`.' );
+
+		}
+
+		// Check for an existing task using this buffer. A transferred buffer cannot be transferred
+		// again from this thread.
+		if ( _taskCache.has( buffer ) ) {
+
+					const cachedTask = _taskCache.get( buffer );
+
+					return cachedTask.promise.then( onLoad ).catch( onError );
+
+		}
+
+		this._createTexture( buffer )
+			.then( function ( _texture ) {
+
+				_texture.copy( _texture );
+				_texture.needsUpdate = true;
+
+				if ( onLoad ) onLoad( _texture );
+
+			} ).catch( onError );
+
 
 	}
+
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	_createTextureFrom( transcodeResult, container ) {
 
