@@ -11,7 +11,7 @@ import { CSMFrustum } from './CSMFrustum.js';
 import { CSMShader } from './CSMShader.js';
 
 const _cameraToLightMatrix = new Matrix4();
-const _lightSpaceFrustum = new CSMFrustum();
+const _lightSpaceFrustum = new CSMFrustum( { webGL: true } );
 const _center = new Vector3();
 const _bbox = new Box3();
 const _uniformArray = [];
@@ -39,7 +39,7 @@ export class CSM {
 		this.shadowNormalBias = data.shadowNormalBias || 0.1; // @DDD@
 		this.customSplitsCallback = data.customSplitsCallback;
 		this.fade = false;
-		this.mainFrustum = new CSMFrustum();
+		this.mainFrustum = new CSMFrustum( { webGL: true } );
 		this.frustums = [];
 		this.breaks = [];
 

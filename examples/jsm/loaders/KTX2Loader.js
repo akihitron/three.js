@@ -336,6 +336,7 @@ class KTX2Loader extends Loader {
 
 
 		return texture;
+
 	}
 
 	parse( buffer, onLoad, onError ) {
@@ -350,9 +351,9 @@ class KTX2Loader extends Loader {
 		// again from this thread.
 		if ( _taskCache.has( buffer ) ) {
 
-					const cachedTask = _taskCache.get( buffer );
+			const cachedTask = _taskCache.get( buffer );
 
-					return cachedTask.promise.then( onLoad ).catch( onError );
+			return cachedTask.promise.then( onLoad ).catch( onError );
 
 		}
 

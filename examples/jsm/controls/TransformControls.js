@@ -38,7 +38,7 @@ const _objectChangeEvent = { type: 'objectChange' };
 
 class TransformControls extends Object3D {
 
-	constructor( camera, domElement ) { // @DDD@
+	constructor( camera, domElement ) {
 
 		super();
 
@@ -54,15 +54,6 @@ class TransformControls extends Object3D {
 		this.visible = false;
 		this.domElement = domElement;
 		this.domElement.style.touchAction = 'none'; // disable touch scroll
-
-
-	}
-
-	lazy_init() { // @DDD@
-
-		if ( this.already_init ) return;
-		const camera = window.DMC.current.camera || window.DMC.camera;
-		this.already_init = true; // @DDD@
 
 		const _gizmo = new TransformControlsGizmo();
 		this._gizmo = _gizmo;
@@ -190,8 +181,6 @@ class TransformControls extends Object3D {
 	// updateMatrixWorld updates key transformation variables
 	updateMatrixWorld( force ) {
 
-		if ( ! this.already_init ) return; // @DDD@
-
 		if ( this.object !== undefined ) {
 
 			this.object.updateMatrixWorld();
@@ -206,33 +195,7 @@ class TransformControls extends Object3D {
 
 			}
 
-
-			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>>>>>>>
-			let hit = false;
-			if ( this.object.skeleton?.bones ) {
-
-				for ( const b of this.object.skeleton.bones ) {
-
-					if ( b.name == '上半身' ) {
-
-						b.matrixWorld.decompose( this.worldPosition, this.worldQuaternion, this._worldScale );
-						hit = true;
-						break;
-
-					}
-
-				}
-
-			}
-
-			if ( hit == false ) {
-
-				this.object.matrixWorld.decompose( this.worldPosition, this.worldQuaternion, this._worldScale );
-				const center = this.object.geometry?.boundingSphere?.center;
-				if ( center ) this.worldPosition.add( center );
-
-			}
-			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+			this.object.matrixWorld.decompose( this.worldPosition, this.worldQuaternion, this._worldScale );
 
 			this._parentQuaternionInv.copy( this._parentQuaternion ).invert();
 			this._worldQuaternionInv.copy( this.worldQuaternion ).invert();
@@ -258,8 +221,6 @@ class TransformControls extends Object3D {
 
 	pointerHover( pointer ) {
 
-		if ( ! this.already_init ) return; // @DDD@
-
 		if ( this.object === undefined || this.dragging === true ) return;
 
 		if ( pointer !== null ) _raycaster.setFromCamera( pointer, this.camera );
@@ -283,8 +244,6 @@ class TransformControls extends Object3D {
 		if ( this.object === undefined || this.dragging === true || ( pointer != null && pointer.button !== 0 ) ) return;
 
 		if ( this.axis !== null ) {
-
-			this.lazy_init(); // @DDD@
 
 			if ( pointer !== null ) _raycaster.setFromCamera( pointer, this.camera );
 
@@ -314,8 +273,6 @@ class TransformControls extends Object3D {
 	}
 
 	pointerMove( pointer ) {
-
-		if ( ! this.already_init ) return; // @DDD@
 
 		const axis = this.axis;
 		const mode = this.mode;
@@ -582,8 +539,6 @@ class TransformControls extends Object3D {
 
 	pointerUp( pointer ) {
 
-		if ( ! this.already_init ) return; // @DDD@
-
 		if ( pointer !== null && pointer.button !== 0 ) return;
 
 		if ( this.dragging && ( this.axis !== null ) ) {
@@ -617,8 +572,6 @@ class TransformControls extends Object3D {
 	// Set current object
 	attach( object ) {
 
-		this.lazy_init(); // @DDD@
-
 		this.object = object;
 		this.visible = true;
 
@@ -629,8 +582,6 @@ class TransformControls extends Object3D {
 	// Detach from object
 	detach() {
 
-		if ( ! this.already_init ) return; // @DDD@
-
 		this.object = undefined;
 		this.visible = false;
 		this.axis = null;
@@ -640,8 +591,6 @@ class TransformControls extends Object3D {
 	}
 
 	reset() {
-
-		if ( ! this.already_init ) return; // @DDD@
 
 		if ( ! this.enabled ) return;
 
