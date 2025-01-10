@@ -413,7 +413,7 @@ class OutlineEffect {
 
 			let keys;
 
-			// clear originialMaterials
+			// clear originalMaterials
 			keys = Object.keys( originalMaterials );
 
 			for ( let i = 0, il = keys.length; i < il; i ++ ) {

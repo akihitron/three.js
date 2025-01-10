@@ -415,7 +415,10 @@ class WebGLTextureUtils {
 
 				return source.image.data;
 
-			} else if ( source instanceof ImageBitmap || source instanceof OffscreenCanvas || source instanceof HTMLImageElement || source instanceof HTMLCanvasElement ) {
+			} else if ( ( typeof HTMLImageElement !== 'undefined' && source instanceof HTMLImageElement ) ||
+				( typeof HTMLCanvasElement !== 'undefined' && source instanceof HTMLCanvasElement ) ||
+				( typeof ImageBitmap !== 'undefined' && source instanceof ImageBitmap ) ||
+				source instanceof OffscreenCanvas ) {
 
 				return source;
 
@@ -728,7 +731,7 @@ class WebGLTextureUtils {
 
 		const requireDrawFrameBuffer = texture.isDepthTexture === true || ( renderContext.renderTarget && renderContext.renderTarget.samples > 0 );
 
-		const srcHeight = renderContext.renderTarget ? renderContext.renderTarget.height : this.backend.gerDrawingBufferSize().y;
+		const srcHeight = renderContext.renderTarget ? renderContext.renderTarget.height : this.backend.getDrawingBufferSize().y;
 
 		if ( requireDrawFrameBuffer ) {
 

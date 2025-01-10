@@ -1,26 +1,12 @@
 import { Color } from '../math/Color.js';
 import { EventDispatcher } from '../core/EventDispatcher.js';
 import { FrontSide, NormalBlending, LessEqualDepth, AddEquation, OneMinusSrcAlphaFactor, SrcAlphaFactor, AlwaysStencilFunc, KeepStencilOp } from '../constants.js';
-import * as MathUtils from '../math/MathUtils.js';
+import { generateUUID } from '../math/MathUtils.js';
 
 let _materialId = 0;
 
 
 class Material extends EventDispatcher {
-
-	static get type() {
-
-		return 'Material';
-
-	}
-
-	get type() {
-
-		return this.constructor.type;
-
-	}
-
-	set type( _value ) { /* */ }
 
 	constructor() {
 
@@ -30,9 +16,10 @@ class Material extends EventDispatcher {
 
 		Object.defineProperty( this, 'id', { value: _materialId ++ } );
 
-		this.uuid = MathUtils.generateUUID();
+		this.uuid = generateUUID();
 
 		this.name = '';
+		this.type = 'Material';
 
 		if ( window.CALLER_LINE ) {
 
