@@ -1,4 +1,5 @@
 class XRButton {
+	static currentSession = null; // @DDD@
 
 	static createButton( renderer, sessionInit = {}, callback ) { // @DDD@
 
@@ -7,7 +8,7 @@ class XRButton {
 
 		function showStartXR( mode ) {
 
-			let currentSession = null;
+			XRButton.currentSession = null;
 
 			async function onSessionStarted( session ) {
 
@@ -17,21 +18,25 @@ class XRButton {
 
 				button.textContent = 'STOP ' + TYPE;
 
-				currentSession = session;
+				XRButton.currentSession = session;
 
 				callback( 'started', session ); // @DDD@
+
+				window.unlock_rendering(); // @DDD@
 
 			}
 
 			function onSessionEnded( /*event*/ ) {
 
-				currentSession.removeEventListener( 'end', onSessionEnded );
+				XRButton.currentSession.removeEventListener( 'end', onSessionEnded );
 
 				button.textContent = 'START ' + TYPE;
 
-				currentSession = null;
+				XRButton.currentSession = null;
 
 				callback( 'ended' ); // @DDD@
+
+				window.unlock_rendering(); // @DDD@
 
 			}
 
@@ -71,9 +76,11 @@ class XRButton {
 
 			button.onclick = function () {
 
-				if ( currentSession === null ) {
+				if ( XRButton.currentSession === null ) {
 
 					callback( 'before_start' );
+
+					window.lock_rendering(); // @DDD@
 
 					navigator.xr.requestSession( mode, sessionOptions )
 						.then( onSessionStarted ).catch( ( err ) => {
@@ -82,15 +89,19 @@ class XRButton {
 							console.warn( 'requestSession failed', err );
 							callback( 'not_allowed' );
 
+							window.unlock_rendering(); // @DDD@
+
 						} );
 
 				} else {
 
-					currentSession.end();
+					XRButton.currentSession.end();
 
 					if ( navigator.xr.offerSession !== undefined ) {
 
 						callback( 'before_start' );
+
+						window.lock_rendering(); // @DDD@
 
 						navigator.xr.offerSession( mode, sessionOptions )
 							.then( onSessionStarted )
@@ -98,6 +109,8 @@ class XRButton {
 
 								console.warn( err );
 								callback( 'not_allowed' );
+
+								window.unlock_rendering(); // @DDD@
 
 							} );
 
@@ -111,12 +124,16 @@ class XRButton {
 
 				callback( 'available' );
 
+				window.lock_rendering(); // @DDD@
+
 				navigator.xr.offerSession( mode, sessionOptions )
 					.then( onSessionStarted )
 					.catch( ( err ) => {
 
 						console.warn( err );
 						callback( 'not_allowed' );
+
+						window.unlock_rendering(); // @DDD@
 
 					} );
 
