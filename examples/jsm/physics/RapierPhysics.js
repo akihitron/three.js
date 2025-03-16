@@ -43,8 +43,8 @@ function getShape( geometry ) {
 
 		// if the buffer is non-indexed, generate an index buffer
 		const indices = geometry.getIndex() === null
-							? Uint32Array.from( Array( parseInt( vertices.length / 3 ) ).keys() )
-							: geometry.getIndex().array;
+			? Uint32Array.from( Array( parseInt( vertices.length / 3 ) ).keys() )
+			: geometry.getIndex().array;
 
 		return RAPIER.ColliderDesc.trimesh( vertices, indices );
 

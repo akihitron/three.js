@@ -5,7 +5,7 @@ import NodeVar from './NodeVar.js';
 import NodeCode from './NodeCode.js';
 import NodeCache from './NodeCache.js';
 import ParameterNode from './ParameterNode.js';
-import StructTypeNode from './StructTypeNode.js';
+import StructType from './StructType.js';
 import FunctionNode from '../code/FunctionNode.js';
 import NodeMaterial from '../../materials/nodes/NodeMaterial.js';
 import { getTypeFromLength } from './NodeUtils.js';
@@ -13,7 +13,7 @@ import { NodeUpdateType, defaultBuildStages, shaderStages } from './constants.js
 
 import {
 	NumberNodeUniform, Vector2NodeUniform, Vector3NodeUniform, Vector4NodeUniform,
-	ColorNodeUniform, Matrix3NodeUniform, Matrix4NodeUniform
+	ColorNodeUniform, Matrix2NodeUniform, Matrix3NodeUniform, Matrix4NodeUniform
 } from '../../renderers/common/nodes/NodeUniform.js';
 
 import { stack } from './StackNode.js';
@@ -21,8 +21,6 @@ import { getCurrentStack, setCurrentStack } from '../tsl/TSLBase.js';
 
 import CubeRenderTarget from '../../renderers/common/CubeRenderTarget.js';
 import ChainMap from '../../renderers/common/ChainMap.js';
-
-import PMREMGenerator from '../../renderers/common/extras/PMREMGenerator.js';
 
 import BindGroup from '../../renderers/common/BindGroup.js';
 
@@ -87,14 +85,14 @@ class NodeBuilder {
 		/**
 		 * The material of the 3D object.
 		 *
-		 * @type {Material?}
+		 * @type {?Material}
 		 */
 		this.material = ( object && object.material ) || null;
 
 		/**
 		 * The geometry of the 3D object.
 		 *
-		 * @type {BufferGeometry?}
+		 * @type {?BufferGeometry}
 		 */
 		this.geometry = ( object && object.geometry ) || null;
 
@@ -115,7 +113,7 @@ class NodeBuilder {
 		/**
 		 * The scene the 3D object belongs to.
 		 *
-		 * @type {Scene?}
+		 * @type {?Scene}
 		 * @default null
 		 */
 		this.scene = null;
@@ -123,7 +121,7 @@ class NodeBuilder {
 		/**
 		 * The camera the 3D object is rendered with.
 		 *
-		 * @type {Camera?}
+		 * @type {?Camera}
 		 * @default null
 		 */
 		this.camera = null;
@@ -167,22 +165,22 @@ class NodeBuilder {
 		/**
 		 * A dictionary that assigns each node to a unique hash.
 		 *
-		 * @type {Object<Number,Node>}
+		 * @type {Object<number,Node>}
 		 */
 		this.hashNodes = {};
 
 		/**
 		 * A reference to a node material observer.
 		 *
-		 * @type {NodeMaterialObserver?}
+		 * @type {?NodeMaterialObserver}
 		 * @default null
 		 */
-		this.monitor = null;
+		this.observer = null;
 
 		/**
 		 * A reference to the current lights node.
 		 *
-		 * @type {LightsNode?}
+		 * @type {?LightsNode}
 		 * @default null
 		 */
 		this.lightsNode = null;
@@ -190,7 +188,7 @@ class NodeBuilder {
 		/**
 		 * A reference to the current environment node.
 		 *
-		 * @type {Node?}
+		 * @type {?Node}
 		 * @default null
 		 */
 		this.environmentNode = null;
@@ -198,7 +196,7 @@ class NodeBuilder {
 		/**
 		 * A reference to the current fog node.
 		 *
-		 * @type {FogNode?}
+		 * @type {?FogNode}
 		 * @default null
 		 */
 		this.fogNode = null;
@@ -206,42 +204,42 @@ class NodeBuilder {
 		/**
 		 * The current clipping context.
 		 *
-		 * @type {ClippingContext?}
+		 * @type {?ClippingContext}
 		 */
 		this.clippingContext = null;
 
 		/**
 		 * The generated vertex shader.
 		 *
-		 * @type {String?}
+		 * @type {?string}
 		 */
 		this.vertexShader = null;
 
 		/**
 		 * The generated fragment shader.
 		 *
-		 * @type {String?}
+		 * @type {?string}
 		 */
 		this.fragmentShader = null;
 
 		/**
 		 * The generated compute shader.
 		 *
-		 * @type {String?}
+		 * @type {?string}
 		 */
 		this.computeShader = null;
 
 		/**
 		 * Nodes used in the primary flow of code generation.
 		 *
-		 * @type {Object<String,Array<Node>>}
+		 * @type {Object<string,Array<Node>>}
 		 */
 		this.flowNodes = { vertex: [], fragment: [], compute: [] };
 
 		/**
 		 * Nodes code from `.flowNodes`.
 		 *
-		 * @type {Object<String,String>}
+		 * @type {Object<string,string>}
 		 */
 		this.flowCode = { vertex: '', fragment: '', compute: '' };
 
@@ -278,7 +276,7 @@ class NodeBuilder {
 		/**
 		 * Reference to the array of bind groups.
 		 *
-		 * @type {Array<BindGroup>?}
+		 * @type {?Array<BindGroup>}
 		 */
 		this.bindGroups = null;
 
@@ -309,7 +307,7 @@ class NodeBuilder {
 		 * This dictionary holds the (native) node codes of this builder.
 		 * The codes are maintained in an array for each shader stage.
 		 *
-		 * @type {Object<String,Array<NodeCode>>}
+		 * @type {Object<string,Array<NodeCode>>}
 		 */
 		this.codes = {};
 
@@ -317,7 +315,7 @@ class NodeBuilder {
 		 * This dictionary holds the node variables of this builder.
 		 * The variables are maintained in an array for each shader stage.
 		 *
-		 * @type {Object<String,Array<NodeVar>>}
+		 * @type {Object<string,Array<NodeVar>>}
 		 */
 		this.vars = {};
 
@@ -325,7 +323,7 @@ class NodeBuilder {
 		 * Current code flow.
 		 * All code generated in this stack will be stored in `.flow`.
 		 *
-		 * @type {{code: String}}
+		 * @type {{code: string}}
 		 */
 		this.flow = { code: '' };
 
@@ -357,7 +355,7 @@ class NodeBuilder {
 		/**
 		 * A tab value. Used for shader string generation.
 		 *
-		 * @type {String}
+		 * @type {string}
 		 * @default '\t'
 		 */
 		this.tab = '\t';
@@ -365,7 +363,7 @@ class NodeBuilder {
 		/**
 		 * Reference to the current function node.
 		 *
-		 * @type {FunctionNode?}
+		 * @type {?FunctionNode}
 		 * @default null
 		 */
 		this.currentFunctionNode = null;
@@ -401,21 +399,21 @@ class NodeBuilder {
 		/**
 		 * The current shader stage.
 		 *
-		 * @type {('vertex'|'fragment'|'compute'|'any')?}
+		 * @type {?('vertex'|'fragment'|'compute'|'any')}
 		 */
 		this.shaderStage = null;
 
 		/**
 		 * The current build stage.
 		 *
-		 * @type {('setup'|'analyze'|'generate')?}
+		 * @type {?('setup'|'analyze'|'generate')}
 		 */
 		this.buildStage = null;
 
 		/**
 		 * Whether comparison in shader code are generated with methods or not.
 		 *
-		 * @type {Boolean}
+		 * @type {boolean}
 		 * @default false
 		 */
 		this.useComparisonMethod = false;
@@ -447,8 +445,8 @@ class NodeBuilder {
 	 * Factory method for creating an instance of {@link RenderTarget} with the given
 	 * dimensions and options.
 	 *
-	 * @param {Number} width - The width of the render target.
-	 * @param {Number} height - The height of the render target.
+	 * @param {number} width - The width of the render target.
+	 * @param {number} height - The height of the render target.
 	 * @param {Object} options - The options of the render target.
 	 * @return {RenderTarget} The render target.
 	 */
@@ -462,7 +460,7 @@ class NodeBuilder {
 	 * Factory method for creating an instance of {@link CubeRenderTarget} with the given
 	 * dimensions and options.
 	 *
-	 * @param {Number} size - The size of the cube render target.
+	 * @param {number} size - The size of the cube render target.
 	 * @param {Object} options - The options of the cube render target.
 	 * @return {CubeRenderTarget} The cube render target.
 	 */
@@ -473,23 +471,10 @@ class NodeBuilder {
 	}
 
 	/**
-	 * Factory method for creating an instance of {@link PMREMGenerator}.
-	 *
-	 * @return {PMREMGenerator} The PMREM generator.
-	 */
-	createPMREMGenerator() {
-
-		// TODO: Move Materials.js to outside of the Nodes.js in order to remove this function and improve tree-shaking support
-
-		return new PMREMGenerator( this.renderer );
-
-	}
-
-	/**
 	 * Whether the given node is included in the internal array of nodes or not.
 	 *
 	 * @param {Node} node - The node to test.
-	 * @return {Boolean} Whether the given node is included in the internal array of nodes or not.
+	 * @return {boolean} Whether the given node is included in the internal array of nodes or not.
 	 */
 	includes( node ) {
 
@@ -498,10 +483,19 @@ class NodeBuilder {
 	}
 
 	/**
+	 * Returns the output struct name which is required by
+	 * {@link OutputStructNode}.
+	 *
+	 * @abstract
+	 * @return {string} The name of the output struct.
+	 */
+	getOutputStructName() {}
+
+	/**
 	 * Returns a bind group for the given group name and binding.
 	 *
 	 * @private
-	 * @param {String} groupName - The group name.
+	 * @param {string} groupName - The group name.
 	 * @param {Array<NodeUniformsGroup>} bindings - List of bindings.
 	 * @return {BindGroup} The bind group
 	 */
@@ -552,7 +546,7 @@ class NodeBuilder {
 	/**
 	 * Returns an array of node uniform groups for the given group name and shader stage.
 	 *
-	 * @param {String} groupName - The group name.
+	 * @param {string} groupName - The group name.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
 	 * @return {Array<NodeUniformsGroup>} The array of node uniform groups.
 	 */
@@ -650,7 +644,7 @@ class NodeBuilder {
 	 * This method sets the given node (value) with the given hash (key) into this dictionary.
 	 *
 	 * @param {Node} node - The node to add.
-	 * @param {Number} hash - The hash of the node.
+	 * @param {number} hash - The hash of the node.
 	 */
 	setHashNode( node, hash ) {
 
@@ -746,7 +740,7 @@ class NodeBuilder {
 	 * Whether the given texture is filtered or not.
 	 *
 	 * @param {Texture} texture - The texture to check.
-	 * @return {Boolean} Whether the given texture is filtered or not.
+	 * @return {boolean} Whether the given texture is filtered or not.
 	 */
 	isFilteredTexture( texture ) {
 
@@ -798,8 +792,8 @@ class NodeBuilder {
 	 * resolved to `textureSize` in GLSL.
 	 *
 	 * @abstract
-	 * @param {String} method - The method name to resolve.
-	 * @return {String} The resolved method name.
+	 * @param {string} method - The method name to resolve.
+	 * @return {string} The resolved method name.
 	 */
 	getMethod( method ) {
 
@@ -810,7 +804,7 @@ class NodeBuilder {
 	/**
 	 * Returns a node for the given hash, see {@link NodeBuilder#setHashNode}.
 	 *
-	 * @param {Number} hash - The hash of the node.
+	 * @param {number} hash - The hash of the node.
 	 * @return {Node} The found node.
 	 */
 	getNodeFromHash( hash ) {
@@ -898,7 +892,7 @@ class NodeBuilder {
 	 * Returns a cache for the given node.
 	 *
 	 * @param {Node} node - The node.
-	 * @param {Boolean} [parent=true] - Whether this node refers to a shared parent cache or not.
+	 * @param {boolean} [parent=true] - Whether this node refers to a shared parent cache or not.
 	 * @return {NodeCache} The cache.
 	 */
 	getCacheFromNode( node, parent = true ) {
@@ -914,8 +908,8 @@ class NodeBuilder {
 	 * Whether the requested feature is available or not.
 	 *
 	 * @abstract
-	 * @param {String} name - The requested feature.
-	 * @return {Boolean} Whether the requested feature is supported or not.
+	 * @param {string} name - The requested feature.
+	 * @return {boolean} Whether the requested feature is supported or not.
 	 */
 	isAvailable( /*name*/ ) {
 
@@ -927,7 +921,7 @@ class NodeBuilder {
 	 * Returns the vertexIndex input variable as a native shader string.
 	 *
 	 * @abstract
-	 * @return {String} The instanceIndex shader string.
+	 * @return {string} The instanceIndex shader string.
 	 */
 	getVertexIndex() {
 
@@ -939,7 +933,7 @@ class NodeBuilder {
 	 * Returns the instanceIndex input variable as a native shader string.
 	 *
 	 * @abstract
-	 * @return {String} The instanceIndex shader string.
+	 * @return {string} The instanceIndex shader string.
 	 */
 	getInstanceIndex() {
 
@@ -952,7 +946,7 @@ class NodeBuilder {
 	 * Only relevant for WebGL and its `WEBGL_multi_draw` extension.
 	 *
 	 * @abstract
-	 * @return {String} The drawIndex shader string.
+	 * @return {string} The drawIndex shader string.
 	 */
 	getDrawIndex() {
 
@@ -964,7 +958,7 @@ class NodeBuilder {
 	 * Returns the frontFacing input variable as a native shader string.
 	 *
 	 * @abstract
-	 * @return {String} The frontFacing shader string.
+	 * @return {string} The frontFacing shader string.
 	 */
 	getFrontFacing() {
 
@@ -976,7 +970,7 @@ class NodeBuilder {
 	 * Returns the fragCoord input variable as a native shader string.
 	 *
 	 * @abstract
-	 * @return {String} The fragCoord shader string.
+	 * @return {string} The fragCoord shader string.
 	 */
 	getFragCoord() {
 
@@ -989,7 +983,7 @@ class NodeBuilder {
 	 * this method evaluate to `true`, WebGPU to `false`.
 	 *
 	 * @abstract
-	 * @return {Boolean} Whether to flip texture data along its vertical axis or not.
+	 * @return {boolean} Whether to flip texture data along its vertical axis or not.
 	 */
 	isFlipY() {
 
@@ -1001,7 +995,7 @@ class NodeBuilder {
 	 * Calling this method increases the usage count for the given node by one.
 	 *
 	 * @param {Node} node - The node to increase the usage count for.
-	 * @return {Number} The updated usage count.
+	 * @return {number} The updated usage count.
 	 */
 	increaseUsage( node ) {
 
@@ -1017,9 +1011,9 @@ class NodeBuilder {
 	 *
 	 * @abstract
 	 * @param {Texture} texture - The texture.
-	 * @param {String} textureProperty - The texture property name.
-	 * @param {String} uvSnippet - Snippet defining the texture coordinates.
-	 * @return {String} The generated shader string.
+	 * @param {string} textureProperty - The texture property name.
+	 * @param {string} uvSnippet - Snippet defining the texture coordinates.
+	 * @return {string} The generated shader string.
 	 */
 	generateTexture( /* texture, textureProperty, uvSnippet */ ) {
 
@@ -1032,23 +1026,106 @@ class NodeBuilder {
 	 *
 	 * @abstract
 	 * @param {Texture} texture - The texture.
-	 * @param {String} textureProperty - The texture property name.
-	 * @param {String} uvSnippet - Snippet defining the texture coordinates.
-	 * @param {String} levelSnippet - Snippet defining the mip level.
-	 * @return {String} The generated shader string.
+	 * @param {string} textureProperty - The texture property name.
+	 * @param {string} uvSnippet - Snippet defining the texture coordinates.
+	 * @param {?string} depthSnippet - Snippet defining the 0-based texture array index to sample.
+	 * @param {string} levelSnippet - Snippet defining the mip level.
+	 * @return {string} The generated shader string.
 	 */
-	generateTextureLod( /* texture, textureProperty, uvSnippet, levelSnippet */ ) {
+	generateTextureLod( /* texture, textureProperty, uvSnippet, depthSnippet, levelSnippet */ ) {
 
 		console.warn( 'Abstract function.' );
 
 	}
 
 	/**
+	 * Generates the array declaration string.
+	 *
+	 * @param {string} type - The type.
+	 * @param {?number} [count] - The count.
+	 * @return {string} The generated value as a shader string.
+	 */
+	generateArrayDeclaration( type, count ) {
+
+		return this.getType( type ) + '[ ' + count + ' ]';
+
+	}
+
+	/**
+	 * Generates the array shader string for the given type and value.
+	 *
+	 * @param {string} type - The type.
+	 * @param {?number} [count] - The count.
+	 * @param {?Array<Node>} [values=null] - The default values.
+	 * @return {string} The generated value as a shader string.
+	 */
+	generateArray( type, count, values = null ) {
+
+		let snippet = this.generateArrayDeclaration( type, count ) + '( ';
+
+		for ( let i = 0; i < count; i ++ ) {
+
+			const value = values ? values[ i ] : null;
+
+			if ( value !== null ) {
+
+				snippet += value.build( this, type );
+
+			} else {
+
+				snippet += this.generateConst( type );
+
+			}
+
+			if ( i < count - 1 ) snippet += ', ';
+
+		}
+
+		snippet += ' )';
+
+		return snippet;
+
+	}
+
+	/**
+	 * Generates the struct shader string.
+	 *
+	 * @param {string} type - The type.
+	 * @param {Array<Object>} [membersLayout] - The count.
+	 * @param {?Array<Node>} [values=null] - The default values.
+	 * @return {string} The generated value as a shader string.
+	 */
+	generateStruct( type, membersLayout, values = null ) {
+
+		const snippets = [];
+
+		for ( const member of membersLayout ) {
+
+			const { name, type } = member;
+
+			if ( values && values[ name ] && values[ name ].isNode ) {
+
+				snippets.push( values[ name ].build( this, type ) );
+
+			} else {
+
+				snippets.push( this.generateConst( type ) );
+
+			}
+
+		}
+
+		return type + '( ' + snippets.join( ', ' ) + ' )';
+
+	}
+
+
+	/**
 	 * Generates the shader string for the given type and value.
 	 *
-	 * @param {String} type - The type.
-	 * @param {Any?} [value=null] - The value.
-	 * @return {String} The generated value as a shader string.
+	 * @param {string} type - The type.
+	 * @param {?any} [value=null] - The value.
+	 * @return {string} The generated value as a shader string.
 	 */
 	generateConst( type, value = null ) {
 
@@ -1083,11 +1160,11 @@ class NodeBuilder {
 
 			return `${ this.getType( type ) }( ${ generateConst( value.x ) }, ${ generateConst( value.y ) }, ${ generateConst( value.z ) } )`;
 
-		} else if ( typeLength === 4 ) {
+		} else if ( typeLength === 4 && type !== 'mat2' ) {
 
 			return `${ this.getType( type ) }( ${ generateConst( value.x ) }, ${ generateConst( value.y ) }, ${ generateConst( value.z ) }, ${ generateConst( value.w ) } )`;
 
-		} else if ( typeLength > 4 && value && ( value.isMatrix3 || value.isMatrix4 ) ) {
+		} else if ( typeLength >= 4 && value && ( value.isMatrix2 || value.isMatrix3 || value.isMatrix4 ) ) {
 
 			return `${ this.getType( type ) }( ${ value.elements.map( generateConst ).join( ', ' ) } )`;
 
@@ -1105,8 +1182,8 @@ class NodeBuilder {
 	 * It might be necessary to convert certain data types to different ones
 	 * so this method can be used to hide the conversion.
 	 *
-	 * @param {String} type - The type.
-	 * @return {String} The updated type.
+	 * @param {string} type - The type.
+	 * @return {string} The updated type.
 	 */
 	getType( type ) {
 
@@ -1119,8 +1196,8 @@ class NodeBuilder {
 	/**
 	 * Whether the given attribute name is defined in the geometry or not.
 	 *
-	 * @param {String} name - The attribute name.
-	 * @return {Boolean} Whether the given attribute name is defined in the geometry.
+	 * @param {string} name - The attribute name.
+	 * @return {boolean} Whether the given attribute name is defined in the geometry.
 	 */
 	hasGeometryAttribute( name ) {
 
@@ -1131,8 +1208,8 @@ class NodeBuilder {
 	/**
 	 * Returns a node attribute for the given name and type.
 	 *
-	 * @param {String} name - The attribute's name.
-	 * @param {String} type - The attribute's type.
+	 * @param {string} name - The attribute's name.
+	 * @param {string} type - The attribute's type.
 	 * @return {NodeAttribute} The node attribute.
 	 */
 	getAttribute( name, type ) {
@@ -1166,7 +1243,7 @@ class NodeBuilder {
 	 *
 	 * @param {Node} node - The node.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The property name.
+	 * @return {string} The property name.
 	 */
 	getPropertyName( node/*, shaderStage*/ ) {
 
@@ -1177,8 +1254,8 @@ class NodeBuilder {
 	/**
 	 * Whether the given type is a vector type or not.
 	 *
-	 * @param {String} type - The type to check.
-	 * @return {Boolean} Whether the given type is a vector type or not.
+	 * @param {string} type - The type to check.
+	 * @return {boolean} Whether the given type is a vector type or not.
 	 */
 	isVector( type ) {
 
@@ -1189,8 +1266,8 @@ class NodeBuilder {
 	/**
 	 * Whether the given type is a matrix type or not.
 	 *
-	 * @param {String} type - The type to check.
-	 * @return {Boolean} Whether the given type is a matrix type or not.
+	 * @param {string} type - The type to check.
+	 * @return {boolean} Whether the given type is a matrix type or not.
 	 */
 	isMatrix( type ) {
 
@@ -1201,8 +1278,8 @@ class NodeBuilder {
 	/**
 	 * Whether the given type is a reference type or not.
 	 *
-	 * @param {String} type - The type to check.
-	 * @return {Boolean} Whether the given type is a reference type or not.
+	 * @param {string} type - The type to check.
+	 * @return {boolean} Whether the given type is a reference type or not.
 	 */
 	isReference( type ) {
 
@@ -1211,11 +1288,11 @@ class NodeBuilder {
 	}
 
 	/**
-	 * Whether the given texture needs a conversion to working color space.
+	 * Checks if the given texture requires a manual conversion to the working color space.
 	 *
 	 * @abstract
 	 * @param {Texture} texture - The texture to check.
-	 * @return {Boolean} Whether a color space conversion is required or not.
+	 * @return {boolean} Whether the given texture requires a conversion to working color space or not.
 	 */
 	needsToWorkingColorSpace( /*texture*/ ) {
 
@@ -1227,7 +1304,7 @@ class NodeBuilder {
 	 * Returns the component type of a given texture.
 	 *
 	 * @param {Texture} texture - The texture.
-	 * @return {String} The component type.
+	 * @return {string} The component type.
 	 */
 	getComponentTypeFromTexture( texture ) {
 
@@ -1247,8 +1324,8 @@ class NodeBuilder {
 	/**
 	 * Returns the element type for a given type.
 	 *
-	 * @param {String} type - The type.
-	 * @return {String} The element type.
+	 * @param {string} type - The type.
+	 * @return {string} The element type.
 	 */
 	getElementType( type ) {
 
@@ -1263,8 +1340,8 @@ class NodeBuilder {
 	/**
 	 * Returns the component type for a given type.
 	 *
-	 * @param {String} type - The type.
-	 * @return {String} The component type.
+	 * @param {string} type - The type.
+	 * @return {string} The component type.
 	 */
 	getComponentType( type ) {
 
@@ -1287,8 +1364,8 @@ class NodeBuilder {
 	/**
 	 * Returns the vector type for a given type.
 	 *
-	 * @param {String} type - The type.
-	 * @return {String} The vector type.
+	 * @param {string} type - The type.
+	 * @return {string} The vector type.
 	 */
 	getVectorType( type ) {
 
@@ -1302,16 +1379,23 @@ class NodeBuilder {
 	/**
 	 * Returns the data type for the given the length and component type.
 	 *
-	 * @param {Number} length - The length.
-	 * @param {String} [componentType='float'] - The component type.
-	 * @return {String} The type.
+	 * @param {number} length - The length.
+	 * @param {string} [componentType='float'] - The component type.
+	 * @return {string} The type.
 	 */
 	getTypeFromLength( length, componentType = 'float' ) {
 
 		if ( length === 1 ) return componentType;
 
-		const baseType = getTypeFromLength( length );
+		let baseType = getTypeFromLength( length );
 		const prefix = componentType === 'float' ? '' : componentType[ 0 ];
+
+		// fix edge case for mat2x2 being same size as vec4
+		if ( /mat2/.test( componentType ) === true ) {
+
+			baseType = baseType.replace( 'vec', 'mat' );
+
+		}
 
 		return prefix + baseType;
 
@@ -1321,7 +1405,7 @@ class NodeBuilder {
 	 * Returns the type for a given typed array.
 	 *
 	 * @param {TypedArray} array - The typed array.
-	 * @return {String} The type.
+	 * @return {string} The type.
 	 */
 	getTypeFromArray( array ) {
 
@@ -1333,7 +1417,7 @@ class NodeBuilder {
 	 * Returns the type for a given buffer attribute.
 	 *
 	 * @param {BufferAttribute} attribute - The buffer attribute.
-	 * @return {String} The type.
+	 * @return {string} The type.
 	 */
 	getTypeFromAttribute( attribute ) {
 
@@ -1360,8 +1444,8 @@ class NodeBuilder {
 	/**
 	 * Returns the length for the given data type.
 	 *
-	 * @param {String} type - The data type.
-	 * @return {Number} The length.
+	 * @param {string} type - The data type.
+	 * @return {number} The length.
 	 */
 	getTypeLength( type ) {
 
@@ -1381,8 +1465,8 @@ class NodeBuilder {
 	/**
 	 * Returns the vector type for a given matrix type.
 	 *
-	 * @param {String} type - The matrix type.
-	 * @return {String} The vector type.
+	 * @param {string} type - The matrix type.
+	 * @return {string} The vector type.
 	 */
 	getVectorFromMatrix( type ) {
 
@@ -1395,9 +1479,9 @@ class NodeBuilder {
 	 * given value. E.g. `vec4` should be changed to the new component type
 	 * `uint` which results in `uvec4`.
 	 *
-	 * @param {String} type - The type.
-	 * @param {String} newComponentType - The new component type.
-	 * @return {String} The new type.
+	 * @param {string} type - The type.
+	 * @param {string} newComponentType - The new component type.
+	 * @return {string} The new type.
 	 */
 	changeComponentType( type, newComponentType ) {
 
@@ -1408,8 +1492,8 @@ class NodeBuilder {
 	/**
 	 * Returns the integer type pendant for the given type.
 	 *
-	 * @param {String} type - The type.
-	 * @return {String} The integer type.
+	 * @param {string} type - The type.
+	 * @return {string} The integer type.
 	 */
 	getIntegerType( type ) {
 
@@ -1459,7 +1543,7 @@ class NodeBuilder {
 	 *
 	 * @param {Node} node - The node to get the data for.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} [shaderStage=this.shaderStage] - The shader stage.
-	 * @param {NodeCache?} cache - An optional cache.
+	 * @param {?NodeCache} cache - An optional cache.
 	 * @return {Object} The node data.
 	 */
 	getDataFromNode( node, shaderStage = this.shaderStage, cache = null ) {
@@ -1501,7 +1585,7 @@ class NodeBuilder {
 	 * Returns an instance of {@link NodeAttribute} for the given buffer attribute node.
 	 *
 	 * @param {BufferAttributeNode} node - The buffer attribute node.
-	 * @param {String} type - The node type.
+	 * @param {string} type - The node type.
 	 * @return {NodeAttribute} The node attribute.
 	 */
 	getBufferAttributeFromNode( node, type ) {
@@ -1527,16 +1611,17 @@ class NodeBuilder {
 	}
 
 	/**
-	 * Returns an instance of {@link StructTypeNode} for the given output struct node.
+	 * Returns an instance of {@link StructType} for the given output struct node.
 	 *
 	 * @param {OutputStructNode} node - The output struct node.
-	 * @param {Array<String>} types - The output struct types.
+	 * @param {Array<Object>} membersLayout - The output struct types.
+	 * @param {?string} [name=null] - The name of the struct.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} [shaderStage=this.shaderStage] - The shader stage.
-	 * @return {StructTypeNode} The struct type attribute.
+	 * @return {StructType} The struct type attribute.
 	 */
-	getStructTypeFromNode( node, types, shaderStage = this.shaderStage ) {
+	getStructTypeFromNode( node, membersLayout, name = null, shaderStage = this.shaderStage ) {
 
-		const nodeData = this.getDataFromNode( node, shaderStage );
+		const nodeData = this.getDataFromNode( node, shaderStage, this.globalCache );
 
 		let structType = nodeData.structType;
 
@@ -1544,7 +1629,9 @@ class NodeBuilder {
 
 			const index = this.structs.index ++;
 
-			structType = new StructTypeNode( 'StructType' + index, types );
+			if ( name === null ) name = 'StructType' + index;
+
+			structType = new StructType( name, membersLayout );
 
 			this.structs[ shaderStage ].push( structType );
 
@@ -1557,12 +1644,28 @@ class NodeBuilder {
 	}
 
 	/**
+	 * Returns an instance of {@link StructType} for the given output struct node.
+	 *
+	 * @param {OutputStructNode} node - The output struct node.
+	 * @param {Array<Object>} membersLayout - The output struct types.
+	 * @return {StructType} The struct type attribute.
+	 */
+	getOutputStructTypeFromNode( node, membersLayout ) {
+
+		const structType = this.getStructTypeFromNode( node, membersLayout, 'OutputType', 'fragment' );
+		structType.output = true;
+
+		return structType;
+
+	}
+
+	/**
 	 * Returns an instance of {@link NodeUniform} for the given uniform node.
 	 *
 	 * @param {UniformNode} node - The uniform node.
-	 * @param {String} type - The uniform type.
+	 * @param {string} type - The uniform type.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} [shaderStage=this.shaderStage] - The shader stage.
-	 * @param {String?} name - The name of the uniform.
+	 * @param {?string} name - The name of the uniform.
 	 * @return {NodeUniform} The node uniform.
 	 */
 	getUniformFromNode( node, type, shaderStage = this.shaderStage, name = null ) {
@@ -1588,15 +1691,34 @@ class NodeBuilder {
 	}
 
 	/**
+	 * Returns the array length.
+	 *
+	 * @param {Node} node - The node.
+	 * @return {?number} The array length.
+	 */
+	getArrayCount( node ) {
+
+		let count = null;
+
+		if ( node.isArrayNode ) count = node.count;
+		else if ( node.isVarNode && node.node.isArrayNode ) count = node.node.count;
+
+		return count;
+
+	}
+
+	/**
 	 * Returns an instance of {@link NodeVar} for the given variable node.
 	 *
 	 * @param {VarNode} node - The variable node.
-	 * @param {String?} name - The variable's name.
-	 * @param {String} [type=node.getNodeType( this )] - The variable's type.
+	 * @param {?string} name - The variable's name.
+	 * @param {string} [type=node.getNodeType( this )] - The variable's type.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} [shaderStage=this.shaderStage] - The shader stage.
+	 * @param {boolean} [readOnly=false] - Whether the variable is read-only or not.
+	 *
 	 * @return {NodeVar} The node variable.
 	 */
-	getVarFromNode( node, name = null, type = node.getNodeType( this ), shaderStage = this.shaderStage ) {
+	getVarFromNode( node, name = null, type = node.getNodeType( this ), shaderStage = this.shaderStage, readOnly = false ) {
 
 		const nodeData = this.getDataFromNode( node, shaderStage );
 
@@ -1604,13 +1726,30 @@ class NodeBuilder {
 
 		if ( nodeVar === undefined ) {
 
+			const idNS = readOnly ? '_const' : '_var';
+
 			const vars = this.vars[ shaderStage ] || ( this.vars[ shaderStage ] = [] );
+			const id = this.vars[ idNS ] || ( this.vars[ idNS ] = 0 );
 
-			if ( name === null ) name = 'nodeVar' + vars.length;
+			if ( name === null ) {
 
-			nodeVar = new NodeVar( name, type );
+				name = ( readOnly ? 'nodeConst' : 'nodeVar' ) + id;
 
-			vars.push( nodeVar );
+				this.vars[ idNS ] ++;
+
+			}
+
+			//
+
+			const count = this.getArrayCount( node );
+
+			nodeVar = new NodeVar( name, type, readOnly, count );
+
+			if ( ! readOnly ) {
+
+				vars.push( nodeVar );
+
+			}
 
 			nodeData.variable = nodeVar;
 
@@ -1621,11 +1760,58 @@ class NodeBuilder {
 	}
 
 	/**
+	 * Returns whether a Node or its flow is deterministic, useful for use in `const`.
+	 *
+	 * @param {Node} node - The varying node.
+	 * @return {boolean} Returns true if deterministic.
+	 */
+	isDeterministic( node ) {
+
+		if ( node.isMathNode ) {
+
+			return this.isDeterministic( node.aNode ) &&
+				( node.bNode ? this.isDeterministic( node.bNode ) : true ) &&
+				( node.cNode ? this.isDeterministic( node.cNode ) : true );
+
+		} else if ( node.isOperatorNode ) {
+
+			return this.isDeterministic( node.aNode ) &&
+				( node.bNode ? this.isDeterministic( node.bNode ) : true );
+
+		} else if ( node.isArrayNode ) {
+
+			if ( node.values !== null ) {
+
+				for ( const n of node.values ) {
+
+					if ( ! this.isDeterministic( n ) ) {
+
+						return false;
+
+					}
+
+				}
+
+			}
+
+			return true;
+
+		} else if ( node.isConstNode ) {
+
+			return true;
+
+		}
+
+		return false;
+
+	}
+
+	/**
 	 * Returns an instance of {@link NodeVarying} for the given varying node.
 	 *
 	 * @param {(VaryingNode|PropertyNode)} node - The varying node.
-	 * @param {String?} name - The varying's name.
-	 * @param {String} [type=node.getNodeType( this )] - The varying's type.
+	 * @param {?string} name - The varying's name.
+	 * @param {string} [type=node.getNodeType( this )] - The varying's type.
 	 * @return {NodeVar} The node varying.
 	 */
 	getVaryingFromNode( node, name = null, type = node.getNodeType( this ) ) {
@@ -1657,7 +1843,7 @@ class NodeBuilder {
 	 * Returns an instance of {@link NodeCode} for the given code node.
 	 *
 	 * @param {CodeNode} node - The code node.
-	 * @param {String} type - The node type.
+	 * @param {string} type - The node type.
 	 * @param {('vertex'|'fragment'|'compute'|'any')} [shaderStage=this.shaderStage] - The shader stage.
 	 * @return {NodeCode} The node code.
 	 */
@@ -1729,7 +1915,7 @@ class NodeBuilder {
 	 * Add a inline-code to the current flow code-block.
 	 *
 	 * @param {Node} node - The node to add.
-	 * @param {String} code - The code to add.
+	 * @param {string} code - The code to add.
 	 * @param {Node} nodeBlock - Current ConditionalNode
 	 */
 	addLineFlowCodeBlock( node, code, nodeBlock ) {
@@ -1746,8 +1932,8 @@ class NodeBuilder {
 	/**
 	 * Add a inline-code to the current flow.
 	 *
-	 * @param {String} code - The code to add.
-	 * @param {Node?} [node= null] - Optional Node, can help the system understand if the Node is part of a code-block.
+	 * @param {string} code - The code to add.
+	 * @param {?Node} [node= null] - Optional Node, can help the system understand if the Node is part of a code-block.
 	 * @return {NodeBuilder} A reference to this node builder.
 	 */
 	addLineFlowCode( code, node = null ) {
@@ -1777,7 +1963,7 @@ class NodeBuilder {
 	/**
 	 * Adds a code to the current code flow.
 	 *
-	 * @param {String} code - Shader code.
+	 * @param {string} code - Shader code.
 	 * @return {NodeBuilder} A reference to this node builder.
 	 */
 	addFlowCode( code ) {
@@ -1843,6 +2029,22 @@ class NodeBuilder {
 		this.flowsData.set( node, flowData );
 
 		return flowData;
+
+	}
+
+	/**
+	 * Includes a node in the current function node.
+	 *
+	 * @param {Node} node - The node to include.
+	 * @returns {void}
+	 */
+	addInclude( node ) {
+
+		if ( this.currentFunctionNode !== null ) {
+
+			this.currentFunctionNode.includes.push( node );
+
+		}
 
 	}
 
@@ -1917,7 +2119,7 @@ class NodeBuilder {
 	 * Runs the node flow through all the steps of creation, 'setup', 'analyze', 'generate'.
 	 *
 	 * @param {Node} node - The node to execute.
-	 * @param {String?} output - Expected output type. For example 'vec3'.
+	 * @param {?string} output - Expected output type. For example 'vec3'.
 	 * @return {Object}
 	 */
 	flowStagesNode( node, output = null ) {
@@ -1963,8 +2165,8 @@ class NodeBuilder {
 	 * It is a similar type of method like {@link NodeBuilder#getMethod}.
 	 *
 	 * @abstract
-	 * @param {String} op - The operator name to resolve.
-	 * @return {String} The resolved operator name.
+	 * @param {string} op - The operator name to resolve.
+	 * @return {string} The resolved operator name.
 	 */
 	getFunctionOperator( /* op */ ) {
 
@@ -1976,7 +2178,7 @@ class NodeBuilder {
 	 * Generates a code flow based on a child Node.
 	 *
 	 * @param {Node} node - The node to execute.
-	 * @param {String?} output - Expected output type. For example 'vec3'.
+	 * @param {?string} output - Expected output type. For example 'vec3'.
 	 * @return {Object} The code flow.
 	 */
 	flowChildNode( node, output = null ) {
@@ -2005,8 +2207,8 @@ class NodeBuilder {
 	 *
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
 	 * @param {Node} node - The node to execute.
-	 * @param {String?} output - Expected output type. For example 'vec3'.
-	 * @param {String?} propertyName - The property name to assign the result.
+	 * @param {?string} output - Expected output type. For example 'vec3'.
+	 * @param {?string} propertyName - The property name to assign the result.
 	 * @return {Object}
 	 */
 	flowNodeFromShaderStage( shaderStage, node, output = null, propertyName = null ) {
@@ -2047,7 +2249,7 @@ class NodeBuilder {
 	 *
 	 * @abstract
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The attribute code section.
+	 * @return {string} The attribute code section.
 	 */
 	getAttributes( /*shaderStage*/ ) {
 
@@ -2060,7 +2262,7 @@ class NodeBuilder {
 	 *
 	 * @abstract
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The varying code section.
+	 * @return {string} The varying code section.
 	 */
 	getVaryings( /*shaderStage*/ ) {
 
@@ -2071,13 +2273,14 @@ class NodeBuilder {
 	/**
 	 * Returns a single variable definition as a shader string for the given variable type and name.
 	 *
-	 * @param {String} type - The variable's type.
-	 * @param {String} name - The variable's name.
-	 * @return {String} The shader string.
+	 * @param {string} type - The variable's type.
+	 * @param {string} name - The variable's name.
+	 * @param {?number} [count=null] - The array length.
+	 * @return {string} The shader string.
 	 */
-	getVar( type, name ) {
+	getVar( type, name, count = null ) {
 
-		return `${ this.getType( type ) } ${ name }`;
+		return `${ count !== null ? this.generateArrayDeclaration( type, count ) : this.getType( type ) } ${ name }`;
 
 	}
 
@@ -2085,7 +2288,7 @@ class NodeBuilder {
 	 * Returns the variable definitions as a shader string for the given shader stage.
 	 *
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The variable code section.
+	 * @return {string} The variable code section.
 	 */
 	getVars( shaderStage ) {
 
@@ -2112,7 +2315,7 @@ class NodeBuilder {
 	 *
 	 * @abstract
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The uniform code section.
+	 * @return {string} The uniform code section.
 	 */
 	getUniforms( /*shaderStage*/ ) {
 
@@ -2124,7 +2327,7 @@ class NodeBuilder {
 	 * Returns the native code definitions as a shader string for the given shader stage.
 	 *
 	 * @param {('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage.
-	 * @return {String} The native code section.
+	 * @return {string} The native code section.
 	 */
 	getCodes( shaderStage ) {
 
@@ -2149,7 +2352,7 @@ class NodeBuilder {
 	/**
 	 * Returns the hash of this node builder.
 	 *
-	 * @return {String} The hash.
+	 * @return {string} The hash.
 	 */
 	getHash() {
 
@@ -2160,7 +2363,7 @@ class NodeBuilder {
 	/**
 	 * Sets the current shader stage.
 	 *
-	 * @param {('vertex'|'fragment'|'compute'|'any')?} shaderStage - The shader stage to set.
+	 * @param {?('vertex'|'fragment'|'compute'|'any')} shaderStage - The shader stage to set.
 	 */
 	setShaderStage( shaderStage ) {
 
@@ -2171,7 +2374,7 @@ class NodeBuilder {
 	/**
 	 * Returns the current shader stage.
 	 *
-	 * @return {('vertex'|'fragment'|'compute'|'any')?} The current shader stage.
+	 * @return {?('vertex'|'fragment'|'compute'|'any')} The current shader stage.
 	 */
 	getShaderStage() {
 
@@ -2182,7 +2385,7 @@ class NodeBuilder {
 	/**
 	 * Sets the current build stage.
 	 *
-	 * @param {('setup'|'analyze'|'generate')?} buildStage - The build stage to set.
+	 * @param {?('setup'|'analyze'|'generate')} buildStage - The build stage to set.
 	 */
 	setBuildStage( buildStage ) {
 
@@ -2193,7 +2396,7 @@ class NodeBuilder {
 	/**
 	 * Returns the current build stage.
 	 *
-	 * @return {('setup'|'analyze'|'generate')?} The current build stage.
+	 * @return {?('setup'|'analyze'|'generate')} The current build stage.
 	 */
 	getBuildStage() {
 
@@ -2295,7 +2498,7 @@ class NodeBuilder {
 	 * Returns a uniform representation which is later used for UBO generation and rendering.
 	 *
 	 * @param {NodeUniform} uniformNode - The uniform node.
-	 * @param {String} type - The requested type.
+	 * @param {string} type - The requested type.
 	 * @return {Uniform} The uniform.
 	 */
 	getNodeUniform( uniformNode, type ) {
@@ -2305,6 +2508,7 @@ class NodeBuilder {
 		if ( type === 'vec3' || type === 'ivec3' || type === 'uvec3' ) return new Vector3NodeUniform( uniformNode );
 		if ( type === 'vec4' || type === 'ivec4' || type === 'uvec4' ) return new Vector4NodeUniform( uniformNode );
 		if ( type === 'color' ) return new ColorNodeUniform( uniformNode );
+		if ( type === 'mat2' ) return new Matrix2NodeUniform( uniformNode );
 		if ( type === 'mat3' ) return new Matrix3NodeUniform( uniformNode );
 		if ( type === 'mat4' ) return new Matrix4NodeUniform( uniformNode );
 
@@ -2317,10 +2521,10 @@ class NodeBuilder {
 	 * this method might be used to convert a simple float string `"1.0"` into a
 	 * `vec3` representation: `"vec3<f32>( 1.0 )"`.
 	 *
-	 * @param {String} snippet - The shader snippet.
-	 * @param {String} fromType - The source type.
-	 * @param {String} toType - The target type.
-	 * @return {String} The updated shader string.
+	 * @param {string} snippet - The shader snippet.
+	 * @param {string} fromType - The source type.
+	 * @param {string} toType - The target type.
+	 * @return {string} The updated shader string.
 	 */
 	format( snippet, fromType, toType ) {
 
@@ -2405,7 +2609,7 @@ class NodeBuilder {
 	/**
 	 * Returns a signature with the engine's current revision.
 	 *
-	 * @return {String} The signature.
+	 * @return {string} The signature.
 	 */
 	getSignature() {
 
@@ -2413,8 +2617,15 @@ class NodeBuilder {
 
 	}
 
-	// deprecated
+	// Deprecated
 
+	/**
+	 * @function
+	 * @deprecated since r168. Use `new NodeMaterial()` instead, with targeted node material name.
+	 *
+	 * @param {string} [type='NodeMaterial'] - The node material type.
+	 * @throws {Error}
+	 */
 	createNodeMaterial( type = 'NodeMaterial' ) { // @deprecated, r168
 
 		throw new Error( `THREE.NodeBuilder: createNodeMaterial() was deprecated. Use new ${ type }() instead.` );

@@ -53,7 +53,7 @@ class Textures extends DataMap {
 	 * it updates the texture states representing the attachments of the framebuffer.
 	 *
 	 * @param {RenderTarget} renderTarget - The render target to update.
-	 * @param {Number} [activeMipmapLevel=0] - The active mipmap level.
+	 * @param {number} [activeMipmapLevel=0] - The active mipmap level.
 	 */
 	updateRenderTarget( renderTarget, activeMipmapLevel = 0 ) {
 
@@ -124,21 +124,28 @@ class Textures extends DataMap {
 
 		//
 
+
 		const options = { sampleCount };
 
-		for ( let i = 0; i < textures.length; i ++ ) {
+		// XR render targets require no texture updates
 
-			const texture = textures[ i ];
+		if ( renderTarget.isXRRenderTarget !== true ) {
 
-			if ( textureNeedsUpdate ) texture.needsUpdate = true;
+			for ( let i = 0; i < textures.length; i ++ ) {
 
-			this.updateTexture( texture, options );
+				const texture = textures[ i ];
 
-		}
+				if ( textureNeedsUpdate ) texture.needsUpdate = true;
 
-		if ( depthTexture ) {
+				this.updateTexture( texture, options );
 
-			this.updateTexture( depthTexture, options );
+			}
+
+			if ( depthTexture ) {
+
+				this.updateTexture( depthTexture, options );
+
+			}
 
 		}
 
@@ -375,9 +382,9 @@ class Textures extends DataMap {
 	 * Computes the number of mipmap levels for the given texture.
 	 *
 	 * @param {Texture} texture - The texture.
-	 * @param {Number} width - The texture's width.
-	 * @param {Number} height - The texture's height.
-	 * @return {Number} The number of mipmap levels.
+	 * @param {number} width - The texture's width.
+	 * @param {number} height - The texture's height.
+	 * @return {number} The number of mipmap levels.
 	 */
 	getMipLevels( texture, width, height ) {
 
@@ -409,7 +416,7 @@ class Textures extends DataMap {
 	 * Returns `true` if the given texture requires mipmaps.
 	 *
 	 * @param {Texture} texture - The texture.
-	 * @return {Boolean} Whether mipmaps are required or not.
+	 * @return {boolean} Whether mipmaps are required or not.
 	 */
 	needsMipmaps( texture ) {
 
@@ -421,7 +428,7 @@ class Textures extends DataMap {
 	 * Returns `true` if the given texture is an environment map.
 	 *
 	 * @param {Texture} texture - The texture.
-	 * @return {Boolean} Whether the given texture is an environment map or not.
+	 * @return {boolean} Whether the given texture is an environment map or not.
 	 */
 	isEnvironmentTexture( texture ) {
 
