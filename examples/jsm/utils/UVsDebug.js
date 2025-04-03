@@ -10,7 +10,7 @@ import {
  *
  */
 
-function UVsDebug( geometry, size = 1024 ) {
+function UVsDebug( geometry, size = 1024, uv_name = 'uv' ) {
 
 	// handles wrapping of uv.x > 1 only
 
@@ -43,8 +43,8 @@ function UVsDebug( geometry, size = 1024 ) {
 	ctx.fillRect( 0, 0, width, height );
 
 	const index = geometry.index;
-	const uvAttribute = geometry.attributes.uv;
-
+	const uvAttribute = geometry.attributes[uv_name];
+	
 	if ( index ) {
 
 		// indexed geometry

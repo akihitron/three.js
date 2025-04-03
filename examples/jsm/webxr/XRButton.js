@@ -124,16 +124,12 @@ class XRButton {
 
 				callback( 'available' );
 
-				window.lock_rendering(); // @DDD@
-
 				navigator.xr.offerSession( mode, sessionOptions )
 					.then( onSessionStarted )
 					.catch( ( err ) => {
 
 						console.warn( err );
 						callback( 'not_allowed' );
-
-						window.unlock_rendering(); // @DDD@
 
 					} );
 
