@@ -12,12 +12,12 @@ class ImageLoader extends Loader {
 
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	load( url, onLoad, onProgress, onError ) {
+	load( url, onLoad, onProgress, onError, params = { no_cache: false } ) {
 
 		const is_data_url = window.is_data_url( url );
 		const scope = this;
 		let cached = null;
-		if ( ! is_data_url ) {
+		if ( ! is_data_url && ! params.no_cache ) {
 
 			if ( this.path !== undefined ) url = this.path + url;
 			url = this.manager.resolveURL( url );

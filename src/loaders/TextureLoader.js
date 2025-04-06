@@ -11,7 +11,7 @@ class TextureLoader extends Loader {
 	}
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	load( url, onLoad, onProgress, onError ) {
+	load( url, onLoad, onProgress, onError, params = {} ) {
 
 		const original_url = url;
 		const texture = new Texture();
@@ -55,7 +55,7 @@ class TextureLoader extends Loader {
 
 				tm.finish();
 
-			}, onProgress, onError );
+			}, onProgress, onError, params );
 
 		}
 
