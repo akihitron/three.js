@@ -352,7 +352,7 @@ class Object3D extends EventDispatcher {
 			};
 			this.ikEnabled = true;
 			const self = this;
-			function _find_( name, o, exact_math = false, arr = null ) {
+			function _find_( name, o, exact_match = false, arr = null ) {
 
 				const _name_ = o.name;
 				if ( name instanceof RegExp ) {
@@ -366,7 +366,7 @@ class Object3D extends EventDispatcher {
 
 				} else {
 
-					if ( exact_math ) {
+					if ( exact_match ) {
 
 						if ( _name_ === name ) {
 
@@ -391,7 +391,7 @@ class Object3D extends EventDispatcher {
 				for ( const sub of o.children ) {
 
 					let ret = null;
-					ret = _find_( name, sub, exact_math, arr );
+					ret = _find_( name, sub, exact_match, arr );
 					if ( ret && arr == null ) return ret;
 
 				}
@@ -400,21 +400,21 @@ class Object3D extends EventDispatcher {
 
 			}
 
-			this.find = function ( name, exact_math = false ) {
+			this.find = function ( name, exact_match = false ) {
 
-				return _find_( name, self, exact_math );
+				return _find_( name, self, exact_match );
 
 			};
 
-			this.findAll = function ( name, exact_math = false ) {
+			this.findAll = function ( name, exact_match = false ) {
 
 				const arr = [];
-				_find_( name, self, exact_math, arr );
+				_find_( name, self, exact_match, arr );
 				return arr;
 
 			};
 
-			function _findMaterial_( name, o = self, exact_math = false ) {
+			function _findMaterial_( name, o = self, exact_match = false ) {
 
 				if ( o.material ) {
 
@@ -429,7 +429,7 @@ class Object3D extends EventDispatcher {
 
 							} else {
 
-								if ( exact_math ) {
+								if ( exact_match ) {
 
 									if ( _name_ === name ) return material;
 
@@ -452,7 +452,7 @@ class Object3D extends EventDispatcher {
 
 						} else {
 
-							if ( exact_math ) {
+							if ( exact_match ) {
 
 								if ( _name_ === name ) return o.material;
 
@@ -471,7 +471,7 @@ class Object3D extends EventDispatcher {
 				for ( const sub of o.children ) {
 
 					let ret = null;
-					ret = _findMaterial_( name, sub, exact_math );
+					ret = _findMaterial_( name, sub, exact_match );
 					if ( ret ) return ret;
 
 				}
@@ -480,9 +480,9 @@ class Object3D extends EventDispatcher {
 
 			}
 
-			this.findMaterial = function ( name, exact_math = false ) {
+			this.findMaterial = function ( name, exact_match = false ) {
 
-				return _findMaterial_( name, self, exact_math );
+				return _findMaterial_( name, self, exact_match );
 
 			};
 
