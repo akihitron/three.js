@@ -77,7 +77,7 @@ class RenderPass extends Pass {
 
 		}
 
-		window.DMC.start_gpu_status_check();
+		window.DMC.startGPUStatusChecker();
 		renderer.render( this.scene, this.camera );
 		if ( this.outline_effect ) this.outline_effect.renderOutline( this.scene, this.camera );
 		if ( effect_composer.renderTarget3 == render_target ) {
@@ -86,7 +86,7 @@ class RenderPass extends Pass {
 
 		}
 
-		window.DMC.end_gpu_status_check();
+		window.DMC.endGPUStatusChecker();
 
 		// restore
 

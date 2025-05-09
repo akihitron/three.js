@@ -165,10 +165,10 @@ class SSAARenderPass extends Pass {
 
 			renderer.clear();
 
-			window.DMC.start_gpu_status_check(); // @DDD@
+			window.DMC.startGPUStatusChecker(); // @DDD@
 			renderer.render( this.scene, this.camera );
 			if ( this.outline_effect ) this.outline_effect.render( this.scene, this.camera ); // @DDD@
-			window.DMC.end_gpu_status_check(); // @DDD@
+			window.DMC.endGPUStatusChecker(); // @DDD@
 
 			if ( i === 0 ) { // @DDD@
 
