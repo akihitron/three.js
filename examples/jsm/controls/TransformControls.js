@@ -1,6 +1,7 @@
 import {
 	BoxGeometry,
 	BufferGeometry,
+	Controls,
 	CylinderGeometry,
 	DoubleSide,
 	Euler,
@@ -83,28 +84,18 @@ class TransformControls extends Controls {
 	 */
 	constructor( camera, domElement = null ) {
 
-		super();
+		super( undefined, domElement );
 
-		if ( domElement === undefined ) {
+		const root = new TransformControlsRoot( this );
+		this._root = root;
 
-			console.warn( 'THREE.TransformControls: The second parameter "domElement" is now mandatory.' );
-			domElement = document;
+		const gizmo = new TransformControlsGizmo();
+		this._gizmo = gizmo;
+		root.add( gizmo );
 
-		}
-
-		this.isTransformControls = true;
-
-		this.visible = false;
-		this.domElement = domElement;
-		this.domElement.style.touchAction = 'none'; // disable touch scroll
-
-		const _gizmo = new TransformControlsGizmo();
-		this._gizmo = _gizmo;
-		this.add( _gizmo );
-
-		const _plane = new TransformControlsPlane();
-		this._plane = _plane;
-		this.add( _plane );
+		const plane = new TransformControlsPlane();
+		this._plane = plane;
+		root.add( plane );
 
 		const scope = this;
 
@@ -126,8 +117,8 @@ class TransformControls extends Controls {
 					if ( propValue !== value ) {
 
 						propValue = value;
-						_plane[ propName ] = value;
-						_gizmo[ propName ] = value;
+						plane[ propName ] = value;
+						gizmo[ propName ] = value;
 
 						scope.dispatchEvent( { type: propName + '-changed', value: value } );
 						scope.dispatchEvent( _changeEvent );
@@ -139,8 +130,8 @@ class TransformControls extends Controls {
 			} );
 
 			scope[ propName ] = defaultValue;
-			_plane[ propName ] = defaultValue;
-			_gizmo[ propName ] = defaultValue;
+			plane[ propName ] = defaultValue;
+			gizmo[ propName ] = defaultValue;
 
 		}
 
@@ -368,13 +359,15 @@ class TransformControls extends Controls {
 
 		if ( domElement !== null ) {
 
-			this.connect();
+			this.connect( domElement );
 
 		}
 
 	}
 
-	connect() {
+	connect( element ) {
+
+		super.connect( element );
 
 		this.domElement.addEventListener( 'pointerdown', this._onPointerDown );
 		this.domElement.addEventListener( 'pointermove', this._onPointerHover );
@@ -395,6 +388,12 @@ class TransformControls extends Controls {
 
 	}
 
+	/**
+	 * Returns the visual representation of the controls. Add the helper to your scene to
+	 * visually transform the attached  3D object.
+	 *
+	 * @return {TransformControlsRoot} The helper.
+	 */
 	getHelper() {
 
 		return this._root;
@@ -575,6 +574,10 @@ class TransformControls extends Controls {
 
 			}
 
+			object.position.x = Math.max( this.minX, Math.min( this.maxX, object.position.x ) );
+			object.position.y = Math.max( this.minY, Math.min( this.maxY, object.position.y ) );
+			object.position.z = Math.max( this.minZ, Math.min( this.maxZ, object.position.z ) );
+
 		} else if ( mode === 'scale' ) {
 
 			if ( axis.search( 'XYZ' ) !== - 1 ) {
@@ -737,17 +740,9 @@ class TransformControls extends Controls {
 
 	dispose() {
 
-		this.domElement.removeEventListener( 'pointerdown', this._onPointerDown );
-		this.domElement.removeEventListener( 'pointermove', this._onPointerHover );
-		this.domElement.removeEventListener( 'pointermove', this._onPointerMove );
-		this.domElement.removeEventListener( 'pointerup', this._onPointerUp );
+		this.disconnect();
 
-		this.traverse( function ( child ) {
-
-			if ( child.geometry ) child.geometry.dispose();
-			if ( child.material ) child.material.dispose();
-
-		} );
+		this._root.dispose();
 
 	}
 
@@ -760,7 +755,7 @@ class TransformControls extends Controls {
 	attach( object ) {
 
 		this.object = object;
-		this.visible = true;
+		this._root.visible = true;
 
 		return this;
 
@@ -774,8 +769,9 @@ class TransformControls extends Controls {
 	detach() {
 
 		this.object = undefined;
-		this.visible = false;
 		this.axis = null;
+
+		this._root.visible = false;
 
 		return this;
 
@@ -1010,6 +1006,75 @@ const _unitZ = new Vector3( 0, 0, 1 );
 const _v1 = new Vector3();
 const _v2 = new Vector3();
 const _v3 = new Vector3();
+
+class TransformControlsRoot extends Object3D {
+
+	constructor( controls ) {
+
+		super();
+
+		this.isTransformControlsRoot = true;
+
+		this.controls = controls;
+		this.visible = false;
+
+	}
+
+	// updateMatrixWorld updates key transformation variables
+	updateMatrixWorld( force ) {
+
+		const controls = this.controls;
+
+		if ( controls.object !== undefined ) {
+
+			controls.object.updateMatrixWorld();
+
+			if ( controls.object.parent === null ) {
+
+				console.error( 'TransformControls: The attached 3D object must be a part of the scene graph.' );
+
+			} else {
+
+				controls.object.parent.matrixWorld.decompose( controls._parentPosition, controls._parentQuaternion, controls._parentScale );
+
+			}
+
+			controls.object.matrixWorld.decompose( controls.worldPosition, controls.worldQuaternion, controls._worldScale );
+
+			controls._parentQuaternionInv.copy( controls._parentQuaternion ).invert();
+			controls._worldQuaternionInv.copy( controls.worldQuaternion ).invert();
+
+		}
+
+		controls.camera.updateMatrixWorld();
+		controls.camera.matrixWorld.decompose( controls.cameraPosition, controls.cameraQuaternion, controls._cameraScale );
+
+		if ( controls.camera.isOrthographicCamera ) {
+
+			controls.camera.getWorldDirection( controls.eye ).negate();
+
+		} else {
+
+			controls.eye.copy( controls.cameraPosition ).sub( controls.worldPosition ).normalize();
+
+		}
+
+		super.updateMatrixWorld( force );
+
+	}
+
+	dispose() {
+
+		this.traverse( function ( child ) {
+
+			if ( child.geometry ) child.geometry.dispose();
+			if ( child.material ) child.material.dispose();
+
+		} );
+
+	}
+
+}
 
 class TransformControlsGizmo extends Object3D {
 
