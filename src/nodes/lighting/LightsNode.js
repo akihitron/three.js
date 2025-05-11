@@ -53,21 +53,21 @@ class LightsNode extends Node {
 		 *
 		 * @type {Node<vec3>}
 		 */
-		this.totalDiffuseNode = vec3().toVar( 'totalDiffuse' );
+		this.totalDiffuseNode = vec3().toVar();
 
 		/**
 		 * A node representing the total specular light.
 		 *
 		 * @type {Node<vec3>}
 		 */
-		this.totalSpecularNode = vec3().toVar( 'totalSpecular' );
+		this.totalSpecularNode = vec3().toVar();
 
 		/**
 		 * A node representing the outgoing light.
 		 *
 		 * @type {Node<vec3>}
 		 */
-		this.outgoingLightNode = vec3().toVar( 'outgoingLight' );
+		this.outgoingLightNode = vec3().toVar();
 
 		/**
 		 * An array representing the lights in the scene.
@@ -107,23 +107,33 @@ class LightsNode extends Node {
 	}
 
 	/**
-	 * Overwrites the default {@link Node#customCacheKey} implementation by including the
-	 * light IDs into the cache key.
+	 * Overwrites the default {@link Node#customCacheKey} implementation by including
+	 * light data into the cache key.
 	 *
 	 * @return {number} The custom cache key.
 	 */
 	customCacheKey() {
 
-		const lightIDs = [];
+		const hashData = [];
 		const lights = this._lights;
 
 		for ( let i = 0; i < lights.length; i ++ ) {
 
-			lightIDs.push( lights[ i ].id );
+			const light = lights[ i ];
+
+			hashData.push( light.id );
+
+			if ( light.isSpotLight === true ) {
+
+				const hashValue = ( light.map !== null ) ? light.map.id : - 1;
+
+				hashData.push( hashValue );
+
+			}
 
 		}
 
-		return hashArray( lightIDs );
+		return hashArray( hashData );
 
 	}
 

@@ -101,6 +101,7 @@ class Background extends DataMap {
 				nodeMaterial.side = BackSide;
 				nodeMaterial.depthTest = false;
 				nodeMaterial.depthWrite = false;
+				nodeMaterial.allowOverride = false;
 				nodeMaterial.fog = false;
 				nodeMaterial.lights = false;
 				nodeMaterial.vertexNode = viewProj;
@@ -116,6 +117,17 @@ class Background extends DataMap {
 					this.matrixWorld.copyPosition( camera.matrixWorld );
 
 				};
+
+				function onBackgroundDispose() {
+
+					background.removeEventListener( 'dispose', onBackgroundDispose );
+
+					backgroundMesh.material.dispose();
+					backgroundMesh.geometry.dispose();
+
+				}
+
+				background.addEventListener( 'dispose', onBackgroundDispose );
 
 			}
 

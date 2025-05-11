@@ -6,61 +6,6 @@ import {
 	UniformsUtils
 } from 'three';
 
-/**
- * Reference: https://en.wikipedia.org/wiki/Cel_shading
- *
- * API
- *
- * 1. Traditional
- *
- * const effect = new OutlineEffect( renderer );
- *
- * function render() {
- *
- * 	effect.render( scene, camera );
- *
- * }
- *
- * 2. VR compatible
- *
- * const effect = new OutlineEffect( renderer );
- * let renderingOutline = false;
- *
- * scene.onAfterRender = function () {
- *
- * 	if ( renderingOutline ) return;
- *
- * 	renderingOutline = true;
- *
- * 	effect.renderOutline( scene, camera );
- *
- * 	renderingOutline = false;
- *
- * };
- *
- * function render() {
- *
- * 	renderer.render( scene, camera );
- *
- * }
- *
- * // How to set default outline parameters
- * new OutlineEffect( renderer, {
- * 	defaultThickness: 0.01,
- * 	defaultColor: [ 0, 0, 0 ],
- * 	defaultAlpha: 0.8,
- * 	defaultKeepAlive: true // keeps outline material in cache even if material is removed from scene
- * } );
- *
- * // How to set outline parameters for each material
- * material.userData.outlineParameters = {
- * 	thickness: 0.01,
- * 	color: [ 0, 0, 0 ],
- * 	alpha: 0.8,
- * 	visible: true,
- * 	keepAlive: true
- * };
- */
 
 //@DDD@
 const vec_p = new THREE.Vector3();
@@ -69,8 +14,33 @@ const quat = new THREE.Quaternion();
 const quat2 = new THREE.Quaternion();
 const vec_s = new THREE.Vector3();
 
+
+/**
+ * An outline effect for toon shaders.
+ *
+ * Note that this class can only be used with {@link WebGLRenderer}.
+ * When using {@link WebGPURenderer}, use {@link ToonOutlinePassNode}.
+ *
+ * ```js
+ * const effect = new OutlineEffect( renderer );
+ *
+ * function render() {
+ *
+ * 	effect.render( scene, camera );
+ *
+ * }
+ * ```
+ *
+ * @three_import import { OutlineEffect } from 'three/addons/effects/OutlineEffect.js';
+ */
 class OutlineEffect {
 
+	/**
+	 * Constructs a new outline effect.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {OutlineEffect~Options} [parameters] - The configuration parameter.
+	 */
 	constructor( renderer, parameters = {} ) {
 
 		this.enabled = true;
@@ -459,6 +429,13 @@ class OutlineEffect {
 
 		}
 
+		/**
+		 * When using this effect, this method should be called instead of the
+		 * default {@link WebGLRenderer#render}.
+		 *
+		 * @param {Object3D} scene - The scene to render.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.render = function ( scene, camera ) {
 
 			if ( this.enabled === false ) {
@@ -479,6 +456,30 @@ class OutlineEffect {
 
 		};
 
+		/**
+		 * This method can be used to render outlines in VR.
+		 *
+		 * ```js
+		 * const effect = new OutlineEffect( renderer );
+		 * let renderingOutline = false;
+		 *
+		 * scene.onAfterRender = function () {
+		 *
+		 * 	if ( renderingOutline ) return;
+		 *
+		 * 	renderingOutline = true;
+		 * 	effect.renderOutline( scene, camera );
+		 * 	renderingOutline = false;
+		 * };
+		 *
+		 * function render() {
+		 * 	renderer.render( scene, camera );
+		 * }
+		 * ```
+		 *
+		 * @param {Object3D} scene - The scene to render.
+		 * @param {Camera} camera - The camera.
+		 */
 		this.renderOutline = function ( scene, camera ) {
 
 			const currentAutoClear = renderer.autoClear;
@@ -506,80 +507,31 @@ class OutlineEffect {
 
 		};
 
-		/*
-		 * See #9918
+		/**
+		 * Resizes the effect.
 		 *
-		 * The following property copies and wrapper methods enable
-		 * OutlineEffect to be called from other *Effect, like
-		 *
-		 * effect = new StereoEffect( new OutlineEffect( renderer ) );
-		 *
-		 * function render () {
-		 *
-	 	 * 	effect.render( scene, camera );
-		 *
-		 * }
+		 * @param {number} width - The width of the effect in logical pixels.
+		 * @param {number} height - The height of the effect in logical pixels.
 		 */
-		this.autoClear = renderer.autoClear;
-		this.domElement = renderer.domElement;
-		this.shadowMap = renderer.shadowMap;
+		this.setSize = function ( width, height ) {
 
-		this.clear = function ( color, depth, stencil ) {
-
-			renderer.clear( color, depth, stencil );
-
-		};
-
-		this.getPixelRatio = function () {
-
-			return renderer.getPixelRatio();
-
-		};
-
-		this.setPixelRatio = function ( value ) {
-
-			renderer.setPixelRatio( value );
-
-		};
-
-		this.getSize = function ( target ) {
-
-			return renderer.getSize( target );
-
-		};
-
-		this.setSize = function ( width, height, updateStyle ) {
-
-			renderer.setSize( width, height, updateStyle );
-
-		};
-
-		this.setViewport = function ( x, y, width, height ) {
-
-			renderer.setViewport( x, y, width, height );
-
-		};
-
-		this.setScissor = function ( x, y, width, height ) {
-
-			renderer.setScissor( x, y, width, height );
-
-		};
-
-		this.setScissorTest = function ( boolean ) {
-
-			renderer.setScissorTest( boolean );
-
-		};
-
-		this.setRenderTarget = function ( renderTarget ) {
-
-			renderer.setRenderTarget( renderTarget );
+			renderer.setSize( width, height );
 
 		};
 
 	}
 
 }
+
+/**
+ * This type represents configuration settings of `OutlineEffect`.
+ *
+ * @typedef {Object} OutlineEffect~Options
+ * @property {number} [defaultThickness=0.003] - The outline thickness.
+ * @property {Array<number>} [defaultColor=[0,0,0]] - The outline color.
+ * @property {number} [defaultAlpha=1] - The outline alpha value.
+ * @property {boolean} [defaultKeepAlive=false] - Whether to keep alive cached internal materials or not.
+ **/
+
 
 export { OutlineEffect };

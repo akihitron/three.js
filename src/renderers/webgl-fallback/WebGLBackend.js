@@ -24,17 +24,23 @@ import WebGLTimestampQueryPool from './utils/WebGLTimestampQueryPool.js';
 class WebGLBackend extends Backend {
 
 	/**
+	 * WebGLBackend options.
+	 *
+	 * @typedef {Object} WebGLBackend~Options
+	 * @property {boolean} [logarithmicDepthBuffer=false] - Whether logarithmic depth buffer is enabled or not.
+	 * @property {boolean} [alpha=true] - Whether the default framebuffer (which represents the final contents of the canvas) should be transparent or opaque.
+	 * @property {boolean} [depth=true] - Whether the default framebuffer should have a depth buffer or not.
+	 * @property {boolean} [stencil=false] - Whether the default framebuffer should have a stencil buffer or not.
+	 * @property {boolean} [antialias=false] - Whether MSAA as the default anti-aliasing should be enabled or not.
+	 * @property {number} [samples=0] - When `antialias` is `true`, `4` samples are used by default. Set this parameter to any other integer value than 0 to overwrite the default.
+	 * @property {boolean} [forceWebGL=false] - If set to `true`, the renderer uses a WebGL 2 backend no matter if WebGPU is supported or not.
+	 * @property {WebGL2RenderingContext} [context=undefined] - A WebGL 2 rendering context.
+	 */
+
+	/**
 	 * Constructs a new WebGPU backend.
 	 *
-	 * @param {Object} parameters - The configuration parameter.
-	 * @param {boolean} [parameters.logarithmicDepthBuffer=false] - Whether logarithmic depth buffer is enabled or not.
-	 * @param {boolean} [parameters.alpha=true] - Whether the default framebuffer (which represents the final contents of the canvas) should be transparent or opaque.
-	 * @param {boolean} [parameters.depth=true] - Whether the default framebuffer should have a depth buffer or not.
-	 * @param {boolean} [parameters.stencil=false] - Whether the default framebuffer should have a stencil buffer or not.
-	 * @param {boolean} [parameters.antialias=false] - Whether MSAA as the default anti-aliasing should be enabled or not.
-	 * @param {number} [parameters.samples=0] - When `antialias` is `true`, `4` samples are used by default. Set this parameter to any other integer value than 0 to overwrite the default.
-	 * @param {boolean} [parameters.forceWebGL=false] - If set to `true`, the renderer uses a WebGL 2 backend no matter if WebGPU is supported or not.
-	 * @param {WebGL2RenderingContext} [parameters.context=undefined] - A WebGL 2 rendering context.
+	 * @param {WebGLBackend~Options} [parameters] - The configuration parameter.
 	 */
 	constructor( parameters = {} ) {
 
@@ -162,14 +168,6 @@ class WebGLBackend extends Backend {
 		this.parallel = null;
 
 		/**
-		 * Whether to track timestamps with a Timestamp Query API or not.
-		 *
-		 * @type {boolean}
-		 * @default false
-		 */
-		this.trackTimestamp = ( parameters.trackTimestamp === true );
-
-		/**
 		 * A reference to the current render context.
 		 *
 		 * @private
@@ -266,6 +264,7 @@ class WebGLBackend extends Backend {
 		this.extensions.get( 'WEBGL_multisampled_render_to_texture' );
 		this.extensions.get( 'WEBGL_render_shared_exponent' );
 		this.extensions.get( 'WEBGL_multi_draw' );
+		this.extensions.get( 'OVR_multiview2' );
 
 		this.disjoint = this.extensions.get( 'EXT_disjoint_timer_query_webgl2' );
 		this.parallel = this.extensions.get( 'KHR_parallel_shader_compile' );
@@ -360,15 +359,15 @@ class WebGLBackend extends Backend {
 
 			this.set( renderTarget.depthTexture, { textureGPU: depthTexture, glInternalFormat: glInternalFormat } );
 
-			renderTarget.autoAllocateDepthBuffer = false;
-
 			// The multisample_render_to_texture extension doesn't work properly if there
 			// are midframe flushes and an external depth texture.
-			if ( this.extensions.has( 'WEBGL_multisampled_render_to_texture' ) === true ) {
+			if ( ( this.extensions.has( 'WEBGL_multisampled_render_to_texture' ) === true ) && renderTarget.autoAllocateDepthBuffer === true && renderTarget.multiview === false ) {
 
 				console.warn( 'THREE.WebGLBackend: Render-to-texture extension was disabled because an external texture was provided' );
 
 			}
+
+			renderTarget.autoAllocateDepthBuffer = false;
 
 		}
 
@@ -549,7 +548,7 @@ class WebGLBackend extends Backend {
 
 			const { samples } = renderContext.renderTarget;
 
-			if ( samples > 0 && this._useMultisampledRTT( renderContext.renderTarget ) === false ) {
+			if ( samples > 0 && this._useMultisampledExtension( renderContext.renderTarget ) === false ) {
 
 				const fb = renderTargetContextData.framebuffers[ renderContext.getCacheKey() ];
 
@@ -963,6 +962,20 @@ class WebGLBackend extends Backend {
 	}
 
 	/**
+	 * Internal to determine if the current render target is a render target array with depth 2D array texture.
+	 *
+	 * @param {RenderContext} renderContext - The render context.
+	 * @return {boolean} Whether the render target is a render target array with depth 2D array texture.
+	 *
+	 * @private
+	 */
+	_isRenderCameraDepthArray( renderContext ) {
+
+		return renderContext.depthTexture && renderContext.depthTexture.isDepthArrayTexture && renderContext.camera.isArrayCamera;
+
+	}
+
+	/**
 	 * Executes a draw command for the given render object.
 	 *
 	 * @param {RenderObject} renderObject - The render object to draw.
@@ -1130,7 +1143,7 @@ class WebGLBackend extends Backend {
 
 		};
 
-		if ( renderObject.camera.isArrayCamera && renderObject.camera.cameras.length > 0 ) {
+		if ( renderObject.camera.isArrayCamera === true && renderObject.camera.cameras.length > 0 && renderObject.camera.isMultiViewCamera === false ) {
 
 			const cameraData = this.get( renderObject.camera );
 			const cameras = renderObject.camera.cameras;
@@ -1161,31 +1174,80 @@ class WebGLBackend extends Backend {
 			const cameraIndexData = this.get( cameraIndex );
 			const pixelRatio = this.renderer.getPixelRatio();
 
+			const renderTarget = this._currentContext.renderTarget;
+			const isRenderCameraDepthArray = this._isRenderCameraDepthArray( this._currentContext );
+			const prevActiveCubeFace = this._currentContext.activeCubeFace;
+
+			if ( isRenderCameraDepthArray ) {
+
+				// Clear the depth texture
+				const textureData = this.get( renderTarget.depthTexture );
+
+				if ( textureData.clearedRenderId !== this.renderer._nodes.nodeFrame.renderId ) {
+
+					textureData.clearedRenderId = this.renderer._nodes.nodeFrame.renderId;
+
+					const { stencilBuffer } = renderTarget;
+
+					for ( let i = 0, len = cameras.length; i < len; i ++ ) {
+
+						this.renderer._activeCubeFace = i;
+						this._currentContext.activeCubeFace = i;
+
+						this._setFramebuffer( this._currentContext );
+						this.clear( false, true, stencilBuffer, this._currentContext, false );
+
+					}
+
+					this.renderer._activeCubeFace = prevActiveCubeFace;
+					this._currentContext.activeCubeFace = prevActiveCubeFace;
+
+				}
+
+			}
+
 			for ( let i = 0, len = cameras.length; i < len; i ++ ) {
 
 				const subCamera = cameras[ i ];
 
 				if ( object.layers.test( subCamera.layers ) ) {
 
+					if ( isRenderCameraDepthArray ) {
+
+						// Update the active layer
+						this.renderer._activeCubeFace = i;
+						this._currentContext.activeCubeFace = i;
+
+						this._setFramebuffer( this._currentContext );
+
+					}
+
 					const vp = subCamera.viewport;
 
-					const x = vp.x * pixelRatio;
-					const y = vp.y * pixelRatio;
-					const width = vp.width * pixelRatio;
-					const height = vp.height * pixelRatio;
+					if ( vp !== undefined ) {
 
-					state.viewport(
-						Math.floor( x ),
-						Math.floor( renderObject.context.height - height - y ),
-						Math.floor( width ),
-						Math.floor( height )
-					);
+						const x = vp.x * pixelRatio;
+						const y = vp.y * pixelRatio;
+						const width = vp.width * pixelRatio;
+						const height = vp.height * pixelRatio;
+
+						state.viewport(
+							Math.floor( x ),
+							Math.floor( renderObject.context.height - height - y ),
+							Math.floor( width ),
+							Math.floor( height )
+						);
+
+					}
 
 					state.bindBufferBase( gl.UNIFORM_BUFFER, cameraIndexData.index, cameraData.indexesGPU[ i ] );
 
 					draw();
 
 				}
+
+				this._currentContext.activeCubeFace = prevActiveCubeFace;
+				this.renderer._activeCubeFace = prevActiveCubeFace;
 
 			}
 
@@ -1886,13 +1948,14 @@ class WebGLBackend extends Backend {
 	 *
 	 * @param {Texture} srcTexture - The source texture.
 	 * @param {Texture} dstTexture - The destination texture.
-	 * @param {?Vector4} [srcRegion=null] - The region of the source texture to copy.
+	 * @param {?(Box3|Box2)} [srcRegion=null] - The region of the source texture to copy.
 	 * @param {?(Vector2|Vector3)} [dstPosition=null] - The destination position of the copy.
-	 * @param {number} [level=0] - The mip level to copy.
+	 * @param {number} [srcLevel=0] - The source mip level to copy from.
+	 * @param {number} [dstLevel=0] - The destination mip level to copy to.
 	 */
-	copyTextureToTexture( srcTexture, dstTexture, srcRegion = null, dstPosition = null, level = 0 ) {
+	copyTextureToTexture( srcTexture, dstTexture, srcRegion = null, dstPosition = null, srcLevel = 0, dstLevel = 0 ) {
 
-		this.textureUtils.copyTextureToTexture( srcTexture, dstTexture, srcRegion, dstPosition, level );
+		this.textureUtils.copyTextureToTexture( srcTexture, dstTexture, srcRegion, dstPosition, srcLevel, dstLevel );
 
 	}
 
@@ -1936,8 +1999,8 @@ class WebGLBackend extends Backend {
 			let msaaFb = renderTargetContextData.msaaFrameBuffer;
 			let depthRenderbuffer = renderTargetContextData.depthRenderbuffer;
 			const multisampledRTTExt = this.extensions.get( 'WEBGL_multisampled_render_to_texture' );
-			const useMultisampledRTT = this._useMultisampledRTT( renderTarget );
-
+			const multiviewExt = this.extensions.get( 'OVR_multiview2' );
+			const useMultisampledRTT = this._useMultisampledExtension( renderTarget );
 			const cacheKey = getCacheKey( descriptor );
 
 			let fb;
@@ -1999,7 +2062,11 @@ class WebGLBackend extends Backend {
 
 						} else {
 
-							if ( useMultisampledRTT ) {
+							if ( renderTarget.multiview ) {
+
+								multiviewExt.framebufferTextureMultisampleMultiviewOVR( gl.FRAMEBUFFER, attachment, textureData.textureGPU, 0, samples, 0, 2 );
+
+							} else if ( hasExternalTextures && useMultisampledRTT ) {
 
 								multisampledRTTExt.framebufferTexture2DMultisampleEXT( gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, textureData.textureGPU, 0, samples );
 
@@ -2032,13 +2099,27 @@ class WebGLBackend extends Backend {
 						textureData.renderTarget = descriptor.renderTarget;
 						textureData.cacheKey = cacheKey; // required for copyTextureToTexture()
 
-						if ( useMultisampledRTT ) {
+						if ( renderTarget.multiview ) {
+
+							multiviewExt.framebufferTextureMultisampleMultiviewOVR( gl.FRAMEBUFFER, depthStyle, textureData.textureGPU, 0, samples, 0, 2 );
+
+						} else if ( hasExternalTextures && useMultisampledRTT ) {
 
 							multisampledRTTExt.framebufferTexture2DMultisampleEXT( gl.FRAMEBUFFER, depthStyle, gl.TEXTURE_2D, textureData.textureGPU, 0, samples );
 
 						} else {
 
-							gl.framebufferTexture2D( gl.FRAMEBUFFER, depthStyle, gl.TEXTURE_2D, textureData.textureGPU, 0 );
+							if ( descriptor.depthTexture.isDepthArrayTexture ) {
+
+								const layer = this.renderer._activeCubeFace;
+
+								gl.framebufferTextureLayer( gl.FRAMEBUFFER, depthStyle, textureData.textureGPU, 0, layer );
+
+							} else {
+
+								gl.framebufferTexture2D( gl.FRAMEBUFFER, depthStyle, gl.TEXTURE_2D, textureData.textureGPU, 0 );
+
+							}
 
 						}
 
@@ -2048,9 +2129,29 @@ class WebGLBackend extends Backend {
 
 			} else {
 
+				const isRenderCameraDepthArray = this._isRenderCameraDepthArray( descriptor );
+
+				if ( isRenderCameraDepthArray ) {
+
+					state.bindFramebuffer( gl.FRAMEBUFFER, fb );
+
+					const layer = this.renderer._activeCubeFace;
+
+					const depthData = this.get( descriptor.depthTexture );
+					const depthStyle = stencilBuffer ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
+					gl.framebufferTextureLayer(
+						gl.FRAMEBUFFER,
+						depthStyle,
+						depthData.textureGPU,
+						0,
+						layer
+					);
+
+				}
+
 				// rebind external XR textures
 
-				if ( isXRRenderTarget && hasExternalTextures ) {
+				if ( ( isXRRenderTarget && hasExternalTextures ) || renderTarget.multiview ) {
 
 					state.bindFramebuffer( gl.FRAMEBUFFER, fb );
 
@@ -2058,7 +2159,11 @@ class WebGLBackend extends Backend {
 
 					const textureData = this.get( descriptor.textures[ 0 ] );
 
-					if ( useMultisampledRTT ) {
+					if ( renderTarget.multiview ) {
+
+						multiviewExt.framebufferTextureMultisampleMultiviewOVR( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, textureData.textureGPU, 0, samples, 0, 2 );
+
+					} else if ( useMultisampledRTT ) {
 
 						multisampledRTTExt.framebufferTexture2DMultisampleEXT( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, textureData.textureGPU, 0, samples );
 
@@ -2082,7 +2187,11 @@ class WebGLBackend extends Backend {
 
 						const textureData = this.get( descriptor.depthTexture );
 
-						if ( useMultisampledRTT ) {
+						if ( renderTarget.multiview ) {
+
+							multiviewExt.framebufferTextureMultisampleMultiviewOVR( gl.FRAMEBUFFER, depthStyle, textureData.textureGPU, 0, samples, 0, 2 );
+
+						} else if ( useMultisampledRTT ) {
 
 							multisampledRTTExt.framebufferTexture2DMultisampleEXT( gl.FRAMEBUFFER, depthStyle, gl.TEXTURE_2D, textureData.textureGPU, 0, samples );
 
@@ -2098,7 +2207,7 @@ class WebGLBackend extends Backend {
 
 			}
 
-			if ( samples > 0 && useMultisampledRTT === false ) {
+			if ( samples > 0 && useMultisampledRTT === false && ! renderTarget.multiview ) {
 
 				if ( msaaFb === undefined ) {
 
@@ -2391,7 +2500,13 @@ class WebGLBackend extends Backend {
 	 * @param {RenderTarget} renderTarget - The render target that should be multisampled.
 	 * @return {boolean} Whether to use the `WEBGL_multisampled_render_to_texture` extension for MSAA or not.
 	 */
-	_useMultisampledRTT( renderTarget ) {
+	_useMultisampledExtension( renderTarget ) {
+
+		if ( renderTarget.multiview === true ) {
+
+			return true;
+
+		}
 
 		return renderTarget.samples > 0 && this.extensions.has( 'WEBGL_multisampled_render_to_texture' ) === true && renderTarget.autoAllocateDepthBuffer !== false;
 

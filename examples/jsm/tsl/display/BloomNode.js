@@ -40,6 +40,7 @@ let _rendererState;
  * postProcessing.outputNode = scenePassColor.add( bloomPass );
  * ```
  * @augments TempNode
+ * @three_import import { bloom } from 'three/addons/tsl/display/BloomNode.js';
  */
 class BloomNode extends TempNode {
 
@@ -457,7 +458,7 @@ class BloomNode extends TempNode {
 
 		//
 
-		const colorTexture = texture();
+		const colorTexture = texture( null );
 		const gaussianCoefficients = uniformArray( coefficients );
 		const invSize = uniform( new Vector2() );
 		const direction = uniform( new Vector2( 0.5, 0.5 ) );

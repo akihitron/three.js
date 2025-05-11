@@ -55,6 +55,22 @@ class VaryingNode extends Node {
 		 */
 		this.isVaryingNode = true;
 
+		/**
+		 * The interpolation type of the varying data.
+		 *
+		 * @type {?string}
+		 * @default null
+		 */
+		this.interpolationType = null;
+
+		/**
+		 * The interpolation sampling type of varying data.
+		 *
+		 * @type {?string}
+		 * @default null
+		 */
+		this.interpolationSampling = null;
+
 	}
 
 	/**
@@ -66,6 +82,22 @@ class VaryingNode extends Node {
 	isGlobal( /*builder*/ ) {
 
 		return true;
+
+	}
+
+
+	/**
+	 * Defines the interpolation type of the varying.
+	 *
+	 * @param {string} type - The interpolation type.
+	 * @param {?string} sampling - The interpolation sampling type
+	 * @return {VaryingNode} A reference to this node.
+	 */
+	setInterpolation( type, sampling = null ) {
+
+		this.interpolationType = type;
+		this.interpolationSampling = sampling;
+		return this;
 
 	}
 
@@ -99,8 +131,10 @@ class VaryingNode extends Node {
 
 			const name = this.name;
 			const type = this.getNodeType( builder );
+			const interpolationType = this.interpolationType;
+			const interpolationSampling = this.interpolationSampling;
 
-			properties.varying = varying = builder.getVaryingFromNode( this, name, type );
+			properties.varying = varying = builder.getVaryingFromNode( this, name, type, interpolationType, interpolationSampling );
 			properties.node = this.node;
 
 		}
@@ -173,7 +207,7 @@ export default VaryingNode;
  * @param {?string} name - The name of the varying in the shader.
  * @returns {VaryingNode}
  */
-export const varying = /*@__PURE__*/ nodeProxy( VaryingNode );
+export const varying = /*@__PURE__*/ nodeProxy( VaryingNode ).setParameterLength( 1, 2 );
 
 /**
  * Computes a node in the vertex stage.
@@ -192,14 +226,14 @@ addMethodChaining( 'toVertexStage', vertexStage );
 
 addMethodChaining( 'varying', ( ...params ) => { // @deprecated, r173
 
-	console.warn( 'TSL.VaryingNode: .varying() has been renamed to .toVarying().' );
+	console.warn( 'THREE.TSL: .varying() has been renamed to .toVarying().' );
 	return varying( ...params );
 
 } );
 
 addMethodChaining( 'vertexStage', ( ...params ) => { // @deprecated, r173
 
-	console.warn( 'TSL.VaryingNode: .vertexStage() has been renamed to .toVertexStage().' );
+	console.warn( 'THREE.TSL: .vertexStage() has been renamed to .toVertexStage().' );
 	return varying( ...params );
 
 } );

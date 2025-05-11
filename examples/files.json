@@ -6,6 +6,7 @@
 		"webgl_animation_skinning_ik",
 		"webgl_animation_skinning_morph",
 		"webgl_animation_multiple",
+		"webgl_animation_walk",
 		"webgl_camera",
 		"webgl_camera_array",
 		"webgl_camera_logarithmicdepthbuffer",
@@ -72,6 +73,7 @@
 		"webgl_lines_fat_wireframe",
 		"webgl_loader_3dm",
 		"webgl_loader_3ds",
+		"webgl_loader_3dtiles",
 		"webgl_loader_3mf",
 		"webgl_loader_3mf_materials",
 		"webgl_loader_amf",
@@ -187,6 +189,7 @@
 		"webgl_points_sprites",
 		"webgl_points_waves",
 		"webgl_portal",
+		"webgl_random_uv",
 		"webgl_raycaster_bvh",
 		"webgl_raycaster_sprite",
 		"webgl_raycaster_texture",
@@ -212,6 +215,7 @@
 		"webgl_tonemapping",
 		"webgl_video_kinect",
 		"webgl_video_panorama_equirectangular",
+		"webgl_watch",
 		"webgl_water",
 		"webgl_water_flowmap"
 	],
@@ -276,6 +280,7 @@
 		"webgl_multiple_rendertargets",
 		"webgl_multisampled_renderbuffers",
 		"webgl_rendertarget_texture2darray",
+		"webgl_reverse_depth_buffer",
 		"webgl_shadowmap_csm",
 		"webgl_shadowmap_pcss",
 		"webgl_shadowmap_progressive",
@@ -302,6 +307,8 @@
 		"webgpu_camera",
 		"webgpu_camera_array",
 		"webgpu_camera_logarithmicdepthbuffer",
+		"webgpu_caustics",
+		"webgpu_centroid_sampling",
 		"webgpu_clearcoat",
 		"webgpu_clipping",
 		"webgpu_compute_audio",
@@ -414,6 +421,7 @@
 		"webgpu_sandbox",
 		"webgpu_shadertoy",
 		"webgpu_shadowmap",
+		"webgpu_shadowmap_array",
 		"webgpu_shadowmap_csm",
 		"webgpu_shadowmap_opacity",
 		"webgpu_shadowmap_progressive",
@@ -446,12 +454,14 @@
 		"webgpu_tsl_vfx_tornado",
 		"webgpu_video_frame",
 		"webgpu_video_panorama",
+		"webgpu_volume_caustics",
 		"webgpu_volume_cloud",
 		"webgpu_volume_lighting",
 		"webgpu_volume_lighting_rectarea",
 		"webgpu_volume_perlin",
 		"webgpu_water",
-		"webgpu_xr_cubes"
+		"webgpu_xr_cubes",
+		"webgpu_xr_native_layers"
 	],
 	"webaudio": [
 		"webaudio_orientation",
@@ -497,7 +507,13 @@
 		"physics_ammo_terrain",
 		"physics_ammo_volume",
 		"physics_jolt_instancing",
-		"physics_rapier_instancing"
+		"physics_rapier_basic",
+		"physics_rapier_instancing",
+		"physics_rapier_joints",
+		"physics_rapier_character_controller",
+		"physics_rapier_vehicle_controller",
+		"physics_rapier_terrain"
+
 	],
 	"misc": [
 		"misc_animation_groups",

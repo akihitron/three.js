@@ -331,6 +331,29 @@ class Object3D extends EventDispatcher {
 		this.animations = [];
 
 		/**
+		 * Custom depth material to be used when rendering to the depth map. Can only be used
+		 * in context of meshes. When shadow-casting with a {@link DirectionalLight} or {@link SpotLight},
+		 * if you are modifying vertex positions in the vertex shader you must specify a custom depth
+		 * material for proper shadows.
+		 *
+		 * Only relevant in context of {@link WebGLRenderer}.
+		 *
+		 * @type {(Material|undefined)}
+		 * @default undefined
+		 */
+		this.customDepthMaterial = undefined;
+
+		/**
+		 * Same as {@link Object3D#customDepthMaterial}, but used with {@link PointLight}.
+		 *
+		 * Only relevant in context of {@link WebGLRenderer}.
+		 *
+		 * @type {(Material|undefined)}
+		 * @default undefined
+		 */
+		this.customDistanceMaterial = undefined;
+
+		/**
 		 * An object that can be used to store custom data about the 3D object. It
 		 * should not hold references to functions as these will not be cloned.
 		 *
@@ -1448,34 +1471,47 @@ class Object3D extends EventDispatcher {
 			object.drawRanges = this._drawRanges;
 			object.reservedRanges = this._reservedRanges;
 
-			object.visibility = this._visibility;
-			object.active = this._active;
-			object.bounds = this._bounds.map( bound => ( {
-				boxInitialized: bound.boxInitialized,
-				boxMin: bound.box.min.toArray(),
-				boxMax: bound.box.max.toArray(),
-
-				sphereInitialized: bound.sphereInitialized,
-				sphereRadius: bound.sphere.radius,
-				sphereCenter: bound.sphere.center.toArray()
+			object.geometryInfo = this._geometryInfo.map( info => ( {
+				...info,
+				boundingBox: info.boundingBox ? {
+					min: info.boundingBox.min.toArray(),
+					max: info.boundingBox.max.toArray()
+				} : undefined,
+				boundingSphere: info.boundingSphere ? {
+					radius: info.boundingSphere.radius,
+					center: info.boundingSphere.center.toArray()
+				} : undefined
 			} ) );
+			object.instanceInfo = this._instanceInfo.map( info => ( { ...info } ) );
+
+			object.availableInstanceIds = this._availableInstanceIds.slice();
+			object.availableGeometryIds = this._availableGeometryIds.slice();
+
+			object.nextIndexStart = this._nextIndexStart;
+			object.nextVertexStart = this._nextVertexStart;
+			object.geometryCount = this._geometryCount;
 
 			object.maxInstanceCount = this._maxInstanceCount;
 			object.maxVertexCount = this._maxVertexCount;
 			object.maxIndexCount = this._maxIndexCount;
 
 			object.geometryInitialized = this._geometryInitialized;
-			object.geometryCount = this._geometryCount;
 
 			object.matricesTexture = this._matricesTexture.toJSON( meta );
 
-			if ( this._colorsTexture !== null ) object.colorsTexture = this._colorsTexture.toJSON( meta );
+			object.indirectTexture = this._indirectTexture.toJSON( meta );
+
+			if ( this._colorsTexture !== null ) {
+
+				object.colorsTexture = this._colorsTexture.toJSON( meta );
+
+			}
 
 			if ( this.boundingSphere !== null ) {
 
 				object.boundingSphere = {
-					center: object.boundingSphere.center.toArray(),
-					radius: object.boundingSphere.radius
+					center: this.boundingSphere.center.toArray(),
+					radius: this.boundingSphere.radius
 				};
 
 			}
@@ -1483,8 +1519,8 @@ class Object3D extends EventDispatcher {
 			if ( this.boundingBox !== null ) {
 
 				object.boundingBox = {
-					min: object.boundingBox.min.toArray(),
-					max: object.boundingBox.max.toArray()
+					min: this.boundingBox.min.toArray(),
+					max: this.boundingBox.max.toArray()
 				};
 
 			}

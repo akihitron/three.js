@@ -1,14 +1,20 @@
 import { ArrayCamera } from '../../cameras/ArrayCamera.js';
 import { EventDispatcher } from '../../core/EventDispatcher.js';
 import { PerspectiveCamera } from '../../cameras/PerspectiveCamera.js';
+import { Quaternion } from '../../math/Quaternion.js';
 import { RAD2DEG } from '../../math/MathUtils.js';
 import { Vector2 } from '../../math/Vector2.js';
 import { Vector3 } from '../../math/Vector3.js';
 import { Vector4 } from '../../math/Vector4.js';
 import { WebXRController } from '../webxr/WebXRController.js';
-import { DepthFormat, DepthStencilFormat, RGBAFormat, UnsignedByteType, UnsignedInt248Type, UnsignedIntType } from '../../constants.js';
+import { AddEquation, BackSide, CustomBlending, DepthFormat, DepthStencilFormat, FrontSide, RGBAFormat, UnsignedByteType, UnsignedInt248Type, UnsignedIntType, ZeroFactor } from '../../constants.js';
 import { DepthTexture } from '../../textures/DepthTexture.js';
+import { DepthArrayTexture } from '../../textures/DepthArrayTexture.js';
 import { XRRenderTarget } from './XRRenderTarget.js';
+import { CylinderGeometry } from '../../geometries/CylinderGeometry.js';
+import { PlaneGeometry } from '../../geometries/PlaneGeometry.js';
+import { MeshBasicMaterial } from '../../materials/MeshBasicMaterial.js';
+import { Mesh } from '../../objects/Mesh.js';
 
 const _cameraLPos = /*@__PURE__*/ new Vector3();
 const _cameraRPos = /*@__PURE__*/ new Vector3();
@@ -27,8 +33,9 @@ class XRManager extends EventDispatcher {
 	 * Constructs a new XR manager.
 	 *
 	 * @param {Renderer} renderer - The renderer.
+	 * @param {boolean} [multiview=false] - Enables multiview if the device supports it.
 	 */
-	constructor( renderer ) {
+	constructor( renderer, multiview = false ) {
 
 		super();
 
@@ -147,6 +154,40 @@ class XRManager extends EventDispatcher {
 		this._xrRenderTarget = null;
 
 		/**
+		 * An array holding all the non-projection layers
+		 *
+		 * @private
+		 * @type {Array<Object>}
+		 * @default []
+		 */
+		this._layers = [];
+
+		/**
+		 * Whether the device has support for all layer types.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this._supportsLayers = false;
+
+		/**
+		 * Helper function to create native WebXR Layer.
+		 *
+		 * @private
+		 * @type {Function}
+		 */
+		this._createXRLayer = createXRLayer.bind( this );
+
+		/**
+		* The current WebGL context.
+		*
+		* @private
+		* @type {?WebGL2RenderingContext}
+		* @default null
+		*/
+		this._gl = null;
+
+		/**
 		 * The current animation context.
 		 *
 		 * @private
@@ -229,7 +270,7 @@ class XRManager extends EventDispatcher {
 		 * The current XR reference space type.
 		 *
 		 * @private
-		 * @type {string}
+		 * @type {XRReferenceSpaceType}
 		 * @default 'local-floor'
 		 */
 		this._referenceSpaceType = 'local-floor';
@@ -314,6 +355,26 @@ class XRManager extends EventDispatcher {
 		 * @readonly
 		 */
 		this._useLayers = ( typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype ); // eslint-disable-line compat/compat
+
+		/**
+		 * Whether the usage of multiview has been requested by the application or not.
+		 *
+		 * @private
+		 * @type {boolean}
+		 * @default false
+		 * @readonly
+		 */
+		this._useMultiviewIfPossible = multiview;
+
+		/**
+		 * Whether the usage of multiview is actually enabled. This flag only evaluates to `true`
+		 * if multiview has been requested by the application and the `OVR_multiview2` is available.
+		 *
+		 * @private
+		 * @type {boolean}
+		 * @readonly
+		 */
+		this._useMultiview = false;
 
 	}
 
@@ -439,7 +500,7 @@ class XRManager extends EventDispatcher {
 	/**
 	 * Returns the reference space type.
 	 *
-	 * @return {string} The reference space type.
+	 * @return {XRReferenceSpaceType} The reference space type.
 	 */
 	getReferenceSpaceType() {
 
@@ -452,7 +513,7 @@ class XRManager extends EventDispatcher {
 	 *
 	 * This method can not be used during a XR session.
 	 *
-	 * @param {string} type - The reference space type.
+	 * @param {XRReferenceSpaceType} type - The reference space type.
 	 */
 	setReferenceSpaceType( type ) {
 
@@ -502,7 +563,7 @@ class XRManager extends EventDispatcher {
 	/**
 	 * Returns the environment blend mode from the current XR session.
 	 *
-	 * @return {?('opaque'|'additive'|'alpha-blend')} The environment blend mode. Returns `null` when used outside of a XR session.
+	 * @return {'opaque'|'additive'|'alpha-blend'|undefined} The environment blend mode. Returns `undefined` when used outside of a XR session.
 	 */
 	getEnvironmentBlendMode() {
 
@@ -524,6 +585,201 @@ class XRManager extends EventDispatcher {
 		return this._xrFrame;
 
 	}
+
+	/**
+	 * Returns `true` if the engine renders to a multiview target.
+	 *
+	 * @return {boolean} Whether the engine renders to a multiview render target or not.
+	 */
+	useMultiview() {
+
+		return this._useMultiview;
+
+	}
+
+	createQuadLayer( width, height, translation, quaternion, pixelwidth, pixelheight, rendercall, attributes = [] ) {
+
+		const geometry = new PlaneGeometry( width, height );
+		const renderTarget = new XRRenderTarget(
+			pixelwidth,
+			pixelheight,
+			{
+				format: RGBAFormat,
+				type: UnsignedByteType,
+				depthTexture: new DepthTexture(
+					pixelwidth,
+					pixelheight,
+					attributes.stencil ? UnsignedInt248Type : UnsignedIntType,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					attributes.stencil ? DepthStencilFormat : DepthFormat
+				),
+				stencilBuffer: attributes.stencil,
+				resolveDepthBuffer: false,
+				resolveStencilBuffer: false
+			} );
+
+		const material = new MeshBasicMaterial( { color: 0xffffff, side: FrontSide } );
+		material.map = renderTarget.texture;
+		material.map.offset.y = 1;
+		material.map.repeat.y = - 1;
+		const plane = new Mesh( geometry, material );
+		plane.position.copy( translation );
+		plane.quaternion.copy( quaternion );
+
+		const layer = {
+			type: 'quad',
+			width: width,
+			height: height,
+			translation: translation,
+			quaternion: quaternion,
+			pixelwidth: pixelwidth,
+			pixelheight: pixelheight,
+			plane: plane,
+			material: material,
+			rendercall: rendercall,
+			renderTarget: renderTarget };
+
+		this._layers.push( layer );
+
+		if ( this._session !== null ) {
+
+			layer.plane.material = new MeshBasicMaterial( { color: 0xffffff, side: FrontSide } );
+			layer.plane.material.blending = CustomBlending;
+			layer.plane.material.blendEquation = AddEquation;
+			layer.plane.material.blendSrc = ZeroFactor;
+			layer.plane.material.blendDst = ZeroFactor;
+
+			layer.xrlayer = this._createXRLayer( layer );
+
+			const xrlayers = this._session.renderState.layers;
+			xrlayers.unshift( layer.xrlayer );
+			this._session.updateRenderState( { layers: xrlayers } );
+
+		} else {
+
+			renderTarget.isXRRenderTarget = false;
+
+		}
+
+		return plane;
+
+	}
+
+	createCylinderLayer( radius, centralAngle, aspectratio, translation, quaternion, pixelwidth, pixelheight, rendercall, attributes = [] ) {
+
+		const geometry = new CylinderGeometry( radius, radius, radius * centralAngle / aspectratio, 64, 64, true, Math.PI - centralAngle / 2, centralAngle );
+		const renderTarget = new XRRenderTarget(
+			pixelwidth,
+			pixelheight,
+			{
+				format: RGBAFormat,
+				type: UnsignedByteType,
+				depthTexture: new DepthTexture(
+					pixelwidth,
+					pixelheight,
+					attributes.stencil ? UnsignedInt248Type : UnsignedIntType,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					undefined,
+					attributes.stencil ? DepthStencilFormat : DepthFormat
+				),
+				stencilBuffer: attributes.stencil,
+				resolveDepthBuffer: false,
+				resolveStencilBuffer: false
+			} );
+
+		const material = new MeshBasicMaterial( { color: 0xffffff, side: BackSide } );
+		material.map = renderTarget.texture;
+		material.map.offset.y = 1;
+		material.map.repeat.y = - 1;
+		const plane = new Mesh( geometry, material );
+		plane.position.copy( translation );
+		plane.quaternion.copy( quaternion );
+
+		const layer = {
+			type: 'cylinder',
+			radius: radius,
+			centralAngle: centralAngle,
+			aspectratio: aspectratio,
+			translation: translation,
+			quaternion: quaternion,
+			pixelwidth: pixelwidth,
+			pixelheight: pixelheight,
+			plane: plane,
+			material: material,
+			rendercall: rendercall,
+			renderTarget: renderTarget };
+
+		this._layers.push( layer );
+
+		if ( this._session !== null ) {
+
+			layer.plane.material = new MeshBasicMaterial( { color: 0xffffff, side: BackSide } );
+			layer.plane.material.blending = CustomBlending;
+			layer.plane.material.blendEquation = AddEquation;
+			layer.plane.material.blendSrc = ZeroFactor;
+			layer.plane.material.blendDst = ZeroFactor;
+
+			layer.xrlayer = this._createXRLayer( layer );
+
+			const xrlayers = this._session.renderState.layers;
+			xrlayers.unshift( layer.xrlayer );
+			this._session.updateRenderState( { layers: xrlayers } );
+
+		} else {
+
+			renderTarget.isXRRenderTarget = false;
+
+		}
+
+		return plane;
+
+	}
+
+	renderLayers( ) {
+
+		const translationObject = new Vector3();
+		const quaternionObject = new Quaternion();
+
+		const wasPresenting = this.isPresenting;
+		this.isPresenting = false;
+
+		for ( const layer of this._layers ) {
+
+			layer.renderTarget.isXRRenderTarget = this._session !== null;
+			layer.renderTarget.hasExternalTextures = layer.renderTarget.isXRRenderTarget;
+			layer.renderTarget.autoAllocateDepthBuffer = ! layer.renderTarget.isXRRenderTarget;
+
+			if ( layer.renderTarget.isXRRenderTarget && this._supportsLayers ) {
+
+				layer.xrlayer.transform = new XRRigidTransform( layer.plane.getWorldPosition( translationObject ), layer.plane.getWorldQuaternion( quaternionObject ) );
+
+				const glSubImage = this._glBinding.getSubImage( layer.xrlayer, this._xrFrame );
+				this._renderer.backend.setXRRenderTargetTextures(
+					layer.renderTarget,
+					glSubImage.colorTexture,
+					glSubImage.depthStencilTexture );
+
+			}
+
+			this._renderer.setRenderTarget( layer.renderTarget );
+			layer.rendercall();
+
+		}
+
+		this.isPresenting = wasPresenting;
+		this._renderer.setRenderTarget( null );
+
+	}
+
 
 	/**
 	 * Returns the current XR session.
@@ -550,7 +806,9 @@ class XRManager extends EventDispatcher {
 		const renderer = this._renderer;
 		const backend = renderer.backend;
 
-		const gl = renderer.getContext();
+		this._gl = renderer.getContext();
+		const gl = this._gl;
+		const attributes = gl.getContextAttributes();
 
 		this._session = session;
 
@@ -600,16 +858,36 @@ class XRManager extends EventDispatcher {
 					scaleFactor: this._framebufferScaleFactor
 				};
 
+				if ( this._useMultiviewIfPossible && renderer.hasFeature( 'OVR_multiview2' ) ) {
+
+					projectionlayerInit.textureType = 'texture-array';
+					this._useMultiview = true;
+
+				}
+
 				const glBinding = new XRWebGLBinding( session, gl );
 				const glProjLayer = glBinding.createProjectionLayer( projectionlayerInit );
+				const layersArray = [ glProjLayer ];
 
 				this._glBinding = glBinding;
 				this._glProjLayer = glProjLayer;
 
-				session.updateRenderState( { layers: [ glProjLayer ] } );
-
 				renderer.setPixelRatio( 1 );
 				renderer.setSize( glProjLayer.textureWidth, glProjLayer.textureHeight, false );
+
+				let depthTexture;
+				if ( this._useMultiview ) {
+
+					depthTexture = new DepthArrayTexture( glProjLayer.textureWidth, glProjLayer.textureHeight, 2 );
+					depthTexture.type = depthType;
+					depthTexture.format = depthFormat;
+
+				} else {
+
+					depthTexture = new DepthTexture( glProjLayer.textureWidth, glProjLayer.textureHeight, depthType, undefined, undefined, undefined, undefined, undefined, undefined, depthFormat );
+
+				}
+
 
 				this._xrRenderTarget = new XRRenderTarget(
 					glProjLayer.textureWidth,
@@ -618,13 +896,43 @@ class XRManager extends EventDispatcher {
 						format: RGBAFormat,
 						type: UnsignedByteType,
 						colorSpace: renderer.outputColorSpace,
-						depthTexture: new DepthTexture( glProjLayer.textureWidth, glProjLayer.textureHeight, depthType, undefined, undefined, undefined, undefined, undefined, undefined, depthFormat ),
+						depthTexture: depthTexture,
 						stencilBuffer: renderer.stencil,
+						samples: attributes.antialias ? 4 : 0,
 						resolveDepthBuffer: ( glProjLayer.ignoreDepthValues === false ),
 						resolveStencilBuffer: ( glProjLayer.ignoreDepthValues === false ),
+						depth: this._useMultiview ? 2 : 1,
+						multiview: this._useMultiview
 					} );
 
 				this._xrRenderTarget.hasExternalTextures = true;
+				this._xrRenderTarget.depth = this._useMultiview ? 2 : 1;
+
+				this._supportsLayers = session.enabledFeatures.includes( 'layers' );
+
+				this._referenceSpace = await session.requestReferenceSpace( this.getReferenceSpaceType() );
+
+				if ( this._supportsLayers ) {
+
+					// switch layers to native
+					for ( const layer of this._layers ) {
+
+						// change material so it "punches" out a hole to show the XR Layer.
+						layer.plane.material = new MeshBasicMaterial( { color: 0xffffff, side: layer.type === 'cylinder' ? BackSide : FrontSide } );
+						layer.plane.material.blending = CustomBlending;
+						layer.plane.material.blendEquation = AddEquation;
+						layer.plane.material.blendSrc = ZeroFactor;
+						layer.plane.material.blendDst = ZeroFactor;
+
+						layer.xrlayer = this._createXRLayer( layer );
+
+						layersArray.unshift( layer.xrlayer );
+
+					}
+
+				}
+
+				session.updateRenderState( { layers: layersArray } );
 
 			} else {
 
@@ -659,13 +967,13 @@ class XRManager extends EventDispatcher {
 					}
 				);
 
+				this._referenceSpace = await session.requestReferenceSpace( this.getReferenceSpaceType() );
+
 			}
 
 			//
 
 			this.setFoveation( this.getFoveation() );
-
-			this._referenceSpace = await session.requestReferenceSpace( this.getReferenceSpaceType() );
 
 			renderer._animation.setAnimationLoop( this._onAnimationFrame );
 			renderer._animation.setContext( session );
@@ -701,6 +1009,7 @@ class XRManager extends EventDispatcher {
 
 		cameraXR.near = cameraR.near = cameraL.near = depthNear;
 		cameraXR.far = cameraR.far = cameraL.far = depthFar;
+		cameraXR.isMultiViewCamera = this._useMultiview;
 
 		if ( this._currentDepthNear !== cameraXR.near || this._currentDepthFar !== cameraXR.far ) {
 
@@ -965,13 +1274,54 @@ function onSessionEnd() {
 
 	renderer.backend.setXRTarget( null );
 	renderer.setOutputRenderTarget( null );
+	renderer.setRenderTarget( null );
 
 	this._session = null;
 	this._xrRenderTarget = null;
 
+	// switch layers back to emulated
+	if ( this._supportsLayers === true ) {
+
+		for ( const layer of this._layers ) {
+
+			// Recreate layer render target to reset state
+			layer.renderTarget = new XRRenderTarget(
+				layer.pixelwidth,
+				layer.pixelheight,
+				{
+					format: RGBAFormat,
+					type: UnsignedByteType,
+					depthTexture: new DepthTexture(
+						layer.pixelwidth,
+						layer.pixelheight,
+						layer.stencilBuffer ? UnsignedInt248Type : UnsignedIntType,
+						undefined,
+						undefined,
+						undefined,
+						undefined,
+						undefined,
+						undefined,
+						layer.stencilBuffer ? DepthStencilFormat : DepthFormat
+					),
+					stencilBuffer: layer.stencilBuffer,
+					resolveDepthBuffer: false,
+					resolveStencilBuffer: false
+				} );
+
+			layer.renderTarget.isXRRenderTarget = false;
+
+			layer.plane.material = layer.material;
+			layer.material.map = layer.renderTarget.texture;
+			delete layer.xrlayer;
+
+		}
+
+	}
+
 	//
 
 	this.isPresenting = false;
+	this._useMultiview = false;
 
 	renderer._animation.stop();
 
@@ -1055,6 +1405,40 @@ function onInputSourcesChange( event ) {
 
 }
 
+// Creation method for native WebXR layers
+function createXRLayer( layer ) {
+
+	if ( layer.type === 'quad' ) {
+
+		return this._glBinding.createQuadLayer( {
+			transform: new XRRigidTransform( layer.translation, layer.quaternion ),
+			depthFormat: this._gl.DEPTH_COMPONENT,
+			width: layer.width / 2,
+			height: layer.height / 2,
+			space: this._referenceSpace,
+			viewPixelWidth: layer.pixelwidth,
+			viewPixelHeight: layer.pixelheight
+		} );
+
+	} else {
+
+		return this._glBinding.createCylinderLayer( {
+			transform: new XRRigidTransform( layer.translation, layer.quaternion ),
+			depthFormat: this._gl.DEPTH_COMPONENT,
+			radius: layer.radius,
+			centralAngle: layer.centralAngle,
+			aspectRatio: layer.aspectRatio,
+			space: this._referenceSpace,
+			viewPixelWidth: layer.pixelwidth,
+			viewPixelHeight: layer.pixelheight
+		} );
+
+	}
+
+}
+
+// Animation Loop
+
 function onAnimationFrame( time, frame ) {
 
 	if ( frame === undefined ) return;
@@ -1108,7 +1492,7 @@ function onAnimationFrame( time, frame ) {
 					backend.setXRRenderTargetTextures(
 						this._xrRenderTarget,
 						glSubImage.colorTexture,
-						this._glProjLayer.ignoreDepthValues ? undefined : glSubImage.depthStencilTexture
+						( this._glProjLayer.ignoreDepthValues && ! this._useMultiview ) ? undefined : glSubImage.depthStencilTexture
 					);
 
 				}

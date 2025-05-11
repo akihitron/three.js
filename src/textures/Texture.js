@@ -35,11 +35,11 @@ class Texture extends EventDispatcher {
 	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
 	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
 	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
-	 * @param {number} [minFilter=LinearFilter] - The min filter value.
-	 * @param {number} [format=RGBAFormat] - The min filter value.
-	 * @param {number} [type=UnsignedByteType] - The min filter value.
-	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The min filter value.
-	 * @param {string} [colorSpace=NoColorSpace] - The min filter value.
+	 * @param {number} [minFilter=LinearMipmapLinearFilter] - The min filter value.
+	 * @param {number} [format=RGBAFormat] - The texture format.
+	 * @param {number} [type=UnsignedByteType] - The texture type.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The anisotropy value.
+	 * @param {string} [colorSpace=NoColorSpace] - The color space.
 	 */
 	constructor( image = Texture.DEFAULT_IMAGE, mapping = Texture.DEFAULT_MAPPING, wrapS = ClampToEdgeWrapping, wrapT = ClampToEdgeWrapping, magFilter = LinearFilter, minFilter = LinearMipmapLinearFilter, format = RGBAFormat, type = UnsignedByteType, anisotropy = Texture.DEFAULT_ANISOTROPY, colorSpace = NoColorSpace ) {
 
@@ -338,6 +338,15 @@ class Texture extends EventDispatcher {
 		this.isRenderTargetTexture = false;
 
 		/**
+		 * Indicates if a texture should be handled like a texture array.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
+		this.isTextureArray = false;
+
+		/**
 		 * Indicates whether this texture should be processed by `PMREMGenerator` or not
 		 * (only relevant for render target textures).
 		 *
@@ -451,6 +460,7 @@ class Texture extends EventDispatcher {
 
 		this.renderTarget = source.renderTarget;
 		this.isRenderTargetTexture = source.isRenderTargetTexture;
+		this.isTextureArray = source.isTextureArray;
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 

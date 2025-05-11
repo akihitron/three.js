@@ -494,7 +494,7 @@ class RenderObject {
 	/**
 	 * Returns the draw parameters for the render object.
 	 *
-	 * @return {{vertexCount: number, firstVertex: number, instanceCount: number, firstInstance: number}} The draw parameters.
+	 * @return {?{vertexCount: number, firstVertex: number, instanceCount: number, firstInstance: number}} The draw parameters.
 	 */
 	getDrawParameters() {
 
@@ -509,7 +509,18 @@ class RenderObject {
 
 		const index = this.getIndex();
 		const hasIndex = ( index !== null );
-		const instanceCount = geometry.isInstancedBufferGeometry ? geometry.instanceCount : ( object.count > 1 ? object.count : 1 );
+
+		let instanceCount = 1;
+
+		if ( geometry.isInstancedBufferGeometry === true ) {
+
+			instanceCount = geometry.instanceCount;
+
+		} else if ( object.count !== undefined ) {
+
+			instanceCount = Math.max( 0, object.count );
+
+		}
 
 		if ( instanceCount === 0 ) return null;
 

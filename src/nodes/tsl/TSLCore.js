@@ -17,12 +17,12 @@ export function addMethodChaining( name, nodeElement ) {
 
 	if ( NodeElements.has( name ) ) {
 
-		console.warn( `Redefinition of method chaining ${ name }` );
+		console.warn( `THREE.TSL: Redefinition of method chaining '${ name }'.` );
 		return;
 
 	}
 
-	if ( typeof nodeElement !== 'function' ) throw new Error( `Node element ${ name } is not a function` );
+	if ( typeof nodeElement !== 'function' ) throw new Error( `THREE.TSL: Node element ${ name } is not a function` );
 
 	NodeElements.set( name, nodeElement );
 
@@ -213,11 +213,38 @@ const ShaderNodeProxy = function ( NodeClass, scope = null, factor = null, setti
 
 	const assignNode = ( node ) => nodeObject( settings !== null ? Object.assign( node, settings ) : node );
 
+	let fn, name = scope, minParams, maxParams;
+
+	function verifyParamsLimit( params ) {
+
+		let tslName;
+
+		if ( name ) tslName = /[a-z]/i.test( name ) ? name + '()' : name;
+		else tslName = NodeClass.type;
+
+		if ( minParams !== undefined && params.length < minParams ) {
+
+			console.error( `THREE.TSL: "${ tslName }" parameter length is less than minimum required.` );
+
+			return params.concat( new Array( minParams - params.length ).fill( 0 ) );
+
+		} else if ( maxParams !== undefined && params.length > maxParams ) {
+
+			console.error( `THREE.TSL: "${ tslName }" parameter length exceeds limit.` );
+
+			return params.slice( 0, maxParams );
+
+		}
+
+		return params;
+
+	}
+
 	if ( scope === null ) {
 
-		return ( ...params ) => {
+		fn = ( ...params ) => {
 
-			return assignNode( new NodeClass( ...nodeArray( params ) ) );
+			return assignNode( new NodeClass( ...nodeArray( verifyParamsLimit( params ) ) ) );
 
 		};
 
@@ -225,21 +252,40 @@ const ShaderNodeProxy = function ( NodeClass, scope = null, factor = null, setti
 
 		factor = nodeObject( factor );
 
-		return ( ...params ) => {
+		fn = ( ...params ) => {
 
-			return assignNode( new NodeClass( scope, ...nodeArray( params ), factor ) );
+			return assignNode( new NodeClass( scope, ...nodeArray( verifyParamsLimit( params ) ), factor ) );
 
 		};
 
 	} else {
 
-		return ( ...params ) => {
+		fn = ( ...params ) => {
 
-			return assignNode( new NodeClass( scope, ...nodeArray( params ) ) );
+			return assignNode( new NodeClass( scope, ...nodeArray( verifyParamsLimit( params ) ) ) );
 
 		};
 
 	}
+
+	fn.setParameterLength = ( ...params ) => {
+
+		if ( params.length === 1 ) minParams = maxParams = params[ 0 ];
+		else if ( params.length === 2 ) [ minParams, maxParams ] = params;
+
+		return fn;
+
+	};
+
+	fn.setName = ( value ) => {
+
+		name = value;
+
+		return fn;
+
+	};
+
+	return fn;
 
 };
 
@@ -257,6 +303,8 @@ class ShaderCallNodeInternal extends Node {
 
 		this.shaderNode = shaderNode;
 		this.inputNodes = inputNodes;
+
+		this.isShaderCallNodeInternal = true;
 
 	}
 
@@ -514,7 +562,35 @@ export const nodeArray = ( val, altType = null ) => new ShaderNodeArray( val, al
 export const nodeProxy = ( ...params ) => new ShaderNodeProxy( ...params );
 export const nodeImmutable = ( ...params ) => new ShaderNodeImmutable( ...params );
 
-export const Fn = ( jsFunc, nodeType ) => {
+let fnId = 0;
+
+export const Fn = ( jsFunc, layout = null ) => {
+
+	let nodeType = null;
+
+	if ( layout !== null ) {
+
+		if ( typeof layout === 'object' ) {
+
+			nodeType = layout.return;
+
+		} else {
+
+			if ( typeof layout === 'string' ) {
+
+				nodeType = layout;
+
+			} else {
+
+				console.error( 'THREE.TSL: Invalid layout type.' );
+
+			}
+
+			layout = null;
+
+		}
+
+	}
 
 	const shaderNode = new ShaderNode( jsFunc, nodeType );
 
@@ -534,7 +610,11 @@ export const Fn = ( jsFunc, nodeType ) => {
 
 		}
 
-		return shaderNode.call( inputs );
+		const fnCall = shaderNode.call( inputs );
+
+		if ( nodeType === 'void' ) fnCall.toStack();
+
+		return fnCall;
 
 	};
 
@@ -556,22 +636,36 @@ export const Fn = ( jsFunc, nodeType ) => {
 
 	};
 
+	if ( layout !== null ) {
+
+		if ( typeof layout.inputs !== 'object' ) {
+
+			const fullLayout = {
+				name: 'fn' + fnId ++,
+				type: nodeType,
+				inputs: []
+			};
+
+			for ( const name in layout ) {
+
+				if ( name === 'return' ) continue;
+
+				fullLayout.inputs.push( {
+					name: name,
+					type: layout[ name ]
+				} );
+
+			}
+
+			layout = fullLayout;
+
+		}
+
+		fn.setLayout( layout );
+
+	}
+
 	return fn;
-
-};
-
-/**
- * @tsl
- * @function
- * @deprecated since r168. Use {@link Fn} instead.
- *
- * @param  {...any} params
- * @returns {Function}
- */
-export const tslFn = ( ...params ) => { // @deprecated, r168
-
-	console.warn( 'TSL.ShaderNode: tslFn() has been renamed to Fn().' );
-	return Fn( ...params );
 
 };
 
@@ -601,9 +695,44 @@ export const setCurrentStack = ( stack ) => {
 
 export const getCurrentStack = () => currentStack;
 
+/**
+ * Represent a conditional node using if/else statements.
+ *
+ * ```js
+ * If( condition, function )
+ * 	.ElseIf( condition, function )
+ * 	.Else( function )
+ * ```
+ * @tsl
+ * @function
+ * @param {...any} params - The parameters for the conditional node.
+ * @returns {StackNode} The conditional node.
+ */
 export const If = ( ...params ) => currentStack.If( ...params );
 
-export function append( node ) {
+/**
+ * Represent a conditional node using switch/case statements.
+ *
+ * ```js
+ * Switch( value )
+ * 	.Case( 1, function )
+ * 	.Case( 2, 3, 4, function )
+ * 	.Default( function )
+ * ```
+ * @tsl
+ * @function
+ * @param {...any} params - The parameters for the conditional node.
+ * @returns {StackNode} The conditional node.
+ */
+export const Switch = ( ...params ) => currentStack.Switch( ...params );
+
+/**
+ * Add the given node to the current stack.
+ *
+ * @param {Node} node - The node to add.
+ * @returns {Node} The node that was added to the stack.
+ */
+export function Stack( node ) {
 
 	if ( currentStack ) currentStack.add( node );
 
@@ -611,7 +740,7 @@ export function append( node ) {
 
 }
 
-addMethodChaining( 'append', append );
+addMethodChaining( 'toStack', Stack );
 
 // types
 
@@ -667,9 +796,48 @@ addMethodChaining( 'toMat4', mat4 );
 
 // basic nodes
 
-export const element = /*@__PURE__*/ nodeProxy( ArrayElementNode );
+export const element = /*@__PURE__*/ nodeProxy( ArrayElementNode ).setParameterLength( 2 );
 export const convert = ( node, types ) => nodeObject( new ConvertNode( nodeObject( node ), types ) );
 export const split = ( node, channels ) => nodeObject( new SplitNode( nodeObject( node ), channels ) );
 
 addMethodChaining( 'element', element );
 addMethodChaining( 'convert', convert );
+
+// deprecated
+
+/**
+ * @tsl
+ * @function
+ * @deprecated since r176. Use {@link Stack} instead.
+ *
+ * @param {Node} node - The node to add.
+ * @returns {Function}
+ */
+export const append = ( node ) => { // @deprecated, r176
+
+	console.warn( 'THREE.TSL: append() has been renamed to Stack().' );
+	return Stack( node );
+
+};
+
+addMethodChaining( 'append', ( node ) => { // @deprecated, r176
+
+	console.warn( 'THREE.TSL: .append() has been renamed to .toStack().' );
+	return Stack( node );
+
+} );
+
+/**
+ * @tsl
+ * @function
+ * @deprecated since r168. Use {@link Fn} instead.
+ *
+ * @param {...any} params
+ * @returns {Function}
+ */
+export const tslFn = ( ...params ) => { // @deprecated, r168
+
+	console.warn( 'THREE.TSL: tslFn() has been renamed to Fn().' );
+	return Fn( ...params );
+
+};
