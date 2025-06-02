@@ -1423,7 +1423,7 @@ class Object3D extends EventDispatcher {
 			};
 
 			output.metadata = {
-				version: 4.6,
+				version: 4.7,
 				type: 'Object',
 				generator: 'Object3D.toJSON'
 			};
@@ -1473,14 +1473,8 @@ class Object3D extends EventDispatcher {
 
 			object.geometryInfo = this._geometryInfo.map( info => ( {
 				...info,
-				boundingBox: info.boundingBox ? {
-					min: info.boundingBox.min.toArray(),
-					max: info.boundingBox.max.toArray()
-				} : undefined,
-				boundingSphere: info.boundingSphere ? {
-					radius: info.boundingSphere.radius,
-					center: info.boundingSphere.center.toArray()
-				} : undefined
+				boundingBox: info.boundingBox ? info.boundingBox.toJSON() : undefined,
+				boundingSphere: info.boundingSphere ? info.boundingSphere.toJSON() : undefined
 			} ) );
 			object.instanceInfo = this._instanceInfo.map( info => ( { ...info } ) );
 
@@ -1509,19 +1503,13 @@ class Object3D extends EventDispatcher {
 
 			if ( this.boundingSphere !== null ) {
 
-				object.boundingSphere = {
-					center: this.boundingSphere.center.toArray(),
-					radius: this.boundingSphere.radius
-				};
+				object.boundingSphere = this.boundingSphere.toJSON();
 
 			}
 
 			if ( this.boundingBox !== null ) {
 
-				object.boundingBox = {
-					min: this.boundingBox.min.toArray(),
-					max: this.boundingBox.max.toArray()
-				};
+				object.boundingBox = this.boundingBox.toJSON();
 
 			}
 

@@ -12,10 +12,13 @@ import {
 } from '../constants.js';
 import { generateUUID } from '../math/MathUtils.js';
 import { Vector2 } from '../math/Vector2.js';
+import { Vector3 } from '../math/Vector3.js';
 import { Matrix3 } from '../math/Matrix3.js';
 import { Source } from './Source.js';
 
 let _textureId = 0;
+
+const _tempVec3 = /*@__PURE__*/ new Vector3();
 
 /**
  * Base class for all textures.
@@ -303,6 +306,14 @@ class Texture extends EventDispatcher {
 		this.userData = {};
 
 		/**
+		 * This can be used to only update a subregion or specific rows of the texture (for example, just the
+		 * first 3 rows). Use the `addUpdateRange()` function to add ranges to this array.
+		 *
+		 * @type {Array<Object>}
+		 */
+		this.updateRanges = [];
+
+		/**
 		 * This starts at `0` and counts how many times {@link Texture#needsUpdate} is set to `true`.
 		 *
 		 * @type {number}
@@ -344,7 +355,7 @@ class Texture extends EventDispatcher {
 		 * @readonly
 		 * @default false
 		 */
-		this.isTextureArray = false;
+		this.isArrayTexture = image && image.depth && image.depth > 1 ? true : false;
 
 		/**
 		 * Indicates whether this texture should be processed by `PMREMGenerator` or not
@@ -379,6 +390,33 @@ class Texture extends EventDispatcher {
 
 
 	/**
+	 * The width of the texture in pixels.
+	 */
+	get width() {
+
+		return this.source.getSize( _tempVec3 ).x;
+
+	}
+
+	/**
+	 * The height of the texture in pixels.
+	 */
+	get height() {
+
+		return this.source.getSize( _tempVec3 ).y;
+
+	}
+
+	/**
+	 * The depth of the texture in pixels.
+	 */
+	get depth() {
+
+		return this.source.getSize( _tempVec3 ).z;
+
+	}
+
+	/**
 	 * The image object holding the texture data.
 	 *
 	 * @type {?Object}
@@ -402,6 +440,27 @@ class Texture extends EventDispatcher {
 	updateMatrix() {
 
 		this.matrix.setUvTransform( this.offset.x, this.offset.y, this.repeat.x, this.repeat.y, this.rotation, this.center.x, this.center.y );
+
+	}
+
+	/**
+	 * Adds a range of data in the data texture to be updated on the GPU.
+	 *
+	 * @param {number} start - Position at which to start update.
+	 * @param {number} count - The number of components to update.
+	 */
+	addUpdateRange( start, count ) {
+
+		this.updateRanges.push( { start, count } );
+
+	}
+
+	/**
+	 * Clears the update ranges.
+	 */
+	clearUpdateRanges() {
+
+		this.updateRanges.length = 0;
 
 	}
 
@@ -460,7 +519,7 @@ class Texture extends EventDispatcher {
 
 		this.renderTarget = source.renderTarget;
 		this.isRenderTargetTexture = source.isRenderTargetTexture;
-		this.isTextureArray = source.isTextureArray;
+		this.isArrayTexture = source.isArrayTexture;
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
@@ -470,6 +529,54 @@ class Texture extends EventDispatcher {
 
 
 		return this;
+
+	}
+
+	/**
+	 * Sets this texture's properties based on `values`.
+	 * @param {Object} values - A container with texture parameters.
+	 */
+	setValues( values ) {
+
+		for ( const key in values ) {
+
+			const newValue = values[ key ];
+
+			if ( newValue === undefined ) {
+
+				console.warn( `THREE.Texture.setValues(): parameter '${ key }' has value of undefined.` );
+				continue;
+
+			}
+
+			const currentValue = this[ key ];
+
+			if ( currentValue === undefined ) {
+
+				console.warn( `THREE.Texture.setValues(): property '${ key }' does not exist.` );
+				continue;
+
+			}
+
+			if ( ( currentValue && newValue ) && ( currentValue.isVector2 && newValue.isVector2 ) ) {
+
+				currentValue.copy( newValue );
+
+			} else if ( ( currentValue && newValue ) && ( currentValue.isVector3 && newValue.isVector3 ) ) {
+
+				currentValue.copy( newValue );
+
+			} else if ( ( currentValue && newValue ) && ( currentValue.isMatrix3 && newValue.isMatrix3 ) ) {
+
+				currentValue.copy( newValue );
+
+			} else {
+
+				this[ key ] = newValue;
+
+			}
+
+		}
 
 	}
 
@@ -493,7 +600,7 @@ class Texture extends EventDispatcher {
 		const output = {
 
 			metadata: {
-				version: 4.6,
+				version: 4.7,
 				type: 'Texture',
 				generator: 'Texture.toJSON'
 			},
