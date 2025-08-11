@@ -30,9 +30,7 @@ const interpolationTypeMap = {
 };
 
 const interpolationModeMap = {
-	'centroid': 'centroid',
-	'flat first': 'flat',
-	'flat either': 'flat'
+	'centroid': 'centroid'
 };
 
 const defaultPrecisions = `
@@ -251,7 +249,7 @@ ${ flowData.code }
 			attribute.pboNode = pbo;
 			attribute.pbo = pbo.value;
 
-			this.getUniformFromNode( attribute.pboNode, 'texture', this.shaderStage, this.context.label );
+			this.getUniformFromNode( attribute.pboNode, 'texture', this.shaderStage, this.context.nodeName );
 
 		}
 
@@ -295,7 +293,7 @@ ${ flowData.code }
 
 		}
 
-		const nodeUniform = this.getUniformFromNode( attribute.pboNode, 'texture', this.shaderStage, this.context.label );
+		const nodeUniform = this.getUniformFromNode( attribute.pboNode, 'texture', this.shaderStage, this.context.nodeName );
 		const textureName = this.getPropertyName( nodeUniform );
 
 		this.increaseUsage( indexNode ); // force cache generate to be used as index in x,y

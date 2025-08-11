@@ -1,8 +1,10 @@
 import { WebGLCoordinateSystem } from '../constants.js';
 import { Matrix4 } from '../math/Matrix4.js';
 import { Object3D } from '../core/Object3D.js';
+// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 import { Vector3 } from '../math/Vector3.js';
 import { Euler } from '../math/Euler.js';
+// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 /**
  * Abstract base class for cameras. This class should always be inherited
@@ -65,6 +67,19 @@ class Camera extends Object3D {
 		this._camera_motion_vmd_euler = new Euler();
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
+		this._reversedDepth = false;
+
+	}
+
+	/**
+	 * The flag that indicates whether the camera uses a reversed depth buffer.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 */
+	get reversedDepth() {
+
+		return this._reversedDepth;
 
 	}
 

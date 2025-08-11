@@ -105,7 +105,7 @@ class GTAOPass extends Pass {
 		 */
 		this.output = 0;
 		this._renderGBuffer = true;
-		this._visibilityCache = new Map();
+		this._visibilityCache = [];
 
 		/**
 		 * The AO blend intensity.
@@ -679,9 +679,12 @@ class GTAOPass extends Pass {
 
 		scene.traverse( function ( object ) {
 
-			cache.set( object, object.visible );
+			if ( ( object.isPoints || object.isLine || object.isLine2 ) && object.visible ) {
 
-			if ( object.isPoints || object.isLine ) object.visible = false;
+				object.visible = false;
+				cache.push( object );
+
+			}
 
 		} );
 
@@ -689,17 +692,15 @@ class GTAOPass extends Pass {
 
 	_restoreVisibility() {
 
-		const scene = this.scene;
 		const cache = this._visibilityCache;
 
-		scene.traverse( function ( object ) {
+		for ( let i = 0; i < cache.length; i ++ ) {
 
-			const visible = cache.get( object );
-			object.visible = visible;
+			cache[ i ].visible = true;
 
-		} );
+		}
 
-		cache.clear();
+		cache.length = 0;
 
 	}
 
