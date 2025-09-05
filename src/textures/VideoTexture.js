@@ -271,9 +271,6 @@ class VideoTexture extends Texture {
 
 	}
 
-	/**
-	 * @override
-	 */
 	dispose() {
 
 		if ( this._requestVideoFrameCallbackId !== 0 ) {
