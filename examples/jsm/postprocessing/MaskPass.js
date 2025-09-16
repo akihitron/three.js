@@ -118,11 +118,41 @@ class MaskPass extends Pass {
 
 		renderer.setRenderTarget( readBuffer );
 		if ( this.clear ) renderer.clear();
-		renderer.render( this.scene, this.camera );
+
+		if ( this._useInternalRender && renderer._renderInternal ) {
+			if ( this.camera.isArrayCamera ) {
+				const cameras = this.camera.cameras;
+				for ( let i = 0; i < cameras.length; i++ ) {
+					const subcamera = cameras[ i ];
+					const viewport = subcamera.viewport;
+					renderer.setViewport( viewport );
+					renderer._renderInternal( this.scene, subcamera, readBuffer, false );
+				}
+			} else {
+				renderer._renderInternal( this.scene, this.camera, readBuffer, false );
+			}
+		} else {
+			renderer.render( this.scene, this.camera );
+		}
 
 		renderer.setRenderTarget( writeBuffer );
 		if ( this.clear ) renderer.clear();
-		renderer.render( this.scene, this.camera );
+
+		if ( this._useInternalRender && renderer._renderInternal ) {
+			if ( this.camera.isArrayCamera ) {
+				const cameras = this.camera.cameras;
+				for ( let i = 0; i < cameras.length; i++ ) {
+					const subcamera = cameras[ i ];
+					const viewport = subcamera.viewport;
+					renderer.setViewport( viewport );
+					renderer._renderInternal( this.scene, subcamera, writeBuffer, false );
+				}
+			} else {
+				renderer._renderInternal( this.scene, this.camera, writeBuffer, false );
+			}
+		} else {
+			renderer.render( this.scene, this.camera );
+		}
 
 		// unlock color and depth buffer and make them writable for subsequent rendering/clearing
 

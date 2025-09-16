@@ -102,6 +102,10 @@ class RenderPass extends Pass {
 
 	}
 
+	setCamera( camera ) {
+		this.camera = camera;
+	}
+
 	/**
 	 * Performs a beauty pass with the configured scene and camera.
 	 *
@@ -150,7 +154,7 @@ class RenderPass extends Pass {
 
 		}
 
-		const render_target = this.renderToScreen ? null : effect_composer.renderTarget3;
+		const render_target = this.renderToScreen ? this._currentRenderTarget : effect_composer.renderTarget3;
 		renderer.setRenderTarget( render_target );
 
 		if ( this.clear === true ) {
@@ -161,8 +165,30 @@ class RenderPass extends Pass {
 		}
 
 		window.DMC.startGPUStatusChecker();
-		renderer.render( this.scene, this.camera );
-		if ( this.outline_effect ) this.outline_effect.renderOutline( this.scene, this.camera );
+
+		if ( this._useInternalRender && renderer._renderInternal && this.scene && this.camera ) {
+			if ( this.camera.isArrayCamera ) {
+				const cameras = this.camera.cameras;
+				for ( let i = 0; i < cameras.length; i++ ) {
+					const subcamera = cameras[ i ];
+					const viewport = subcamera.viewport;
+					renderer.setViewport( viewport );
+					renderer._renderInternal( this.scene, subcamera, render_target, false );
+					// renderer._renderInternal( this.scene, subcamera, render_target, i === 0 ? this.clear : false );
+				}
+			} else {
+				renderer._renderInternal( this.scene, this.camera, render_target, this.clear );
+			}
+		} else {
+			renderer.render( this.scene, this.camera );
+		}
+
+		if ( this.outline_effect ) {
+
+			this.outline_effect.renderOutline( this.scene, this.camera );
+
+		}
+
 		if ( effect_composer.renderTarget3 == render_target ) {
 
 			this.copy_pass.render( renderer, readBuffer, effect_composer.renderTarget3 );

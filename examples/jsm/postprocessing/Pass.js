@@ -62,6 +62,10 @@ class Pass {
 		 */
 		this.renderToScreen = false;
 
+
+		this._currentRenderTarget = null; // @DDD@
+
+
 	}
 
 	/**
@@ -145,7 +149,7 @@ class FullScreenQuad {
 	constructor( material ) {
 
 		this._mesh = new Mesh( _geometry, material );
-
+		
 	}
 
 	/**
@@ -165,7 +169,11 @@ class FullScreenQuad {
 	 */
 	render( renderer ) {
 
-		renderer.render( this._mesh, _camera );
+		if ( renderer._renderInternal ) {
+			renderer._renderInternal( this._mesh, _camera, renderer.getRenderTarget(), false );
+		} else {
+			renderer.render( this._mesh, _camera );
+		}
 
 	}
 
