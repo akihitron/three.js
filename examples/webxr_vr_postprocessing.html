@@ -16,7 +16,11 @@
 			}
 		</script>
 
+		<div id="reload-button" style="position: fixed; top: 10px; right: 10px; background-color: #000; color: #fff; padding: 10px; border-radius: 5px; cursor: pointer;" onclick="window.__reload__()">Reload</div>
+
 		<script type="module">
+					// "three": "../src/Three.js",
+					// "three": "../build/three.module.js",
 
 			import * as THREE from 'three';
 
@@ -30,6 +34,22 @@
 
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 			import Stats from 'three/addons/libs/stats.module.js';
+
+
+			window.__reload__ = async () => {
+				if (window.__TAURI__?.core && localStorage.ddd_needs_relaunch == 'true') {
+					// const { relaunch } = await import('@tauri-apps/api/process');
+					const { exit, relaunch } = window.__TAURI__.process;
+					const { saveWindowState, StateFlags } = window.__TAURI__.windowState;
+					await saveWindowState(StateFlags.ALL);
+					// await exit(0);
+					localStorage.ddd_needs_relaunch = 'false';
+					await relaunch();
+					// window.__TAURI__.core.invoke('reload');
+				} else {
+					location.reload();
+				}
+			};
 
 			let camera, scene, renderer;
 			let reflector;
@@ -113,7 +133,7 @@
 				renderer.toneMappingExposure = 1;
 				document.body.appendChild( renderer.domElement );
 
-				document.body.appendChild( VRButton.createButton( renderer ) );
+				document.body.appendChild( VRButton.createButton( renderer, {}, ()=>{ localStorage.ddd_needs_relaunch = 'true';} ) );
 
 				window.addEventListener( 'resize', onWindowResize );
 

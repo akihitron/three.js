@@ -342,6 +342,13 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		// Returns the current XR render target used during the session.
+		this.getRenderTarget = function () {
+
+			return newRenderTarget;
+
+		};
+
 		/**
 		 * Returns the current XR binding.
 		 *

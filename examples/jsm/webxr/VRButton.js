@@ -37,7 +37,7 @@ class VRButton {
 
 				currentSession = session;
 
-				callback( 'started' ); // @DDD@
+				if (callback) callback( 'started' ); // @DDD@
 
 			}
 
@@ -49,7 +49,7 @@ class VRButton {
 
 				currentSession = null;
 
-				callback( 'ended' ); // @DDD@
+				if (callback) callback( 'ended' ); // @DDD@
 
 			}
 
@@ -66,7 +66,7 @@ class VRButton {
 			button.style.alignItems = 'center';
 
 			button.textContent = 'ENTER VR';
-			callback( 'initialize' ); // @DDD@
+			if (callback) callback( 'initialize' ); // @DDD@
 
 			// WebXR's requestReferenceSpace only works if the corresponding feature
 			// was requested at session creation time. For simplicity, just ask for
@@ -99,7 +99,7 @@ class VRButton {
 
 			button.onclick = function () {
 
-				callback( 'before_start' );
+				if (callback) callback( 'before_start' );
 
 				if ( currentSession === null ) {
 
@@ -107,7 +107,7 @@ class VRButton {
 
 						button.textContent = 'ACCESS DENIED';
 						console.warn( 'requestSession failed', err );
-						callback( 'not_allowed' );
+						if (callback) callback( 'not_allowed' );
 
 					} );
 
@@ -123,7 +123,7 @@ class VRButton {
 
 								console.warn( err );
 
-								callback( 'not_allowed' );
+								if (callback) callback( 'not_allowed' );
 
 							} );
 
@@ -135,7 +135,7 @@ class VRButton {
 
 			if ( navigator.xr.offerSession !== undefined ) {
 
-				callback( 'available' );
+				if (callback) callback( 'available' );
 
 				navigator.xr.offerSession( 'immersive-vr', sessionOptions )
 					.then( onSessionStarted )
@@ -143,7 +143,7 @@ class VRButton {
 
 						console.warn( err );
 
-						callback( 'not_allowed' );
+						if (callback) callback( 'not_allowed' );
 
 					} );
 
@@ -172,7 +172,7 @@ class VRButton {
 
 			button.textContent = 'VR NOT AVAILABLE';
 
-			callback( 'not_supported' ); // @DDD@
+			if (callback) callback( 'not_supported' ); // @DDD@
 
 		}
 
@@ -184,7 +184,7 @@ class VRButton {
 
 			button.textContent = 'VR NOT ALLOWED';
 
-			callback( 'not_allowed' ); // @DDD@
+			if (callback) callback( 'not_allowed' ); // @DDD@
 
 		}
 
@@ -248,7 +248,7 @@ class VRButton {
 
 			stylizeElement( message );
 
-			callback( 'not_available' ); // @DDD@
+			if (callback) callback( 'not_available' ); // @DDD@
 
 			return message;
 
