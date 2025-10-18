@@ -72,8 +72,11 @@ class FileLoader extends Loader {
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	_load_( url, onLoad, onProgress, onError ) {
 		const scope = this;
+		if (window.is_data_url == null) return { cache: null, should_use_default_load: true };
+ 
 		const isDataURL = window.is_data_url( url );
 		const file_system = scope.params.file_system;
+
 		if ( window.external_io && isDataURL == false && file_system == 'external_io' ) {
 
 			if ( url === undefined ) url = '';
