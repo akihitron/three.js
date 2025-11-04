@@ -1,9 +1,10 @@
 import { Object3D } from '../core/Object3D.js';
+import { warn } from '../utils.js';
 
 /**
  * Represents a non-positional ( global ) audio object.
  *
- * This and related audio modules make use of the [Web Audio API]{@link https://www.w3.org/TR/webaudio-1.1/}.
+ * This and related audio modules make use of the [Web Audio API](https://www.w3.org/TR/webaudio-1.1/).
  *
  * ```js
  * // create an AudioListener and add it to the camera
@@ -351,14 +352,14 @@ class Audio extends Object3D {
 
 		if ( this.isPlaying === true ) {
 
-			console.warn( 'THREE.Audio: Audio is already playing.' );
+			warn( 'Audio: Audio is already playing.' );
 			return;
 
 		}
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return;
 
 		}
@@ -413,7 +414,7 @@ class Audio extends Object3D {
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return;
 
 		}
@@ -455,7 +456,7 @@ class Audio extends Object3D {
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return;
 
 		}
@@ -648,7 +649,7 @@ class Audio extends Object3D {
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return;
 
 		}
@@ -697,7 +698,7 @@ class Audio extends Object3D {
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return false;
 
 		}
@@ -718,7 +719,7 @@ class Audio extends Object3D {
 
 		if ( this.hasPlaybackControl === false ) {
 
-			console.warn( 'THREE.Audio: this Audio has no playback control.' );
+			warn( 'Audio: this Audio has no playback control.' );
 			return;
 
 		}
@@ -797,7 +798,7 @@ class Audio extends Object3D {
 
 		if ( source.sourceType !== 'buffer' ) {
 
-			console.warn( 'THREE.Audio: Audio source type cannot be copied.' );
+			warn( 'Audio: Audio source type cannot be copied.' );
 
 			return this;
 
