@@ -155,6 +155,14 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		// render depth map
 
+		// [PATCH] Disable logarithmic depth buffer during shadow map rendering.
+		// With native depth textures (r182+), MeshDepthMaterial writes log depth
+		// to gl_FragDepth for perspective shadow cameras (SpotLight), but the shadow
+		// comparison in the main pass uses linear projection coordinates. This mismatch
+		// causes all fragments to appear in shadow.
+		const _savedLogDepthBuffer = capabilities.logarithmicDepthBuffer;
+		capabilities.logarithmicDepthBuffer = false;
+
 		for ( let i = 0, il = lights.length; i < il; i ++ ) {
 
 			const light = lights[ i ];
@@ -363,6 +371,9 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 			shadow.needsUpdate = false;
 
 		}
+
+		// [PATCH] Restore logarithmic depth buffer capability
+		capabilities.logarithmicDepthBuffer = _savedLogDepthBuffer;
 
 		_previousType = this.type;
 

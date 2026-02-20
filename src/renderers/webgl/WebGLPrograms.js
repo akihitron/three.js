@@ -15,8 +15,6 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 	const programs = [];
 	const programsMap = new Map();
 
-	const logarithmicDepthBuffer = capabilities.logarithmicDepthBuffer;
-
 	let precision = capabilities.precision;
 
 	const shaderIDs = {
@@ -311,7 +309,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			),
 
 			sizeAttenuation: material.sizeAttenuation === true,
-			logarithmicDepthBuffer: logarithmicDepthBuffer,
+			logarithmicDepthBuffer: capabilities.logarithmicDepthBuffer,
 			reversedDepthBuffer: reversedDepthBuffer,
 
 			skinning: object.isSkinnedMesh === true,

@@ -1319,6 +1319,8 @@ const SRGBColorSpace = 'srgb';
  * @constant
  */
 const LinearSRGBColorSpace = 'srgb-linear';
+const DisplayP3ColorSpace = 'display-p3';
+const LinearDisplayP3ColorSpace = 'display-p3-linear';
 
 /**
  * Linear transfer function.
@@ -2284,7 +2286,7 @@ function generateUUID() {
 			_lut[ d3 & 0xff ] + _lut[ d3 >> 8 & 0xff ] + _lut[ d3 >> 16 & 0xff ] + _lut[ d3 >> 24 & 0xff ];
 
 	// .toLowerCase() here flattens concatenated strings to save heap memory space.
-	return uuid.toLowerCase();
+	return uuid.toLowerCase().replace( /-/g, '' ); // @DDD@
 
 }
 
@@ -7543,7 +7545,27 @@ class Texture extends EventDispatcher {
 		 */
 		this.pmremVersion = 0;
 
+		{ // @DDD@
+
+			this.source_file = null;
+
+		}
+
 	}
+
+
+	get width() {
+
+		return this.source.data?.naturalWidth || this.source.data?.width;
+
+	} // @DDD@
+
+	get height() {
+
+		return this.source.data?.naturalHeight || this.source.data?.height;
+
+	} // @DDD@
+
 
 	/**
 	 * The width of the texture in pixels.
@@ -7681,6 +7703,9 @@ class Texture extends EventDispatcher {
 
 		this.needsUpdate = true;
 
+		this.source_file = source.source_file; // @DDD@
+
+
 		return this;
 
 	}
@@ -7761,7 +7786,9 @@ class Texture extends EventDispatcher {
 			uuid: this.uuid,
 			name: this.name,
 
-			image: this.source.toJSON( meta ).uuid,
+			// image: this.source.toJSON( meta ).uuid,
+			image: this.source.uuid, // @DDD@
+
 
 			mapping: this.mapping,
 			channel: this.channel,
@@ -7786,8 +7813,9 @@ class Texture extends EventDispatcher {
 
 			generateMipmaps: this.generateMipmaps,
 			premultiplyAlpha: this.premultiplyAlpha,
-			unpackAlignment: this.unpackAlignment
+			unpackAlignment: this.unpackAlignment,
 
+			source_file: this.source_file // @DDD@
 		};
 
 		if ( Object.keys( this.userData ).length > 0 ) output.userData = this.userData;
@@ -12011,6 +12039,183 @@ class Object3D extends EventDispatcher {
 		 */
 		this.userData = {};
 
+
+		{ // @DDD@
+
+			this.script = '';
+			this.script_mode = null;
+			this.isMosaicObject = false;
+			this._collapsible_ = false;
+			this._animation_clock_ = 0;
+
+			this.user = {
+				updaters: {},
+			};
+			this.ikEnabled = true;
+			const self = this;
+			function _find_( name, o, exact_match = false, arr = null ) {
+
+				const _name_ = o.name;
+				if ( name instanceof RegExp ) {
+
+					if ( _name_.match( name ) ) {
+
+						if ( arr ) arr.push( o );
+						else return o;
+
+					}
+
+				} else {
+
+					if ( exact_match ) {
+
+						if ( _name_ === name ) {
+
+							if ( arr ) arr.push( o );
+							else return o;
+
+						}
+
+					} else {
+
+						if ( _name_.indexOf( name ) >= 0 ) {
+
+							if ( arr ) arr.push( o );
+							else return o;
+
+						}
+
+					}
+
+				}
+
+				for ( const sub of o.children ) {
+
+					let ret = null;
+					ret = _find_( name, sub, exact_match, arr );
+					if ( ret && arr == null ) return ret;
+
+				}
+
+				return null;
+
+			}
+
+			this.find = function ( name, exact_match = false ) {
+
+				return _find_( name, self, exact_match );
+
+			};
+
+			this.findAll = function ( name, exact_match = false ) {
+
+				const arr = [];
+				_find_( name, self, exact_match, arr );
+				return arr;
+
+			};
+
+			function _findMaterial_( name, o = self, exact_match = false ) {
+
+				if ( o.material ) {
+
+					if ( Array.isArray( o.material ) ) {
+
+						for ( const material of o.material ) {
+
+							const _name_ = material.name;
+							if ( name instanceof RegExp ) {
+
+								if ( _name_.match( name ) ) return material;
+
+							} else {
+
+								if ( exact_match ) {
+
+									if ( _name_ === name ) return material;
+
+								} else {
+
+									if ( _name_.indexOf( name ) >= 0 ) return material;
+
+								}
+
+							}
+
+						}
+
+					} else {
+
+						const _name_ = o.material.name;
+						if ( name instanceof RegExp ) {
+
+							if ( _name_.match( name ) ) return o.material;
+
+						} else {
+
+							if ( exact_match ) {
+
+								if ( _name_ === name ) return o.material;
+
+							} else {
+
+								if ( _name_.indexOf( name ) >= 0 ) return o.material;
+
+							}
+
+						}
+
+					}
+
+				}
+
+				for ( const sub of o.children ) {
+
+					let ret = null;
+					ret = _findMaterial_( name, sub, exact_match );
+					if ( ret ) return ret;
+
+				}
+
+				return null;
+
+			}
+
+			this.findMaterial = function ( name, exact_match = false ) {
+
+				return _findMaterial_( name, self, exact_match );
+
+			};
+
+			this.setUpdater = function ( key, callback ) {
+
+				this.user.updaters[ key ] = callback;
+
+			};
+
+			this.isMMD = false;
+
+			// // Single
+			// this.getCurrentAction = function () {}
+			// this.setCurrentAction = function(any, params) {}
+
+			// // Multiple
+			// this.setActions = function(any, params) {}
+			// this.getActions = function() {}
+			// this.clearActions = function() {}
+			// // Multiple
+			// this.getAnimationBlender = function() {}
+			// this.createAnimationBlender = function() {}
+
+			// // Mode
+			// this.setActionMode = function(mode) {}
+			// this.getActionMode = function() {}
+
+			// // Single/Multiple
+			// this.updateActions = undefined;//function(delta) {}
+
+		}
+
 		/**
 		 * The pivot point for rotation and scale transformations.
 		 * When set, rotation and scale are applied around this point
@@ -15013,6 +15218,8 @@ class Scene extends Object3D {
 		 */
 		this.overrideMaterial = null;
 
+		this.isXRMode = false; // @DDD@
+
 		if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
 
 			__THREE_DEVTOOLS__.dispatchEvent( new CustomEvent( 'observe', { detail: this } ) );
@@ -17298,7 +17505,15 @@ class Int8BufferAttribute extends BufferAttribute {
 	 */
 	constructor( array, itemSize, normalized ) {
 
-		super( new Int8Array( array ), itemSize, normalized );
+		if ( array instanceof Int8Array ) { // @DDD@
+
+			super( new Int8Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
+		} else {
+
+			super( new Int8Array( array ), itemSize, normalized );
+
+		}
 
 	}
 
@@ -17321,7 +17536,15 @@ class Uint8BufferAttribute extends BufferAttribute {
 	 */
 	constructor( array, itemSize, normalized ) {
 
-		super( new Uint8Array( array ), itemSize, normalized );
+		if ( array instanceof Uint8Array ) { // @DDD@
+
+			super( new Uint8Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
+		} else {
+
+			super( new Uint8Array( array ), itemSize, normalized );
+
+		}
 
 	}
 
@@ -17627,7 +17850,23 @@ class Float32BufferAttribute extends BufferAttribute {
 	 */
 	constructor( array, itemSize, normalized ) {
 
-		super( new Float32Array( array ), itemSize, normalized );
+		if ( array.is_custom ) {
+
+			super( array.new_array, itemSize, normalized );
+
+		} else {
+
+			if ( array instanceof Float32Array ) { // @DDD@
+
+				super( new Float32Array( array.buffer.slice( 0 ) ), itemSize, normalized );
+
+			} else {
+
+				super( new Float32Array( array ), itemSize, normalized );
+
+			}
+
+		}
 
 	}
 
@@ -20793,6 +21032,15 @@ class Material extends EventDispatcher {
 
 		this._alphaTest = 0;
 
+		{ // Extensions
+
+			this.receiveDynamicEnvironment = true; // @DDD@
+			this.castDynamicEnvironment = true; // @DDD@
+			this.receiveShadow = true;// @DDD@
+			this.motionBlur = true; // @DDD@
+
+		}
+
 	}
 
 	/**
@@ -21132,6 +21380,9 @@ class Material extends EventDispatcher {
 		if ( this.stencilZPass !== KeepStencilOp ) data.stencilZPass = this.stencilZPass;
 		if ( this.stencilWrite === true ) data.stencilWrite = this.stencilWrite;
 
+		if ( this.castDynamicEnvironment !== undefined ) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
+		if ( this.receiveDynamicEnvironment !== undefined ) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
+
 		// rotation (SpriteMaterial)
 		if ( this.rotation !== undefined && this.rotation !== 0 ) data.rotation = this.rotation;
 
@@ -21293,6 +21544,9 @@ class Material extends EventDispatcher {
 
 		this.toneMapped = source.toneMapped;
 
+		this.castDynamicEnvironment = source.castDynamicEnvironment; // @DDD@
+		this.receiveDynamicEnvironment = source.receiveDynamicEnvironment; // @DDD@
+
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
 		return this;
@@ -21330,6 +21584,13 @@ class Material extends EventDispatcher {
 		if ( value === true ) this.version ++;
 
 	}
+
+	onBeforeRender( /* renderer, scene, camera, geometry, object, group */ ) {
+
+		// console.warn( 'Material: onBeforeRender() has been removed.' ); // @deprecated, r166 @DDD@
+
+	}
+
 
 }
 
@@ -21526,18 +21787,19 @@ class Sprite extends Object3D {
 
 			_geometry = new BufferGeometry();
 
-			const float32Array = new Float32Array( [
-				-0.5, -0.5, 0, 0, 0,
-				0.5, -0.5, 0, 1, 0,
-				0.5, 0.5, 0, 1, 1,
-				-0.5, 0.5, 0, 0, 1
+			const float32Array = new Float32Array( [ // @DDD@
+				-0.5, -0.5, 0, 	0, 0, 1, 0, 0,
+				0.5, -0.5, 0, 		0, 0, 1, 1, 0,
+				0.5, 0.5, 0, 		0, 0, 1, 1, 1,
+				-0.5, 0.5, 0, 		0, 0, 1, 0, 1
 			] );
 
-			const interleavedBuffer = new InterleavedBuffer( float32Array, 5 );
+			const interleavedBuffer = new InterleavedBuffer( float32Array, 8 ); // @DDD@
 
 			_geometry.setIndex( [ 0, 1, 2,	0, 2, 3 ] );
 			_geometry.setAttribute( 'position', new InterleavedBufferAttribute( interleavedBuffer, 3, 0, false ) );
-			_geometry.setAttribute( 'uv', new InterleavedBufferAttribute( interleavedBuffer, 2, 3, false ) );
+			_geometry.setAttribute( 'normal', new InterleavedBufferAttribute( interleavedBuffer, 3, 3, false ) ); // @DDD@
+			_geometry.setAttribute( 'uv', new InterleavedBufferAttribute( interleavedBuffer, 2, 6, false ) ); // @DDD@
 
 		}
 
@@ -23047,30 +23309,95 @@ class Mesh extends Object3D {
 
 		const geometry = this.geometry;
 
-		const morphAttributes = geometry.morphAttributes;
-		const keys = Object.keys( morphAttributes );
 
-		if ( keys.length > 0 ) {
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		if ( geometry.isMMDMorph ) {
 
-			const morphAttribute = morphAttributes[ keys[ 0 ] ];
+			const morphAttributes = geometry.morphAttributes;
+			const morphs = geometry.morphs;
+			const keys = Object.keys( morphAttributes );
 
-			if ( morphAttribute !== undefined ) {
+			if ( keys.length > 0 ) {
 
-				this.morphTargetInfluences = [];
-				this.morphTargetDictionary = {};
+				const morphAttribute = morphAttributes[ keys[ 0 ] ];
 
-				for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+				if ( morphAttribute !== undefined ) {
 
-					const name = morphAttribute[ m ].name || String( m );
+					this.morphTargetInfluences = [];
+					this.morphTargetDictionary = {};
+					this.morphTargetIndexDictionary = [];
 
-					this.morphTargetInfluences.push( 0 );
-					this.morphTargetDictionary[ name ] = m;
+					for ( let m = 0, ml = morphs.length; m < ml; m ++ ) {
+
+						const name = morphs[ m ].name || String( m );
+
+						this.morphTargetInfluences.push( 0 );
+						this.morphTargetDictionary[ name ] = m;
+						this.morphTargetIndexDictionary.push( name );
+
+					}
+
+				}
+
+			}
+
+		} else {
+
+			const morphAttributes = geometry.morphAttributes;
+			const keys = Object.keys( morphAttributes );
+
+			if ( keys.length > 0 ) {
+
+				const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+				if ( morphAttribute !== undefined ) {
+
+					this.morphTargetInfluences = [];
+					this.morphTargetDictionary = {};
+					this.morphTargetIndexDictionary = [];
+
+
+					for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+						const name = morphAttribute[ m ].name || String( m );
+
+						this.morphTargetInfluences.push( 0 );
+						this.morphTargetDictionary[ name ] = m;
+						this.morphTargetIndexDictionary.push( name );
+
+					}
 
 				}
 
 			}
 
 		}
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
+		// const morphAttributes = geometry.morphAttributes;
+		// const keys = Object.keys( morphAttributes );
+
+		// if ( keys.length > 0 ) {
+
+		// 	const morphAttribute = morphAttributes[ keys[ 0 ] ];
+
+		// 	if ( morphAttribute !== undefined ) {
+
+		// 		this.morphTargetInfluences = [];
+		// 		this.morphTargetDictionary = {};
+
+		// 		for ( let m = 0, ml = morphAttribute.length; m < ml; m ++ ) {
+
+		// 			const name = morphAttribute[ m ].name || String( m );
+
+		// 			this.morphTargetInfluences.push( 0 );
+		// 			this.morphTargetDictionary[ name ] = m;
+
+		// 		}
+
+		// 	}
+
+		// }
 
 	}
 
@@ -24078,7 +24405,8 @@ class Skeleton {
 			const matrix = bones[ i ] ? bones[ i ].matrixWorld : _identityMatrix;
 
 			_offsetMatrix.multiplyMatrices( matrix, boneInverses[ i ] );
-			_offsetMatrix.toArray( boneMatrices, i * 16 );
+			// _offsetMatrix.toArray( boneMatrices, i * 16 );
+			boneMatrices.set( _offsetMatrix.elements, i * 16 ); // @DDD@
 
 		}
 
@@ -25227,6 +25555,16 @@ class Frustum {
 			_sphere$3.copy( geometry.boundingSphere ).applyMatrix4( object.matrixWorld );
 
 		}
+
+		// TODO: intersection code
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		// if ( object.__getActualMatrixWorld__ ) {
+
+		// 	_sphere.copy( geometry.boundingSphere ).applyMatrix4( object.__getActualMatrixWorld__() );
+
+		// }
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 
 		return this.intersectsSphere( _sphere$3 );
 
@@ -28233,6 +28571,169 @@ class VideoTexture extends Texture {
 
 	}
 
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	getVideo() {
+
+		return this.image;
+
+	}
+	get width() {
+
+		return this.image.videoWidth;
+
+	}
+	get height() {
+
+		return this.image.videoHeight;
+
+	}
+	play() {
+
+		const video = this.image;
+		const isPlaying = ! video.paused && ! video.ended && video.readyState > video.HAVE_CURRENT_DATA;
+		if ( ! isPlaying ) {
+
+			video.play();
+
+		}
+
+	}
+	getDuration() {
+
+		return this.image.duration;
+
+	}
+	setCurrentTime( t ) {
+
+		this.image.currentTime = t;
+
+	}
+	getCurrentTime() {
+
+		return this.image.currentTime;
+
+	}
+	pause() {
+
+		this.image.pause();
+
+	}
+	setVolume( v ) {
+
+		if ( v < 0.0001 ) {
+
+			this.image.muted = true;
+
+		} else {
+
+			this.image.muted = false;
+
+		}
+
+		this.image.volume = v;
+		console.log( v );
+
+	}
+	setAutoPlay( v ) {
+
+		this.image.autoplay = v;
+
+	}
+	getAutoPlay() {
+
+		return this.image.autoplay;
+
+	}
+	enableAutoPlay( v = true ) { // Deprecated
+
+		console.warn( 'Deprecated: Use setAutoPlay instead of enableAutoPlay.' );
+		if ( v ) {
+
+			this.image.autoplay = true;
+			// this.image.setAttribute("autoplay","");
+
+		} else {
+
+			this.image.autoplay = false;
+			// this.image.removeAttribute("autoplay","");
+
+		}
+
+	}
+	getVolume( v ) {
+
+		return this.image.volume;
+
+	}
+	setLoop( v ) {
+
+		this.image.loop = v;
+
+	}
+	getLoop( v ) {
+
+		return this.image.loop;
+
+	}
+	getMuted() {
+
+		return this.image.muted;
+
+	}
+	setMuted( v ) {
+
+		this.image.muted = v;
+
+	}
+	stop() {
+
+		this.image.pause();
+		this.setCurrentTime( 0 );
+
+	}
+	dispose() {
+
+		super.dispose();
+		try {
+
+			this.image.pause();
+
+		} catch ( e ) {}
+
+		this.image.currentTime = 0;
+
+	}
+	toJSON() {
+
+		const j = super.toJSON();
+		j.video_loop = this.image.loop;
+		j.video_volume = this.image.volume;
+		j.video_muted = this.image.muted;
+		return j;
+
+	}
+	copy( obj ) {
+
+		super.copy( obj );
+		if ( obj.video_loop !== undefined ) {
+
+			this.image.loop = obj.video_loop;
+			this.image.volume = obj.video_volume;
+			this.image.muted = obj.video_muted;
+
+		} else if ( this.image?.loop !== undefined && obj.image?.loop !== undefined ) {
+
+			this.image.loop = obj.image.loop;
+			this.image.volume = obj.image.volume;
+			this.image.muted = obj.image.muted;
+
+		}
+
+		return this;
+
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 	/**
 	 * This method is called automatically by the renderer and sets {@link Texture#needsUpdate}
 	 * to `true` every time a new frame is available.
@@ -28999,8 +29500,9 @@ class BoxGeometry extends BufferGeometry {
 	 * @param {number} [widthSegments=1] - Number of segmented rectangular faces along the width of the sides.
 	 * @param {number} [heightSegments=1] - Number of segmented rectangular faces along the height of the sides.
 	 * @param {number} [depthSegments=1] - Number of segmented rectangular faces along the depth of the sides.
+	 * @param {any} [offset={x: 0, y: 0, z: 0}] - The offset of the box geometry.
 	 */
-	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
+	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1, offset = { x: 0, y: 0, z: 0 } ) { // @DDD@
 
 		super();
 
@@ -29093,7 +29595,7 @@ class BoxGeometry extends BufferGeometry {
 
 					// now apply vector to vertex buffer
 
-					vertices.push( vector.x, vector.y, vector.z );
+					vertices.push( vector.x + offset.x, vector.y + offset.y, vector.z + offset.z ); // @DDD@
 
 					// set values to correct vector component
 
@@ -43841,9 +44343,12 @@ class FileLoader extends Loader {
 	 *
 	 * @param {LoadingManager} [manager] - The loading manager.
 	 */
-	constructor( manager ) {
+	constructor( manager, _params = {} ) { // @DDD@
 
 		super( manager );
+
+		this.params = { file_system: 'external_io' }; // @DDD@
+		if ( _params ) Object.assign( this.params, _params ); // @DDD@
 
 		/**
 		 * The expected mime type. Valid values can be found
@@ -43871,6 +44376,129 @@ class FileLoader extends Loader {
 
 	}
 
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	_load_( url, onLoad, onProgress, onError ) {
+		const scope = this;
+		if (window.is_data_url == null) return { cache: null, should_use_default_load: true };
+ 
+		const isDataURL = window.is_data_url( url );
+		const file_system = scope.params.file_system;
+
+		if ( window.external_io && isDataURL == false && file_system == 'external_io' ) {
+
+			if ( url === undefined ) url = '';
+			if ( this.path !== undefined ) url = this.path + url;
+			url = this.manager.resolveURL( url );
+			const cached = Cache.get( url );
+			if ( cached != null ) {
+
+				scope.manager.itemStart( url );
+				setTimeout( function () {
+
+					if ( onLoad ) onLoad( cached );
+					scope.manager.itemEnd( url );
+
+				}, 0 );
+				return {cache: cached, should_use_default_load: false};
+
+			} else {
+
+				const io = window.external_io;
+				io.get( url ).then( data=>{
+					let response;
+					const responseType = ( scope.responseType || '' ).toLowerCase();
+					switch ( responseType ) {
+						case 'arraybuffer':
+						case 'blob':
+							const view = data;
+							if ( responseType === 'blob' ) {
+								const mimeType = 'application/octet-stream';
+								response = new Blob( [ view.buffer ], { type: mimeType } );
+							} else {
+								if ( view?.buffer instanceof ArrayBuffer ) {
+									response = view.buffer;
+								} else if ( view instanceof ArrayBuffer ) {
+									response = view;
+								}
+							}
+							break;
+
+						case 'document':
+							console.error( 'Deprecated' );
+							break;
+						case 'json':
+							const txt = new TextDecoder().decode( data );
+							response = JSON.parse( txt );
+							break;
+						case 'text':
+							response = new TextDecoder().decode( data );
+							break;
+						default: // 'text' or other
+							response = data;
+							break;
+					}
+
+					Cache.add( url, response );
+					if ( onLoad ) onLoad( response );
+					scope.manager.itemEnd( url );
+
+				} ).catch( error=>{
+
+					if ( onError ) onError( error );
+					scope.manager.itemError( url );
+					scope.manager.itemEnd( url );
+
+				} );
+
+				return {cache: null, should_use_default_load: false};
+
+			}
+
+		} else {
+
+			if ( window.nodejs && ! window.external_io && isDataURL == false && file_system == 'system_resource' ) {
+
+				url = scope.manager.resolveURL( url );
+				const cached = Cache.get( url );
+				if ( cached != null ) {
+
+					scope.manager.itemStart( url );
+					setTimeout( function () {
+
+						if ( onLoad ) onLoad( cached );
+						scope.manager.itemEnd( url );
+
+					}, 0 );
+					return {cache: cached, should_use_default_load: false};
+
+				}
+
+				const nodejs = window.nodejs;
+				try {
+
+					const buffer = nodejs.fs.readFileSync( url );
+					Cache.add( url, buffer );
+					if ( onLoad ) onLoad( buffer );
+					scope.manager.itemEnd( url );
+
+				} catch ( e ) {
+
+					console.error( 'FileLoader: ', e );
+					onError( e );
+
+				}
+
+				scope.manager.itemEnd( url );
+				return {cache: null, should_use_default_load: false};
+
+			}
+
+			return {cache: null, should_use_default_load: true};
+
+		}
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 	/**
 	 * Starts loading from the given URL and pass the loaded response to the `onLoad()` callback.
 	 *
@@ -43881,6 +44509,10 @@ class FileLoader extends Loader {
 	 * @return {any|undefined} The cached resource if available.
 	 */
 	load( url, onLoad, onProgress, onError ) {
+
+		const { cache, should_use_default_load } = this._load_( url, onLoad, onProgress, onError ); // @DDD@
+
+		if ( !should_use_default_load ) return cache; // @DDD@
 
 		if ( url === undefined ) url = '';
 
@@ -44447,7 +45079,760 @@ class ImageLoader extends Loader {
 	 * @param {onErrorCallback} onError - Executed when errors occur.
 	 * @return {Image} The image.
 	 */
-	load( url, onLoad, onProgress, onError ) {
+
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	load( url, onLoad, onProgress, onError, params = { no_cache: false } ) {
+
+		const is_data_url = window.is_data_url( url );
+		const scope = this;
+		let cached = null;
+		if ( ! is_data_url && ! params.no_cache ) {
+
+			if ( this.path !== undefined ) url = this.path + url;
+			url = this.manager.resolveURL( url );
+			cached = Cache.get( url );
+
+		}
+
+		if ( cached != null ) {
+
+			if ( ! is_data_url ) {
+
+				scope.manager.itemStart( url );
+
+			}
+
+			setTimeout( function () {
+
+				if ( onLoad ) onLoad( cached );
+
+				if ( ! is_data_url ) {
+
+					scope.manager.itemEnd( url );
+
+				}
+
+			}, 0 );
+
+			return cached;
+
+		}
+
+		const image = new Image();// @DDD@
+		// const image = createElementNS( 'img' );
+
+		function onImageLoad() {
+
+			removeEventListeners();
+
+			if ( ! is_data_url ) {
+
+				Cache.add( url, this );
+
+			}
+
+			if ( onLoad ) onLoad( this );
+
+			if ( ! is_data_url ) {
+
+				scope.manager.itemEnd( url );
+
+			}
+
+		}
+
+		function onImageError( event ) {
+
+			if ( window.terminal_error ) window.terminal_error( 'Fail to load:', url ); // @DDD@
+
+			removeEventListeners();
+
+			if ( onError ) onError( event );
+
+			if ( ! is_data_url ) {
+
+				scope.manager.itemError( url );
+				scope.manager.itemEnd( url );
+
+			}
+
+		}
+
+		function removeEventListeners() {
+
+			image.removeEventListener( 'load', onImageLoad, false );
+			image.removeEventListener( 'error', onImageError, false );
+
+		}
+
+		image.addEventListener( 'load', onImageLoad, false );
+		image.addEventListener( 'error', onImageError, false );
+
+		if ( url.slice( 0, 5 ) !== 'data:' ) {
+
+			if ( this.crossOrigin !== undefined ) image.crossOrigin = this.crossOrigin;
+
+		}
+
+		if ( ! is_data_url ) {
+
+			scope.manager.itemStart( url );
+
+		}
+
+		function tga_parse( buffer ) {
+
+			function tgaCheckHeader( header ) {
+
+				switch ( header.image_type ) {
+
+					// check indexed type
+
+					case TGA_TYPE_INDEXED:
+					case TGA_TYPE_RLE_INDEXED:
+						if ( header.colormap_length > 256 || header.colormap_size !== 24 || header.colormap_type !== 1 ) {
+
+							console.error( 'THREE.TGALoader: Invalid type colormap data for indexed type.' );
+
+						}
+
+						break;
+
+						// check colormap type
+
+					case TGA_TYPE_RGB:
+					case TGA_TYPE_GREY:
+					case TGA_TYPE_RLE_RGB:
+					case TGA_TYPE_RLE_GREY:
+						if ( header.colormap_type ) {
+
+							console.error( 'THREE.TGALoader: Invalid type colormap data for colormap type.' );
+
+						}
+
+						break;
+
+						// What the need of a file without data ?
+
+					case TGA_TYPE_NO_DATA:
+						console.error( 'THREE.TGALoader: No data.' );
+
+						// Invalid type ?
+
+					default:
+						console.error( 'THREE.TGALoader: Invalid type "%s".', header.image_type );
+
+				}
+
+				// check image width and height
+
+				if ( header.width <= 0 || header.height <= 0 ) {
+
+					console.error( 'THREE.TGALoader: Invalid image size.' );
+
+				}
+
+				// check image pixel size
+
+				if ( header.pixel_size !== 8 && header.pixel_size !== 16 &&
+					header.pixel_size !== 24 && header.pixel_size !== 32 ) {
+
+					console.error( 'THREE.TGALoader: Invalid pixel size "%s".', header.pixel_size );
+
+				}
+
+			}
+
+			// parse tga image buffer
+
+			function tgaParse( use_rle, use_pal, header, offset, data ) {
+
+				let pixel_data,
+					palettes;
+
+				const pixel_size = header.pixel_size >> 3;
+				const pixel_total = header.width * header.height * pixel_size;
+
+				// read palettes
+
+				if ( use_pal ) {
+
+					palettes = data.subarray( offset, offset += header.colormap_length * ( header.colormap_size >> 3 ) );
+
+				}
+
+				// read RLE
+
+				if ( use_rle ) {
+
+					pixel_data = new Uint8Array( pixel_total );
+
+					let c, count, i;
+					let shift = 0;
+					const pixels = new Uint8Array( pixel_size );
+
+					while ( shift < pixel_total ) {
+
+						c = data[ offset ++ ];
+						count = ( c & 0x7f ) + 1;
+
+						// RLE pixels
+
+						if ( c & 0x80 ) {
+
+							// bind pixel tmp array
+
+							for ( i = 0; i < pixel_size; ++ i ) {
+
+								pixels[ i ] = data[ offset ++ ];
+
+							}
+
+							// copy pixel array
+
+							for ( i = 0; i < count; ++ i ) {
+
+								pixel_data.set( pixels, shift + i * pixel_size );
+
+							}
+
+							shift += pixel_size * count;
+
+						} else {
+
+							// raw pixels
+
+							count *= pixel_size;
+
+							for ( i = 0; i < count; ++ i ) {
+
+								pixel_data[ shift + i ] = data[ offset ++ ];
+
+							}
+
+							shift += count;
+
+						}
+
+					}
+
+				} else {
+
+					// raw pixels
+
+					pixel_data = data.subarray(
+						offset, offset += ( use_pal ? header.width * header.height : pixel_total )
+					);
+
+				}
+
+				return {
+					pixel_data: pixel_data,
+					palettes: palettes
+				};
+
+			}
+
+			function tgaGetImageData8bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image, palettes ) {
+
+				const colormap = palettes;
+				let color, i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i ++ ) {
+
+						color = image[ i ];
+						imageData[ ( x + width * y ) * 4 + 3 ] = 255;
+						imageData[ ( x + width * y ) * 4 + 2 ] = colormap[ ( color * 3 ) + 0 ];
+						imageData[ ( x + width * y ) * 4 + 1 ] = colormap[ ( color * 3 ) + 1 ];
+						imageData[ ( x + width * y ) * 4 + 0 ] = colormap[ ( color * 3 ) + 2 ];
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function tgaGetImageData16bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image ) {
+
+				let color, i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i += 2 ) {
+
+						color = image[ i + 0 ] + ( image[ i + 1 ] << 8 ); // Inversed ?
+						imageData[ ( x + width * y ) * 4 + 0 ] = ( color & 0x7C00 ) >> 7;
+						imageData[ ( x + width * y ) * 4 + 1 ] = ( color & 0x03E0 ) >> 2;
+						imageData[ ( x + width * y ) * 4 + 2 ] = ( color & 0x001F ) >> 3;
+						imageData[ ( x + width * y ) * 4 + 3 ] = ( color & 0x8000 ) ? 0 : 255;
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function tgaGetImageData24bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image ) {
+
+				let i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i += 3 ) {
+
+						imageData[ ( x + width * y ) * 4 + 3 ] = 255;
+						imageData[ ( x + width * y ) * 4 + 2 ] = image[ i + 0 ];
+						imageData[ ( x + width * y ) * 4 + 1 ] = image[ i + 1 ];
+						imageData[ ( x + width * y ) * 4 + 0 ] = image[ i + 2 ];
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function tgaGetImageData32bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image ) {
+
+				let i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i += 4 ) {
+
+						imageData[ ( x + width * y ) * 4 + 2 ] = image[ i + 0 ];
+						imageData[ ( x + width * y ) * 4 + 1 ] = image[ i + 1 ];
+						imageData[ ( x + width * y ) * 4 + 0 ] = image[ i + 2 ];
+						imageData[ ( x + width * y ) * 4 + 3 ] = image[ i + 3 ];
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function tgaGetImageDataGrey8bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image ) {
+
+				let color, i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i ++ ) {
+
+						color = image[ i ];
+						imageData[ ( x + width * y ) * 4 + 0 ] = color;
+						imageData[ ( x + width * y ) * 4 + 1 ] = color;
+						imageData[ ( x + width * y ) * 4 + 2 ] = color;
+						imageData[ ( x + width * y ) * 4 + 3 ] = 255;
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function tgaGetImageDataGrey16bits( imageData, y_start, y_step, y_end, x_start, x_step, x_end, image ) {
+
+				let i = 0, x, y;
+				const width = header.width;
+
+				for ( y = y_start; y !== y_end; y += y_step ) {
+
+					for ( x = x_start; x !== x_end; x += x_step, i += 2 ) {
+
+						imageData[ ( x + width * y ) * 4 + 0 ] = image[ i + 0 ];
+						imageData[ ( x + width * y ) * 4 + 1 ] = image[ i + 0 ];
+						imageData[ ( x + width * y ) * 4 + 2 ] = image[ i + 0 ];
+						imageData[ ( x + width * y ) * 4 + 3 ] = image[ i + 1 ];
+
+					}
+
+				}
+
+				return imageData;
+
+			}
+
+			function getTgaRGBA( data, width, height, image, palette ) {
+
+				let x_start,
+					y_start,
+					x_step,
+					y_step,
+					x_end,
+					y_end;
+
+				switch ( ( header.flags & TGA_ORIGIN_MASK ) >> TGA_ORIGIN_SHIFT ) {
+
+					default:
+					case TGA_ORIGIN_UL:
+						x_start = 0;
+						x_step = 1;
+						x_end = width;
+						y_start = 0;
+						y_step = 1;
+						y_end = height;
+						break;
+
+					case TGA_ORIGIN_BL:
+						x_start = 0;
+						x_step = 1;
+						x_end = width;
+						y_start = height - 1;
+						y_step = -1;
+						y_end = -1;
+						break;
+
+					case TGA_ORIGIN_UR:
+						x_start = width - 1;
+						x_step = -1;
+						x_end = -1;
+						y_start = 0;
+						y_step = 1;
+						y_end = height;
+						break;
+
+					case TGA_ORIGIN_BR:
+						x_start = width - 1;
+						x_step = -1;
+						x_end = -1;
+						y_start = height - 1;
+						y_step = -1;
+						y_end = -1;
+						break;
+
+				}
+
+				if ( use_grey ) {
+
+					switch ( header.pixel_size ) {
+
+						case 8:
+							tgaGetImageDataGrey8bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image );
+							break;
+
+						case 16:
+							tgaGetImageDataGrey16bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image );
+							break;
+
+						default:
+							console.error( 'THREE.TGALoader: Format not supported.' );
+							break;
+
+					}
+
+				} else {
+
+					switch ( header.pixel_size ) {
+
+						case 8:
+							tgaGetImageData8bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image, palette );
+							break;
+
+						case 16:
+							tgaGetImageData16bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image );
+							break;
+
+						case 24:
+							tgaGetImageData24bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image );
+							break;
+
+						case 32:
+							tgaGetImageData32bits( data, y_start, y_step, y_end, x_start, x_step, x_end, image );
+							break;
+
+						default:
+							console.error( 'THREE.TGALoader: Format not supported.' );
+							break;
+
+					}
+
+				}
+
+				// Load image data according to specific method
+				// let func = 'tgaGetImageData' + (use_grey ? 'Grey' : '') + (header.pixel_size) + 'bits';
+				// func(data, y_start, y_step, y_end, x_start, x_step, x_end, width, image, palette );
+				return data;
+
+			}
+
+			// TGA constants
+
+			const TGA_TYPE_NO_DATA = 0,
+				TGA_TYPE_INDEXED = 1,
+				TGA_TYPE_RGB = 2,
+				TGA_TYPE_GREY = 3,
+				TGA_TYPE_RLE_INDEXED = 9,
+				TGA_TYPE_RLE_RGB = 10,
+				TGA_TYPE_RLE_GREY = 11,
+
+				TGA_ORIGIN_MASK = 0x30,
+				TGA_ORIGIN_SHIFT = 0x04,
+				TGA_ORIGIN_BL = 0x00,
+				TGA_ORIGIN_BR = 0x01,
+				TGA_ORIGIN_UL = 0x02,
+				TGA_ORIGIN_UR = 0x03;
+
+			if ( buffer.length < 19 ) console.error( 'THREE.TGALoader: Not enough data to contain header.' );
+
+			let offset = 0;
+
+			const content = new Uint8Array( buffer ),
+				header = {
+					id_length: content[ offset ++ ],
+					colormap_type: content[ offset ++ ],
+					image_type: content[ offset ++ ],
+					colormap_index: content[ offset ++ ] | content[ offset ++ ] << 8,
+					colormap_length: content[ offset ++ ] | content[ offset ++ ] << 8,
+					colormap_size: content[ offset ++ ],
+					origin: [
+						content[ offset ++ ] | content[ offset ++ ] << 8,
+						content[ offset ++ ] | content[ offset ++ ] << 8
+					],
+					width: content[ offset ++ ] | content[ offset ++ ] << 8,
+					height: content[ offset ++ ] | content[ offset ++ ] << 8,
+					pixel_size: content[ offset ++ ],
+					flags: content[ offset ++ ]
+				};
+
+			// check tga if it is valid format
+
+			tgaCheckHeader( header );
+
+			if ( header.id_length + offset > buffer.length ) {
+
+				console.error( 'THREE.TGALoader: No data.' );
+
+			}
+
+			// skip the needn't data
+
+			offset += header.id_length;
+
+			// get targa information about RLE compression and palette
+
+			let use_rle = false,
+				use_pal = false,
+				use_grey = false;
+
+			switch ( header.image_type ) {
+
+				case TGA_TYPE_RLE_INDEXED:
+					use_rle = true;
+					use_pal = true;
+					break;
+
+				case TGA_TYPE_INDEXED:
+					use_pal = true;
+					break;
+
+				case TGA_TYPE_RLE_RGB:
+					use_rle = true;
+					break;
+
+				case TGA_TYPE_RGB:
+					break;
+
+				case TGA_TYPE_RLE_GREY:
+					use_rle = true;
+					use_grey = true;
+					break;
+
+				case TGA_TYPE_GREY:
+					use_grey = true;
+					break;
+
+			}
+
+			//
+
+			const imageData = new Uint8Array( header.width * header.height * 4 );
+			const result = tgaParse( use_rle, use_pal, header, offset, content );
+			getTgaRGBA( imageData, header.width, header.height, result.pixel_data, result.palettes );
+
+			return {
+
+				data: imageData,
+				width: header.width,
+				height: header.height,
+			};
+
+		}
+
+		let ext = null;
+		if ( ! is_data_url ) {
+
+			ext = url.split( '.' ).pop();
+			ext = ext.toLowerCase();
+
+		}
+
+		if ( ! is_data_url && window.external_io ) {
+
+			url = url.replace( /\\/g, '/' );
+			//console.log(`PATH-fetch:"${url}"`);
+			window.external_io.get( url ).then( data => {
+
+				// console.log(`PATH-fetched:"${url}"`, ext);
+				if ( ext == 'tga' ) {
+
+					if ( window.debug ) console.log( 'TGA loader' );
+
+
+					try {
+
+						const tga_image_obj = tga_parse( data );
+						const imagedata = new ImageData( new Uint8ClampedArray( tga_image_obj.data ), tga_image_obj.width, tga_image_obj.height );
+						const canvas = document.createElement( 'canvas' );
+						const ctx = canvas.getContext( '2d' );
+						canvas.width = imagedata.width;
+						canvas.height = imagedata.height;
+						ctx.putImageData( imagedata, 0, 0 );
+
+						const load_f = function () {
+
+							if ( window.debug ) console.log( 'Canvas to data url.', url );
+							image.removeEventListener( 'load', load_f, false );
+							image.removeEventListener( 'error', error_f, false );
+
+						};
+
+						const error_f = function ( e ) {
+
+							console.error( e );
+							image.removeEventListener( 'load', load_f, false );
+							image.removeEventListener( 'error', error_f, false );
+
+						};
+
+						image.addEventListener( 'load', load_f, false );
+						image.addEventListener( 'error', error_f, false );
+						image.src = canvas.toDataURL();
+
+					} catch ( e ) {
+
+						console.error( e );
+						onImageError( e );
+
+					}
+
+				} else if ( ext ) {
+
+					if ( ext == 'jpg' ) ext = 'jpeg';
+					if ( ext == 'tif' ) ext = 'tiff';
+					const blob = new Blob( [ data ], { type: 'image/' + ext } );
+
+					const fileObject = window.URL.createObjectURL( blob );
+					const load_f = function () {
+
+						window.URL.revokeObjectURL( fileObject );
+						image.removeEventListener( 'load', load_f, false );
+						image.removeEventListener( 'error', error_f, false );
+
+					};
+
+					const error_f = function () {
+
+						window.URL.revokeObjectURL( fileObject );
+						image.removeEventListener( 'load', load_f, false );
+						image.removeEventListener( 'error', error_f, false );
+
+					};
+
+					image.addEventListener( 'load', load_f, false );
+					image.addEventListener( 'error', error_f, false );
+					image.src = fileObject;
+
+				} else {
+
+					console.error( 'Unknown Ext: ' + ext );
+					onImageError( new Error( 'Unknown Ext: ' + ext ) );
+
+				}
+
+			} ).catch( e => {
+
+				if ( window.terminal_log ) window.terminal_log( e + ' ' + url );
+				//console.log(`PATH-fetch-error:"${url}"`);
+				console.warn( e );
+				onImageError( e );
+				image.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+			} );
+
+		} else {
+
+			if ( ext == 'tga' ) {
+
+				try {
+
+					// This flow must be electron.
+					const data = window.nodejs.fs.readFileSync( url );
+					const tga_image_obj = tga_parse( data );
+					const imagedata = new ImageData( new Uint8ClampedArray( tga_image_obj.data ), tga_image_obj.width, tga_image_obj.height );
+					const canvas = document.createElement( 'canvas' );
+					const ctx = canvas.getContext( '2d' );
+					canvas.width = imagedata.width;
+					canvas.height = imagedata.height;
+					ctx.putImageData( imagedata, 0, 0 );
+
+					const load_f = function () {
+
+						if ( window.debug ) console.log( 'Canvas to data url.', url );
+						image.removeEventListener( 'load', load_f, false );
+						image.removeEventListener( 'error', error_f, false );
+
+					};
+
+					const error_f = function ( e ) {
+
+						console.error( e );
+						image.removeEventListener( 'load', load_f, false );
+						image.removeEventListener( 'error', error_f, false );
+
+					};
+
+					image.addEventListener( 'load', load_f, false );
+					image.addEventListener( 'error', error_f, false );
+					image.src = canvas.toDataURL();
+
+				} catch ( e ) {
+
+					console.error( e );
+					onImageError( e );
+
+				}
+
+			} else {
+
+				image.src = url;
+
+			}
+
+		}
+
+		return image;
+
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
+	_load( url, onLoad, onProgress, onError ) {
 
 		if ( this.path !== undefined ) url = this.path + url;
 
@@ -44839,6 +46224,7 @@ class TextureLoader extends Loader {
 
 	}
 
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	/**
 	 * Starts loading from the given URL and pass the fully loaded texture
 	 * to the `onLoad()` callback. The method also returns a new texture object which can
@@ -44851,7 +46237,60 @@ class TextureLoader extends Loader {
 	 * @param {onErrorCallback} onError - Executed when errors occur.
 	 * @return {Texture} The texture.
 	 */
-	load( url, onLoad, onProgress, onError ) {
+	load( url, onLoad, onProgress, onError, params = {} ) {
+
+		const original_url = url;
+		const texture = new Texture();
+		const is_data_url = window.is_data_url( url );
+		if ( ! is_data_url ) texture._source_file_ = ( this.path + original_url ).replace( /\\/g, '/' );
+
+		// texture.image = {
+		// 	is_dummy: true,
+		// 	image_data: new ImageData(new Uint8ClampedArray([255,255,255,255, 255,255,255,255, 255,255,255,255 ,255,255,255,255]), 2, 2),
+		// 	width: 2,
+		// 	height: 2,
+		// 	channels: 4,
+		// 	depth: 4
+		// }
+		// texture.image = ImageData2ImageElement(new ImageData(new Uint8ClampedArray([255,255,255,255, 255,255,255,255, 255,255,255,255 ,255,255,255,255]), 2, 2));
+		// texture.image = await ImageData2ImageElement(new ImageData(new Uint8ClampedArray([255,255,255,255, 255,255,255,255, 255,255,255,255 ,255,255,255,255]), 2, 2));
+		// texture.image = new Image();
+		// texture.image.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP8L/n/PwMQMMIYAEMrBi9x/4F7AAAAAElFTkSuQmCC";
+
+
+		const loader = new ImageLoader( this.manager );
+		loader.setCrossOrigin( this.crossOrigin );
+		loader.setPath( this.path );
+
+		{
+
+			const url = this.path + original_url;
+
+			const tm = window.TimeDurationChecker( `TextureLoader:load-N: ${url.slice( 0, 100 ).split( '/' ).pop()}` );
+
+			loader.load( url, function ( image ) {
+
+				texture.image = image;
+				texture.needsUpdate = true;
+
+				if ( onLoad !== undefined ) {
+
+					onLoad( texture );
+
+				}
+
+				tm.finish();
+
+			}, onProgress, onError, params );
+
+		}
+
+		return texture;
+
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
+	_load( url, onLoad, onProgress, onError ) { // @DDD@ older
 
 		const texture = new Texture();
 
@@ -45427,6 +46866,12 @@ class Camera extends Object3D {
 		 * @type {(WebGLCoordinateSystem|WebGPUCoordinateSystem)}
 		 */
 		this.coordinateSystem = WebGLCoordinateSystem;
+
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		this._camera_motion_vmd_distance = 0;
+		this._camera_motion_vmd_rotate = new Vector3();
+		this._camera_motion_vmd_euler = new Euler();
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 		this._reversedDepth = false;
 
@@ -47699,6 +49144,21 @@ class LoaderUtils {
 	 */
 	static extractUrlBase( url ) {
 
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		const nodejs = window.nodejs;
+		if ( nodejs ) {
+
+			if ( nodejs.path.isAbsolute( url ) ) {
+
+				if ( url.slice( -1 ) == '/' ) return url.replace( /\//g, '/' );
+				return nodejs.path.dirname( url ).replace( /\//g, '/' ) + '/';
+
+			}
+
+		}
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
+
 		const index = url.lastIndexOf( '/' );
 
 		if ( index === -1 ) return './';
@@ -47737,8 +49197,18 @@ class LoaderUtils {
 		// Blob URL
 		if ( /^blob:.*$/i.test( url ) ) return url;
 
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		let result = path + url;
+		const driver = window.external_io?.driver;
+		if ( driver != 'http' ) {
+
+			result = decodeURI( result );
+
+		}
+
 		// Relative URL
-		return path + url;
+		return result;
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	}
 
@@ -49350,7 +50820,98 @@ class ImageBitmapLoader extends Loader {
 	 * @param {onErrorCallback} onError - Executed when errors occur.
 	 * @return {ImageBitmap|undefined} The image bitmap.
 	 */
-	load( url, onLoad, onProgress, onError ) {
+	load( url, onLoad, onProgress, onError ) { // @DDD@
+
+
+		if ( url === undefined ) url = '';
+
+		if ( this.path !== undefined ) url = this.path + url;
+
+		url = this.manager.resolveURL( url );
+
+		const scope = this;
+
+		const cached = Cache.get( url );
+
+		if ( cached !== undefined ) {
+
+			scope.manager.itemStart( url );
+
+			setTimeout( function () {
+
+				if ( onLoad ) onLoad( cached );
+
+				scope.manager.itemEnd( url );
+
+			}, 0 );
+
+			return cached;
+
+		}
+
+		if ( url.indexOf( ':' ) == -1 && window.external_io ) {
+
+			if ( url === undefined ) url = '';
+			if ( this.path !== undefined ) url = this.path + url;
+			url = this.manager.resolveURL( url );
+			const scope = this;
+			const cached = Cache.get( url );
+			if ( cached !== undefined ) {
+
+				scope.manager.itemStart( url );
+				setTimeout( function () {
+
+					if ( onLoad ) onLoad( cached );
+					scope.manager.itemEnd( url );
+
+				}, 0 );
+				return cached;
+
+			} else {
+
+				const io = window.external_io;
+				scope.manager.itemStart( url );
+				io.get( url ).then( data=>{
+
+					const blob = new Blob( [ data ], { type: 'application/octet-stream' } );
+					createImageBitmap( blob, Object.assign( scope.options, { colorSpaceConversion: 'none' } ) ).
+						then( response=>{
+
+							console.warn( response );
+							Cache.add( url, response );
+							if ( onLoad ) onLoad( response );
+							scope.manager.itemEnd( url );
+
+						} ).catch( error=>{
+
+							console.error( error );
+							if ( onError ) onError( error );
+							scope.manager.itemError( url );
+							scope.manager.itemEnd( url );
+
+						} );
+
+				} ).catch( error=>{
+
+					console.error( error );
+					if ( onError ) onError( error );
+					scope.manager.itemError( url );
+					scope.manager.itemEnd( url );
+
+				} );
+				return null;
+
+			}
+
+		} else {
+
+			return this._load_( url, onLoad, onProgress, onError );
+
+		}
+
+	}
+
+	_load_( url, onLoad, onProgress, onError ) { // @DDD@
 
 		if ( url === undefined ) url = '';
 
@@ -49547,6 +51108,30 @@ class AudioLoader extends Loader {
 	load( url, onLoad, onProgress, onError ) {
 
 		const scope = this;
+
+		if ( window.nodejs && window.external_io == null ) { // @DDD@
+
+			try {
+
+				const buffer = window.nodejs.to_array_buffer( window.nodejs.fs.readFileSync( url ) );
+
+
+				const context = AudioContext.getContext();
+				context.decodeAudioData( buffer, function ( audioBuffer ) {
+
+					onLoad( audioBuffer );
+
+				}, onError );
+
+			} catch ( e ) {
+
+				onError( e );
+
+			}
+
+			return;
+
+		}
 
 		const loader = new FileLoader( this.manager );
 		loader.setResponseType( 'arraybuffer' );
@@ -50596,6 +52181,43 @@ class Audio extends Object3D {
 		 */
 		this.filters = [];
 
+		this.prepare( listener );//@DDD@
+
+	}
+
+	prepare( listener ) {	//@DDD@
+
+		if ( listener ) {
+
+			this.listener = listener;
+			this.context = listener.context;
+
+		}
+
+		if ( this.source == null && this.context ) {
+
+			this.gain = this.context.createGain();
+			this.gain.connect( listener.getInput() );
+
+			this.source = this.context.createBufferSource();
+			this.source.buffer = this.buffer;
+			if ( this.buffer ) {
+
+				try {
+
+					this.source.start( this._startedAt, this._progress + this.offset, this.duration );
+					this.source.stop();
+
+				} catch ( e ) {
+
+					console.error( e );
+
+				}
+
+			}
+
+		}
+
 	}
 
 	/**
@@ -50709,6 +52331,15 @@ class Audio extends Object3D {
 
 		}
 
+		if ( window.DMC?.sound_listener && this.source == null ) this.prepare( window.DMC.sound_listener );
+		if ( this.context == null ) {
+
+			console.warn( 'Audio object must prepare audio context before play.' ); return;
+
+		}// @DDD@
+
+		delay = Math.max( delay, 0 ); // @DDD@
+
 		this._startedAt = this.context.currentTime + delay;
 
 		const source = this.context.createBufferSource();
@@ -50726,7 +52357,16 @@ class Audio extends Object3D {
 		this.setDetune( this.detune );
 		this.setPlaybackRate( this.playbackRate );
 
+		if ( this.__on_started_audio__ ) this.__on_started_audio__(); // @DDD@
+
 		return this.connect();
+
+	}
+
+	time() { // @DDD@
+
+		if ( this.isPlaying === true ) return this._progress + this.offset + Math.max( this.context.currentTime - this._startedAt, 0 ) * this.playbackRate;
+		return this._progress + this.offset;
 
 	}
 
@@ -51110,10 +52750,11 @@ class Audio extends Object3D {
 	 * @param {number} value - The volume to set.
 	 * @return {Audio} A reference to this instance.
 	 */
-	setVolume( value ) {
+	setVolume( value ) { // @DDD@
 
-		this.gain.gain.setTargetAtTime( value, this.context.currentTime, 0.01 );
-
+		if ( window.DMC?.sound_listener && this.source == null ) this.prepare( window.DMC.sound_listener );
+		if ( this.gain ) this.gain.gain.setTargetAtTime( value, this.context.currentTime, 0.01 );
+		else console.warn( 'No gain.' );
 		return this;
 
 	}
@@ -53161,6 +54802,12 @@ class AnimationAction {
 		 */
 		this.time = 0;
 
+		this.timeOffset = 0; // @DDD@
+
+
+		this.timeOffset = 0; // @DDD@
+
+
 		/**
 		 * Scaling factor for the {@link AnimationAction#time}. A value of `0` causes the
 		 * animation to pause. Negative values cause the animation to play backwards.
@@ -53818,11 +55465,7 @@ class AnimationAction {
 
 			handle_stop: {
 
-				if ( time >= duration ) {
-
-					time = duration;
-
-				} else if ( time < 0 ) {
+				if ( time >= duration ) ; else if ( time < 0 ) {
 
 					time = 0;
 
@@ -53835,7 +55478,6 @@ class AnimationAction {
 				}
 
 				if ( this.clampWhenFinished ) this.paused = true;
-				else this.enabled = false;
 
 				this.time = time;
 
@@ -57409,8 +59051,8 @@ class HemisphereLightHelper extends Object3D {
 	 */
 	dispose() {
 
-		this.children[ 0 ].geometry.dispose();
-		this.children[ 0 ].material.dispose();
+		this.children[ 0 ]?.geometry?.dispose?.(); // @DDD@
+		this.children[ 0 ]?.material?.dispose?.(); // @DDD@
 
 	}
 
@@ -58051,34 +59693,34 @@ class CameraHelper extends LineSegments {
 
 		// near
 
-		setPoint( 'n1', pointMap, geometry, _camera, - w, - h, nearZ );
-		setPoint( 'n2', pointMap, geometry, _camera, w, - h, nearZ );
-		setPoint( 'n3', pointMap, geometry, _camera, - w, h, nearZ );
+		setPoint( 'n1', pointMap, geometry, _camera, -1, -1, nearZ );
+		setPoint( 'n2', pointMap, geometry, _camera, w, -1, nearZ );
+		setPoint( 'n3', pointMap, geometry, _camera, -1, h, nearZ );
 		setPoint( 'n4', pointMap, geometry, _camera, w, h, nearZ );
 
 		// far
 
-		setPoint( 'f1', pointMap, geometry, _camera, - w, - h, farZ );
-		setPoint( 'f2', pointMap, geometry, _camera, w, - h, farZ );
-		setPoint( 'f3', pointMap, geometry, _camera, - w, h, farZ );
+		setPoint( 'f1', pointMap, geometry, _camera, -1, -1, farZ );
+		setPoint( 'f2', pointMap, geometry, _camera, w, -1, farZ );
+		setPoint( 'f3', pointMap, geometry, _camera, -1, h, farZ );
 		setPoint( 'f4', pointMap, geometry, _camera, w, h, farZ );
 
 		// up
 
 		setPoint( 'u1', pointMap, geometry, _camera, w * 0.7, h * 1.1, nearZ );
-		setPoint( 'u2', pointMap, geometry, _camera, - w * 0.7, h * 1.1, nearZ );
+		setPoint( 'u2', pointMap, geometry, _camera, -1 * 0.7, h * 1.1, nearZ );
 		setPoint( 'u3', pointMap, geometry, _camera, 0, h * 2, nearZ );
 
 		// cross
 
-		setPoint( 'cf1', pointMap, geometry, _camera, - w, 0, farZ );
+		setPoint( 'cf1', pointMap, geometry, _camera, -1, 0, farZ );
 		setPoint( 'cf2', pointMap, geometry, _camera, w, 0, farZ );
-		setPoint( 'cf3', pointMap, geometry, _camera, 0, - h, farZ );
+		setPoint( 'cf3', pointMap, geometry, _camera, 0, -1, farZ );
 		setPoint( 'cf4', pointMap, geometry, _camera, 0, h, farZ );
 
-		setPoint( 'cn1', pointMap, geometry, _camera, - w, 0, nearZ );
+		setPoint( 'cn1', pointMap, geometry, _camera, -1, 0, nearZ );
 		setPoint( 'cn2', pointMap, geometry, _camera, w, 0, nearZ );
-		setPoint( 'cn3', pointMap, geometry, _camera, 0, - h, nearZ );
+		setPoint( 'cn3', pointMap, geometry, _camera, 0, -1, nearZ );
 		setPoint( 'cn4', pointMap, geometry, _camera, 0, h, nearZ );
 
 		geometry.getAttribute( 'position' ).needsUpdate = true;
@@ -59465,4 +61107,4 @@ if ( typeof window !== 'undefined' ) {
 
 }
 
-export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AttachedBindMode, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BasicDepthPacking, BasicShadowMap, BatchedMesh, BezierInterpolant, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Color, ColorKeyframeTrack, ColorManagement, Compatibility, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Controls, CubeCamera, CubeDepthTexture, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DetachedBindMode, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExternalTexture, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Float32BufferAttribute, FloatType, Fog, FogExp2, FramebufferTexture, FrontSide, Frustum, FrustumArray, GLBufferAttribute, GLSL1, GLSL3, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, HemisphereLight, HemisphereLightHelper, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateBezier, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InterpolationSamplingMode, InterpolationSamplingType, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry, Layers, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, MOUSE, Material, MaterialBlending, MaterialLoader, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoNormalPacking, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalGAPacking, NormalRGPacking, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectSpaceNormalMap, OctahedronGeometry, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, Path, PerspectiveCamera, Plane, PlaneGeometry, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, R11_EAC_Format, RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RG11_EAC_Format, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, RenderTarget, RenderTarget3D, RepeatWrapping, ReplaceStencilOp, ReverseSubtractEquation, ReversedDepthFuncs, RingGeometry, SIGNED_R11_EAC_Format, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SIGNED_RG11_EAC_Format, SRGBColorSpace, SRGBTransfer, Scene, ShaderMaterial, ShadowMaterial, Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TetrahedronGeometry, Texture, TextureLoader, TextureUtils, Timer, TimestampQuery, TorusGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsUtils, UnsignedByteType, UnsignedInt101111Type, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoFrameTexture, VideoTexture, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLRenderTarget, WebGPUCoordinateSystem, WebXRController, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, cloneUniforms, createCanvasElement, createElementNS, error, getByteLength, getConsoleFunction, getUnlitUniformColorSpace, isTypedArray, log, mergeUniforms, probeAsync, setConsoleFunction, warn, warnOnce };
+export { ACESFilmicToneMapping, AddEquation, AddOperation, AdditiveAnimationBlendMode, AdditiveBlending, AgXToneMapping, AlphaFormat, AlwaysCompare, AlwaysDepth, AlwaysStencilFunc, AmbientLight, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrayCamera, ArrowHelper, AttachedBindMode, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BackSide, BasicDepthPacking, BasicShadowMap, BatchedMesh, BezierInterpolant, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxGeometry, BoxHelper, BufferAttribute, BufferGeometry, BufferGeometryLoader, ByteType, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CineonToneMapping, CircleGeometry, ClampToEdgeWrapping, Clock, Color, ColorKeyframeTrack, ColorManagement, Compatibility, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry, ConstantAlphaFactor, ConstantColorFactor, Controls, CubeCamera, CubeDepthTexture, CubeReflectionMapping, CubeRefractionMapping, CubeTexture, CubeTextureLoader, CubeUVReflectionMapping, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceBack, CullFaceFront, CullFaceFrontBack, CullFaceNone, Curve, CurvePath, CustomBlending, CustomToneMapping, CylinderGeometry, Cylindrical, Data3DTexture, DataArrayTexture, DataTexture, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DepthFormat, DepthStencilFormat, DepthTexture, DetachedBindMode, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronGeometry, DoubleSide, DstAlphaFactor, DstColorFactor, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualCompare, EqualDepth, EqualStencilFunc, EquirectangularReflectionMapping, EquirectangularRefractionMapping, Euler, EventDispatcher, ExternalTexture, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Float32BufferAttribute, FloatType, Fog, FogExp2, FramebufferTexture, FrontSide, Frustum, FrustumArray, GLBufferAttribute, GLSL1, GLSL3, GreaterCompare, GreaterDepth, GreaterEqualCompare, GreaterEqualDepth, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HalfFloatType, HemisphereLight, HemisphereLightHelper, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, IntType, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateBezier, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InterpolationSamplingMode, InterpolationSamplingType, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry, Layers, LessCompare, LessDepth, LessEqualCompare, LessEqualDepth, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, LightShadow, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearFilter, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, LinearMipmapLinearFilter, LinearMipmapNearestFilter, LinearSRGBColorSpace, LinearToneMapping, LinearTransfer, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, MOUSE, Material, MaterialBlending, MaterialLoader, MathUtils, Matrix2, Matrix3, Matrix4, MaxEquation, Mesh, MeshBasicMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, MinEquation, MirroredRepeatWrapping, MixOperation, MultiplyBlending, MultiplyOperation, NearestFilter, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NeutralToneMapping, NeverCompare, NeverDepth, NeverStencilFunc, NoBlending, NoColorSpace, NoNormalPacking, NoToneMapping, NormalAnimationBlendMode, NormalBlending, NormalGAPacking, NormalRGPacking, NotEqualCompare, NotEqualDepth, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, ObjectSpaceNormalMap, OctahedronGeometry, OneFactor, OneMinusConstantAlphaFactor, OneMinusConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, OrthographicCamera, PCFShadowMap, PCFSoftShadowMap, Path, PerspectiveCamera, Plane, PlaneGeometry, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, R11_EAC_Format, RAD2DEG, RED_GREEN_RGTC2_Format, RED_RGTC1_Format, REVISION, RG11_EAC_Format, RGBADepthPacking, RGBAFormat, RGBAIntegerFormat, RGBA_ASTC_10x10_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_BPTC_Format, RGBA_ETC2_EAC_Format, RGBA_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGBDepthPacking, RGBFormat, RGBIntegerFormat, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGB_PVRTC_2BPPV1_Format, RGB_PVRTC_4BPPV1_Format, RGB_S3TC_DXT1_Format, RGDepthPacking, RGFormat, RGIntegerFormat, RawShaderMaterial, Ray, Raycaster, RectAreaLight, RedFormat, RedIntegerFormat, ReinhardToneMapping, RenderTarget, RenderTarget3D, RepeatWrapping, ReplaceStencilOp, ReverseSubtractEquation, ReversedDepthFuncs, RingGeometry, SIGNED_R11_EAC_Format, SIGNED_RED_GREEN_RGTC2_Format, SIGNED_RED_RGTC1_Format, SIGNED_RG11_EAC_Format, SRGBColorSpace, SRGBTransfer, Scene, ShaderMaterial, ShadowMaterial, Shape, ShapeGeometry, ShapePath, ShapeUtils, ShortType, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, SrcAlphaFactor, SrcAlphaSaturateFactor, SrcColorFactor, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, SubtractEquation, SubtractiveBlending, TOUCH, TangentSpaceNormalMap, TetrahedronGeometry, Texture, TextureLoader, TextureUtils, Timer, TimestampQuery, TorusGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, UVMapping, Uint16BufferAttribute, Uint32BufferAttribute, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, UniformsUtils, UnsignedByteType, UnsignedInt101111Type, UnsignedInt248Type, UnsignedInt5999Type, UnsignedIntType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShortType, VSMShadowMap, Vector2, Vector3, Vector4, VectorKeyframeTrack, VideoFrameTexture, VideoTexture, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGLCoordinateSystem, WebGLRenderTarget, WebGPUCoordinateSystem, WebXRController, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroFactor, ZeroSlopeEnding, ZeroStencilOp, cloneUniforms, createCanvasElement, createElementNS, error, getByteLength, getConsoleFunction, getUnlitUniformColorSpace, isTypedArray, log, mergeUniforms, probeAsync, setConsoleFunction, warn, warnOnce };

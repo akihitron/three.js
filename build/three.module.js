@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: MIT
  */
 import { Matrix3, Vector2, Color, mergeUniforms, Vector3, CubeUVReflectionMapping, Mesh, BoxGeometry, ShaderMaterial, BackSide, cloneUniforms, Euler, Matrix4, ColorManagement, SRGBTransfer, PlaneGeometry, FrontSide, getUnlitUniformColorSpace, IntType, warn, HalfFloatType, UnsignedByteType, FloatType, RGBAFormat, Plane, CubeReflectionMapping, CubeRefractionMapping, BufferGeometry, OrthographicCamera, PerspectiveCamera, NoToneMapping, MeshBasicMaterial, error, NoBlending, WebGLRenderTarget, BufferAttribute, LinearSRGBColorSpace, LinearFilter, CubeTexture, LinearMipmapLinearFilter, CubeCamera, EquirectangularReflectionMapping, EquirectangularRefractionMapping, warnOnce, Uint32BufferAttribute, Uint16BufferAttribute, Vector4, DataArrayTexture, Float32BufferAttribute, RawShaderMaterial, CustomToneMapping, NeutralToneMapping, AgXToneMapping, ACESFilmicToneMapping, CineonToneMapping, ReinhardToneMapping, LinearToneMapping, Data3DTexture, GreaterEqualCompare, LessEqualCompare, DepthTexture, Texture, GLSL3, VSMShadowMap, PCFShadowMap, AddOperation, MixOperation, MultiplyOperation, LinearTransfer, UniformsUtils, DoubleSide, NormalBlending, TangentSpaceNormalMap, ObjectSpaceNormalMap, Layers, RGFormat, Frustum, MeshDepthMaterial, MeshDistanceMaterial, PCFSoftShadowMap, DepthFormat, NearestFilter, CubeDepthTexture, UnsignedIntType, LessEqualDepth, ReverseSubtractEquation, SubtractEquation, AddEquation, OneMinusConstantAlphaFactor, ConstantAlphaFactor, OneMinusConstantColorFactor, ConstantColorFactor, OneMinusDstAlphaFactor, OneMinusDstColorFactor, OneMinusSrcAlphaFactor, OneMinusSrcColorFactor, DstAlphaFactor, DstColorFactor, SrcAlphaSaturateFactor, SrcAlphaFactor, SrcColorFactor, OneFactor, ZeroFactor, NotEqualDepth, GreaterDepth, GreaterEqualDepth, EqualDepth, LessDepth, AlwaysDepth, NeverDepth, CullFaceNone, CullFaceBack, CullFaceFront, CustomBlending, MultiplyBlending, SubtractiveBlending, AdditiveBlending, ReversedDepthFuncs, MinEquation, MaxEquation, MirroredRepeatWrapping, ClampToEdgeWrapping, RepeatWrapping, LinearMipmapNearestFilter, NearestMipmapLinearFilter, NearestMipmapNearestFilter, NotEqualCompare, GreaterCompare, EqualCompare, LessCompare, AlwaysCompare, NeverCompare, NoColorSpace, DepthStencilFormat, getByteLength, UnsignedInt248Type, UnsignedShortType, createElementNS, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedInt5999Type, UnsignedInt101111Type, ByteType, ShortType, AlphaFormat, RGBFormat, RedFormat, RedIntegerFormat, RGIntegerFormat, RGBAIntegerFormat, RGB_S3TC_DXT1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGB_PVRTC_4BPPV1_Format, RGB_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_PVRTC_2BPPV1_Format, RGB_ETC1_Format, RGB_ETC2_Format, RGBA_ETC2_EAC_Format, R11_EAC_Format, SIGNED_R11_EAC_Format, RG11_EAC_Format, SIGNED_RG11_EAC_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_10x10_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, RGBA_BPTC_Format, RGB_BPTC_SIGNED_Format, RGB_BPTC_UNSIGNED_Format, RED_RGTC1_Format, SIGNED_RED_RGTC1_Format, RED_GREEN_RGTC2_Format, SIGNED_RED_GREEN_RGTC2_Format, ExternalTexture, EventDispatcher, ArrayCamera, WebXRController, RAD2DEG, DataTexture, createCanvasElement, SRGBColorSpace, REVISION, log, WebGLCoordinateSystem, probeAsync } from './three.core.js';
-export { AdditiveAnimationBlendMode, AlwaysStencilFunc, AmbientLight, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrowHelper, AttachedBindMode, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BasicDepthPacking, BasicShadowMap, BatchedMesh, BezierInterpolant, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxHelper, BufferGeometryLoader, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CircleGeometry, Clock, ColorKeyframeTrack, Compatibility, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry, Controls, CubeTextureLoader, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceFrontBack, Curve, CurvePath, CylinderGeometry, Cylindrical, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DetachedBindMode, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DodecahedronGeometry, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualStencilFunc, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Fog, FogExp2, FramebufferTexture, FrustumArray, GLBufferAttribute, GLSL1, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HemisphereLight, HemisphereLightHelper, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateBezier, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InterpolationSamplingMode, InterpolationSamplingType, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, MOUSE, Material, MaterialBlending, MaterialLoader, MathUtils, Matrix2, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NeverStencilFunc, NoNormalPacking, NormalAnimationBlendMode, NormalGAPacking, NormalRGPacking, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, OctahedronGeometry, Path, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RGBADepthPacking, RGBDepthPacking, RGBIntegerFormat, RGDepthPacking, Ray, Raycaster, RectAreaLight, RenderTarget, RenderTarget3D, ReplaceStencilOp, RingGeometry, Scene, ShadowMaterial, Shape, ShapeGeometry, ShapePath, ShapeUtils, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, TOUCH, TetrahedronGeometry, TextureLoader, TextureUtils, Timer, TimestampQuery, TorusGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, UVMapping, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, VectorKeyframeTrack, VideoFrameTexture, VideoTexture, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGPUCoordinateSystem, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroSlopeEnding, ZeroStencilOp, getConsoleFunction, setConsoleFunction } from './three.core.js';
+export { AdditiveAnimationBlendMode, AlwaysStencilFunc, AmbientLight, AnimationAction, AnimationClip, AnimationLoader, AnimationMixer, AnimationObjectGroup, AnimationUtils, ArcCurve, ArrowHelper, AttachedBindMode, Audio, AudioAnalyser, AudioContext, AudioListener, AudioLoader, AxesHelper, BasicDepthPacking, BasicShadowMap, BatchedMesh, BezierInterpolant, Bone, BooleanKeyframeTrack, Box2, Box3, Box3Helper, BoxHelper, BufferGeometryLoader, Cache, Camera, CameraHelper, CanvasTexture, CapsuleGeometry, CatmullRomCurve3, CircleGeometry, Clock, ColorKeyframeTrack, Compatibility, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CompressedTextureLoader, ConeGeometry, Controls, CubeTextureLoader, CubicBezierCurve, CubicBezierCurve3, CubicInterpolant, CullFaceFrontBack, Curve, CurvePath, CylinderGeometry, Cylindrical, DataTextureLoader, DataUtils, DecrementStencilOp, DecrementWrapStencilOp, DefaultLoadingManager, DetachedBindMode, DirectionalLight, DirectionalLightHelper, DiscreteInterpolant, DisplayP3ColorSpace, DodecahedronGeometry, DynamicCopyUsage, DynamicDrawUsage, DynamicReadUsage, EdgesGeometry, EllipseCurve, EqualStencilFunc, ExtrudeGeometry, FileLoader, Float16BufferAttribute, Fog, FogExp2, FramebufferTexture, FrustumArray, GLBufferAttribute, GLSL1, GreaterEqualStencilFunc, GreaterStencilFunc, GridHelper, Group, HemisphereLight, HemisphereLightHelper, IcosahedronGeometry, ImageBitmapLoader, ImageLoader, ImageUtils, IncrementStencilOp, IncrementWrapStencilOp, InstancedBufferAttribute, InstancedBufferGeometry, InstancedInterleavedBuffer, InstancedMesh, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, InterleavedBuffer, InterleavedBufferAttribute, Interpolant, InterpolateBezier, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, InterpolationSamplingMode, InterpolationSamplingType, InvertStencilOp, KeepStencilOp, KeyframeTrack, LOD, LatheGeometry, LessEqualStencilFunc, LessStencilFunc, Light, LightProbe, LightShadow, Line, Line3, LineBasicMaterial, LineCurve, LineCurve3, LineDashedMaterial, LineLoop, LineSegments, LinearDisplayP3ColorSpace, LinearInterpolant, LinearMipMapLinearFilter, LinearMipMapNearestFilter, Loader, LoaderUtils, LoadingManager, LoopOnce, LoopPingPong, LoopRepeat, MOUSE, Material, MaterialBlending, MaterialLoader, MathUtils, Matrix2, MeshLambertMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshPhongMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshToonMaterial, NearestMipMapLinearFilter, NearestMipMapNearestFilter, NeverStencilFunc, NoNormalPacking, NormalAnimationBlendMode, NormalGAPacking, NormalRGPacking, NotEqualStencilFunc, NumberKeyframeTrack, Object3D, ObjectLoader, OctahedronGeometry, Path, PlaneHelper, PointLight, PointLightHelper, Points, PointsMaterial, PolarGridHelper, PolyhedronGeometry, PositionalAudio, PropertyBinding, PropertyMixer, QuadraticBezierCurve, QuadraticBezierCurve3, Quaternion, QuaternionKeyframeTrack, QuaternionLinearInterpolant, RGBADepthPacking, RGBDepthPacking, RGBIntegerFormat, RGDepthPacking, Ray, Raycaster, RectAreaLight, RenderTarget, RenderTarget3D, ReplaceStencilOp, RingGeometry, Scene, ShadowMaterial, Shape, ShapeGeometry, ShapePath, ShapeUtils, Skeleton, SkeletonHelper, SkinnedMesh, Source, Sphere, SphereGeometry, Spherical, SphericalHarmonics3, SplineCurve, SpotLight, SpotLightHelper, Sprite, SpriteMaterial, StaticCopyUsage, StaticDrawUsage, StaticReadUsage, StereoCamera, StreamCopyUsage, StreamDrawUsage, StreamReadUsage, StringKeyframeTrack, TOUCH, TetrahedronGeometry, TextureLoader, TextureUtils, Timer, TimestampQuery, TorusGeometry, TorusKnotGeometry, Triangle, TriangleFanDrawMode, TriangleStripDrawMode, TrianglesDrawMode, TubeGeometry, UVMapping, Uint8BufferAttribute, Uint8ClampedBufferAttribute, Uniform, UniformsGroup, VectorKeyframeTrack, VideoFrameTexture, VideoTexture, WebGL3DRenderTarget, WebGLArrayRenderTarget, WebGPUCoordinateSystem, WireframeGeometry, WrapAroundEnding, ZeroCurvatureEnding, ZeroSlopeEnding, ZeroStencilOp, getConsoleFunction, setConsoleFunction } from './three.core.js';
 
 function WebGLAnimation() {
 
@@ -347,7 +347,7 @@ var defaultnormal_vertex = "vec3 transformedNormal = objectNormal;\n#ifdef USE_T
 
 var displacementmap_pars_vertex = "#ifdef USE_DISPLACEMENTMAP\n\tuniform sampler2D displacementMap;\n\tuniform float displacementScale;\n\tuniform float displacementBias;\n#endif";
 
-var displacementmap_vertex = "#ifdef USE_DISPLACEMENTMAP\n\ttransformed += normalize( objectNormal ) * ( texture2D( displacementMap, vDisplacementMapUv ).x * displacementScale + displacementBias );\n#endif";
+var displacementmap_vertex = "#ifdef USE_DISPLACEMENTMAP\n\ttransformed += normalize( objectNormal ) * ( texture2D( displacementMap, vDisplacementMapUv ).x * displacementScale + displacementBias );\n    \n#endif";
 
 var emissivemap_fragment = "#ifdef USE_EMISSIVEMAP\n\tvec4 emissiveColor = texture2D( emissiveMap, vEmissiveMapUv );\n\t#ifdef DECODE_VIDEO_TEXTURE_EMISSIVE\n\t\temissiveColor = sRGBTransferEOTF( emissiveColor );\n\t#endif\n\ttotalEmissiveRadiance *= emissiveColor.rgb;\n#endif";
 
@@ -549,7 +549,7 @@ const fragment$8 = "#define MATCAP\nuniform vec3 diffuse;\nuniform float opacity
 
 const vertex$7 = "#define NORMAL\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP_TANGENTSPACE )\n\tvarying vec3 vViewPosition;\n#endif\n#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <normal_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <batching_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphinstance_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <normal_vertex>\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP_TANGENTSPACE )\n\tvViewPosition = - mvPosition.xyz;\n#endif\n}";
 
-const fragment$7 = "#define NORMAL\nuniform float opacity;\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP_TANGENTSPACE )\n\tvarying vec3 vViewPosition;\n#endif\n#include <uv_pars_fragment>\n#include <normal_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\tvec4 diffuseColor = vec4( 0.0, 0.0, 0.0, opacity );\n\t#include <clipping_planes_fragment>\n\t#include <logdepthbuf_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\tgl_FragColor = vec4( normalize( normal ) * 0.5 + 0.5, diffuseColor.a );\n\t#ifdef OPAQUE\n\t\tgl_FragColor.a = 1.0;\n\t#endif\n}";
+const fragment$7 = "#define NORMAL\nuniform float opacity;\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP_TANGENTSPACE )\n\tvarying vec3 vViewPosition;\n#endif\n#include <uv_pars_fragment>\n#include <normal_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\tvec4 diffuseColor = vec4( 0.0, 0.0, 0.0, opacity );\n\t\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <clipping_planes_fragment>\n\t#include <logdepthbuf_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\tgl_FragColor = vec4( normalize( normal ) * 0.5 + 0.5, diffuseColor.a );\n\t#ifdef OPAQUE\n\t\tgl_FragColor.a = 1.0;\n\t#endif\n}";
 
 const vertex$6 = "#define PHONG\nvarying vec3 vViewPosition;\n#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <normal_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <color_vertex>\n\t#include <morphcolor_vertex>\n\t#include <batching_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphinstance_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <normal_vertex>\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}";
 
@@ -4584,11 +4584,67 @@ function WebGLInfo( gl ) {
 function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	const morphTextures = new WeakMap();
+	const objectMorphTemps = new WeakMap(); // @DDD@
 	const morph = new Vector4();
 
-	function update( object, geometry, program ) {
+	function update( object, geometry, material, program ) { // @DDD@
 
-		const objectInfluences = object.morphTargetInfluences;
+		object.morphTargetInfluences;
+
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		let tmp_influences = null;
+		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
+
+			const morphTargetInfluences = object.morphTargetInfluences;
+			const backup = object.morphTargetInfluences_backup;
+			const cache = object.morphTargetInfluences_cache;
+			const coef = object.morphTargetInfluences_coef;
+			const result = object.morphTargetInfluences_result;
+
+			// if (geometry.isMMDMorph) {
+			// 	tmp_influences = objectMorphTemps.get(object)?.tmp_influences;
+			// 	if (tmp_influences == null) tmp_influences = new Float32Array(geometry.morphAttributes.position.length);
+			// 	objectMorphTemps.set(object, {tmp_influences});
+			// }
+			tmp_influences = objectMorphTemps.get( object )?.tmp_influences;
+			if ( tmp_influences == null ) tmp_influences = new Float32Array( geometry.morphAttributes.position.length );
+			objectMorphTemps.set( object, { tmp_influences } );
+
+			let m_index = 0;
+			const mask = geometry.influenceMasks;
+			if ( mask ) {
+
+				for ( let i = 0, l = morphTargetInfluences.length; i < l; ++ i ) {
+
+					const c = morphTargetInfluences[ i ];
+					backup[ i ] = c;
+					const r = result[ i ] = ( c + cache[ i ] ) * coef[ i ];
+					const m = mask[ i ];
+					const a = morphTargetInfluences[ i ] = r * m;
+					if ( m > 0 ) tmp_influences[ m_index ++ ] = a;
+
+				}
+
+			} else {
+
+				for ( let i = 0, l = morphTargetInfluences.length; i < l; ++ i ) {
+
+					const c = morphTargetInfluences[ i ];
+					backup[ i ] = c;
+					const r = result[ i ] = ( c + cache[ i ] ) * coef[ i ];
+					const a = morphTargetInfluences[ i ] = r;
+					tmp_influences[ m_index ++ ] = a;
+
+				}
+
+			}
+
+		} else {
+
+			tmp_influences = object.morphTargetInfluences;
+
+		}
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 		// the following encodes morph targets into an array of data textures. Each layer represents a single morph target.
 
@@ -4715,9 +4771,9 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 			let morphInfluencesSum = 0;
 
-			for ( let i = 0; i < objectInfluences.length; i ++ ) {
+			for ( let i = 0; i < tmp_influences.length; i ++ ) { // @DDD@
 
-				morphInfluencesSum += objectInfluences[ i ];
+				morphInfluencesSum += tmp_influences[ i ]; // @DDD@
 
 			}
 
@@ -4725,7 +4781,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 
 			program.getUniforms().setValue( gl, 'morphTargetBaseInfluence', morphBaseInfluence );
-			program.getUniforms().setValue( gl, 'morphTargetInfluences', objectInfluences );
+			if ( tmp_influences.length > 0 ) program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
 
 		}
 
@@ -4734,11 +4790,30 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	}
 
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	function store( object, geometry ) {
+
+		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
+
+			const morphTargetInfluences = object.morphTargetInfluences;
+			const backup = object.morphTargetInfluences_backup;
+			for ( let i = 0, l = backup.length; i < l; i ++ ) {
+
+				morphTargetInfluences[ i ] = backup[ i ];
+
+			}
+
+		}
+
+	}
+
 	return {
 
-		update: update
+		update: update,
+		store: store,
 
 	};
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 }
 
@@ -6855,7 +6930,7 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.skinning ? '#define USE_SKINNING' : '',
 
-			parameters.morphTargets ? '#define USE_MORPHTARGETS' : '',
+			parameters.morphTargetsCount > 0 && parameters.morphTargets ? '#define USE_MORPHTARGETS' : '', // @DDD@
 			parameters.morphNormals && parameters.flatShading === false ? '#define USE_MORPHNORMALS' : '',
 			( parameters.morphColors ) ? '#define USE_MORPHCOLORS' : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_TEXTURE_STRIDE ' + parameters.morphTextureStride : '',
@@ -7435,8 +7510,6 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 	const programs = [];
 	const programsMap = new Map();
 
-	const logarithmicDepthBuffer = capabilities.logarithmicDepthBuffer;
-
 	let precision = capabilities.precision;
 
 	const shaderIDs = {
@@ -7731,7 +7804,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			),
 
 			sizeAttenuation: material.sizeAttenuation === true,
-			logarithmicDepthBuffer: logarithmicDepthBuffer,
+			logarithmicDepthBuffer: capabilities.logarithmicDepthBuffer,
 			reversedDepthBuffer: reversedDepthBuffer,
 
 			skinning: object.isSkinnedMesh === true,
@@ -7761,7 +7834,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 			dithering: material.dithering,
 
-			shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0,
+			shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0 && material.receiveShadow, // @DDD@
 			shadowMapType: renderer.shadowMap.type,
 
 			toneMapping: toneMapping,
@@ -9209,6 +9282,14 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		// render depth map
 
+		// [PATCH] Disable logarithmic depth buffer during shadow map rendering.
+		// With native depth textures (r182+), MeshDepthMaterial writes log depth
+		// to gl_FragDepth for perspective shadow cameras (SpotLight), but the shadow
+		// comparison in the main pass uses linear projection coordinates. This mismatch
+		// causes all fragments to appear in shadow.
+		const _savedLogDepthBuffer = capabilities.logarithmicDepthBuffer;
+		capabilities.logarithmicDepthBuffer = false;
+
 		for ( let i = 0, il = lights.length; i < il; i ++ ) {
 
 			const light = lights[ i ];
@@ -9417,6 +9498,9 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 			shadow.needsUpdate = false;
 
 		}
+
+		// [PATCH] Restore logarithmic depth buffer capability
+		capabilities.logarithmicDepthBuffer = _savedLogDepthBuffer;
 
 		_previousType = this.type;
 
@@ -12215,13 +12299,30 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 				} else {
 
+					// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+
 					if ( useTexStorage ) {
 
-						if ( allocateMemory ) {
+						if ( image.is_dummy ) {
 
-							const dimensions = getDimensions( image );
+							if ( allocateMemory ) {
 
-							state.texStorage2D( _gl.TEXTURE_2D, levels, glInternalFormat, dimensions.width, dimensions.height );
+								state.texStorage2D( _gl.TEXTURE_2D, levels, glInternalFormat, image.width, image.height );
+
+							}
+
+							state.texSubImage2D( _gl.TEXTURE_2D, 0, 0, 0, _gl.RGBA, _gl.UNSIGNED_BYTE, image.image_data );
+
+						} else {
+
+							if ( allocateMemory ) {
+
+								const dimensions = getDimensions( image );
+
+								state.texStorage2D( _gl.TEXTURE_2D, levels, glInternalFormat, dimensions.width, dimensions.height );
+
+							}
+
 
 						}
 
@@ -12233,9 +12334,19 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 					} else {
 
-						state.texImage2D( _gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glType, image );
+						if ( image.is_dummy ) {
+
+							state.texImage2D( _gl.TEXTURE_2D, 0, glInternalFormat, image.width, image.height, 0, glFormat, glType, image.data );
+
+						} else {
+
+							state.texImage2D( _gl.TEXTURE_2D, 0, glInternalFormat, glFormat, glType, image );
+
+						}
 
 					}
+
+					// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 				}
 
@@ -14057,6 +14168,13 @@ class WebXRManager extends EventDispatcher {
 
 		};
 
+		// Returns the current XR render target used during the session.
+		this.getRenderTarget = function () {
+
+			return newRenderTarget;
+
+		};
+
 		/**
 		 * Returns the current XR binding.
 		 *
@@ -15323,8 +15441,13 @@ function WebGLMaterials( renderer, properties ) {
 		if ( material.transmission > 0 ) {
 
 			uniforms.transmission.value = material.transmission;
-			uniforms.transmissionSamplerMap.value = transmissionRenderTarget.texture;
-			uniforms.transmissionSamplerSize.value.set( transmissionRenderTarget.width, transmissionRenderTarget.height );
+			
+			if ( transmissionRenderTarget ) { // @DDD@
+
+				uniforms.transmissionSamplerMap.value = transmissionRenderTarget.texture;
+				uniforms.transmissionSamplerSize.value.set( transmissionRenderTarget.width, transmissionRenderTarget.height );
+			
+			}
 
 			if ( material.transmissionMap ) {
 
@@ -17118,6 +17241,14 @@ class WebGLRenderer {
 
 			}
 
+			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+			if ( geometry.morphAttributes.position !== undefined || geometry.morphAttributes.normal !== undefined ) {
+
+				morphtargets.store( object, geometry );
+
+			}
+			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 		};
 
 		// Compile
@@ -17887,25 +18018,32 @@ class WebGLRenderer {
 			object.modelViewMatrix.multiplyMatrices( camera.matrixWorldInverse, object.matrixWorld );
 			object.normalMatrix.getNormalMatrix( object.modelViewMatrix );
 
-			material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			const ret = material.onBeforeRender( _this, scene, camera, geometry, object, group ); // @DDD@
 
-				material.side = BackSide;
-				material.needsUpdate = true;
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+			if ( ret == undefined || ret == true ) { // @DDD@
 
-				material.side = FrontSide;
-				material.needsUpdate = true;
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+				if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
 
-				material.side = DoubleSide;
+					material.side = BackSide;
+					material.needsUpdate = true;
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-			} else {
+					material.side = FrontSide;
+					material.needsUpdate = true;
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
 
-				_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+					material.side = DoubleSide;
+
+				} else {
+
+					_this.renderBufferDirect( camera, scene, geometry, material, object, group );
+
+				}
 
 			}
+
+			material.onAfterRender?.( _this, scene, camera, geometry, object, group ); // @DDD@
 
 			object.onAfterRender( _this, scene, camera, geometry, material, group );
 
@@ -17913,9 +18051,12 @@ class WebGLRenderer {
 
 		function getProgram( material, scene, object ) {
 
+			const tm = performance.now(); // @DDD@
+
 			if ( scene.isScene !== true ) scene = _emptyScene; // scene could be a Mesh, Line, Points, ...
 
 			const materialProperties = properties.get( material );
+			const currentRenderState = renderStates.get( scene ); // @DDD@
 
 			const lights = currentRenderState.state.lights;
 			const shadowsArray = currentRenderState.state.shadowsArray;
@@ -18014,8 +18155,26 @@ class WebGLRenderer {
 
 			}
 
-			materialProperties.currentProgram = program;
-			materialProperties.uniformsList = null;
+
+			if ( window.debug && window.debug_performance ) { // @DDD@
+
+				const progUniforms = program.getUniforms();
+				const uniformsList = WebGLUniforms.seqWithValue( progUniforms.seq, uniforms );
+				if ( performance.now() - tm > 10 ) {
+
+					console.log( `getUniforms@"${material.name}"-${material.constructor.name}`, Math.floor( performance.now() - tm ), 'ms' );
+
+				}
+
+				materialProperties.currentProgram = program;
+				materialProperties.uniformsList = uniformsList;
+
+			} else {
+
+				materialProperties.currentProgram = program;
+				materialProperties.uniformsList = null;
+
+			}
 
 			return program;
 
@@ -18090,7 +18249,10 @@ class WebGLRenderer {
 			const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
 
 			const materialProperties = properties.get( material );
+			const currentRenderState = renderStates.get( scene ); // @DDD@ prevent null.
 			const lights = currentRenderState.state.lights;
+
+
 
 			if ( _clippingEnabled === true ) {
 
@@ -18381,7 +18543,7 @@ class WebGLRenderer {
 
 			if ( morphAttributes.position !== undefined || morphAttributes.normal !== undefined || ( morphAttributes.color !== undefined ) ) {
 
-				morphtargets.update( object, geometry, program );
+				morphtargets.update( object, geometry, material, program ); // @DDD@
 
 			}
 
