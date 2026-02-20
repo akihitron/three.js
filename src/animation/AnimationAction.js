@@ -554,7 +554,7 @@ class AnimationAction {
 
 	}
 
-	// Interna
+	// Internal
 
 	_update( time, deltaTime, timeDirection, accuIndex ) {
 
