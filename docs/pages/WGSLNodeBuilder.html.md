@@ -22,6 +22,18 @@ The renderer.
 
 ## Properties
 
+### .allowEarlyReturns : boolean
+
+A flag that indicates that early returns are allowed.
+
+Default is `true`.
+
+### .allowGlobalVariables : boolean
+
+A flag that indicates that global variables are allowed.
+
+Default is `true`.
+
 ### .builtins : Object.<string, Map.<string, Object>>
 
 A dictionary that holds for each shader stage a Map of builtins.
@@ -149,6 +161,36 @@ Default is `'0u'`.
 **depthSnippet**
 
 A WGSL snippet that represents 0-based texture array index to sample.
+
+**Returns:** The WGSL snippet.
+
+### .generateStorageTextureLoad( texture : Texture, textureProperty : string, uvIndexSnippet : string, levelSnippet : string, depthSnippet : string, offsetSnippet : string ) : string
+
+Generates the WGSL snippet that reads a single texel from a storage texture.
+
+**texture**
+
+The texture.
+
+**textureProperty**
+
+The name of the texture uniform in the shader.
+
+**uvIndexSnippet**
+
+A WGSL snippet that represents texture coordinates used for sampling.
+
+**levelSnippet**
+
+A WGSL snippet that represents the mip level, with level 0 containing a full size version of the texture.
+
+**depthSnippet**
+
+A WGSL snippet that represents 0-based texture array index to sample.
+
+**offsetSnippet**
+
+A WGSL snippet that represents the offset that will be applied to the unnormalized texture coordinate before sampling the texture.
 
 **Returns:** The WGSL snippet.
 
@@ -770,14 +812,6 @@ The node data type.
 
 **Returns:** The WGSL type.
 
-### .getUniformBufferLimit() : number
-
-Returns the maximum uniform buffer size limit.
-
-**Overrides:** [NodeBuilder#getUniformBufferLimit](NodeBuilder.html#getUniformBufferLimit)
-
-**Returns:** The maximum uniform buffer size in bytes.
-
 ### .getUniformFromNode( node : UniformNode, type : string, shaderStage : string, name : string ) : NodeUniform
 
 This method is one of the more important ones since it's responsible for generating a matching binding instance for the given uniform node.
@@ -818,7 +852,7 @@ The shader stage.
 
 **Returns:** The WGSL snippet that defines the uniforms.
 
-### .getVar( type : string, name : string, count : number ) : string
+### .getVar( type : string, name : string, count : number, qualifier : string ) : string
 
 Returns a WGSL string representing a variable.
 
@@ -835,6 +869,12 @@ The variable's name.
 The array length.
 
 Default is `null`.
+
+**qualifier**
+
+The variable's qualifier.
+
+Default is `''`.
 
 **Overrides:** [NodeBuilder#getVar](NodeBuilder.html#getVar)
 
