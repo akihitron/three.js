@@ -345,7 +345,7 @@ class LightProbeGrid extends Object3D {
 	 */
 	_ensureTextures() {
 
-		if ( this._renderTarget !== null ) return;
+		if (this._renderTarget) this._renderTarget.dispose(); // @DDD@ - dispose old target if it exists (e.g. on resize)
 
 		const res = this.resolution;
 		const nx = res.x, ny = res.y, nz = res.z;
