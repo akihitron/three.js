@@ -480,6 +480,12 @@ class Material extends EventDispatcher {
 			this.receiveDynamicEnvironment = true; // @DDD@
 			this.castDynamicEnvironment = true; // @DDD@
 			this.receiveShadow = true;// @DDD@
+			// Whether this material writes into the shadow map. `castShadow`
+			// on the object is all-or-nothing, which cannot express a mesh
+			// built from many materials — a PMX model is one mesh whose
+			// glasses, hair and body are separate materials, and the glasses
+			// must not throw a solid shadow just because the body does.
+			this.castShadow = true; // @DDD@
 			this.motionBlur = true; // @DDD@
 
 		}
@@ -829,6 +835,8 @@ class Material extends EventDispatcher {
 
 		if ( this.castDynamicEnvironment !== undefined ) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
 		if ( this.receiveDynamicEnvironment !== undefined ) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
+		if ( this.castShadow === false ) data.castShadow = this.castShadow; // @DDD@
+		if ( this.receiveShadow === false ) data.receiveShadow = this.receiveShadow; // @DDD@
 
 		// rotation (SpriteMaterial)
 		if ( this.rotation !== undefined && this.rotation !== 0 ) data.rotation = this.rotation;
@@ -1183,6 +1191,11 @@ class Material extends EventDispatcher {
 
 		this.castDynamicEnvironment = source.castDynamicEnvironment; // @DDD@
 		this.receiveDynamicEnvironment = source.receiveDynamicEnvironment; // @DDD@
+		// Both shadow flags travel with a clone. Without this a cloned
+		// material silently goes back to casting and receiving, and DDD
+		// clones every material (material_overwrite / material_original).
+		this.castShadow = source.castShadow; // @DDD@
+		this.receiveShadow = source.receiveShadow; // @DDD@
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 

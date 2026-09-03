@@ -50,6 +50,12 @@ export const getShadowRenderObjectFunction = ( renderer, shadow, shadowType, use
 
 		renderObjectFunction = ( object, scene, _camera, geometry, material, group, lightsNode, clippingContext, passId ) => {
 
+			// @DDD@ the material's own castShadow, so the WebGPU path reads
+			// the flag the same way WebGLShadowMap does. `material` here is
+			// already the group's material, so a multi-material mesh is
+			// decided per group.
+			if ( material !== undefined && material.castShadow === false ) return; // @DDD@
+
 			if ( object.castShadow === true || ( object.receiveShadow && shadowType === VSMShadowMap ) ) {
 
 				if ( useVelocity ) {

@@ -539,7 +539,9 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 						const group = groups[ k ];
 						const groupMaterial = material[ group.materialIndex ];
 
-						if ( groupMaterial && groupMaterial.visible ) {
+						// @DDD@ `castShadow` per material: one mesh, many
+						// materials, and only some of them belong in the map.
+						if ( groupMaterial && groupMaterial.visible && groupMaterial.castShadow !== false ) {
 
 							const depthMaterial = getDepthMaterial( object, groupMaterial, light, type );
 
@@ -553,7 +555,7 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 					}
 
-				} else if ( material.visible ) {
+				} else if ( material.visible && material.castShadow !== false ) { // @DDD@
 
 					const depthMaterial = getDepthMaterial( object, material, light, type );
 
