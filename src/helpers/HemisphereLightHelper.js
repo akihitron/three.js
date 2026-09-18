@@ -82,6 +82,8 @@ class HemisphereLightHelper extends Object3D {
 	 */
 	dispose() {
 
+		super.dispose();
+
 		this.children[ 0 ]?.geometry?.dispose?.(); // @DDD@
 		this.children[ 0 ]?.material?.dispose?.(); // @DDD@
 
