@@ -72,9 +72,10 @@ class FileLoader extends Loader {
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	_load_( url, onLoad, onProgress, onError ) {
+
 		const scope = this;
-		if (window.is_data_url == null) return { cache: null, should_use_default_load: true };
- 
+		if ( window.is_data_url == null ) return { cache: null, should_use_default_load: true };
+
 		const isDataURL = window.is_data_url( url );
 		const file_system = scope.params.file_system;
 
@@ -93,28 +94,39 @@ class FileLoader extends Loader {
 					scope.manager.itemEnd( url );
 
 				}, 0 );
-				return {cache: cached, should_use_default_load: false};
+				return { cache: cached, should_use_default_load: false };
 
 			} else {
 
 				const io = window.external_io;
 				io.get( url ).then( data=>{
+
 					let response;
 					const responseType = ( scope.responseType || '' ).toLowerCase();
 					switch ( responseType ) {
+
 						case 'arraybuffer':
 						case 'blob':
 							const view = data;
 							if ( responseType === 'blob' ) {
+
 								const mimeType = 'application/octet-stream';
 								response = new Blob( [ view.buffer ], { type: mimeType } );
+
 							} else {
+
 								if ( view?.buffer instanceof ArrayBuffer ) {
+
 									response = view.buffer;
+
 								} else if ( view instanceof ArrayBuffer ) {
+
 									response = view;
+
 								}
+
 							}
+
 							break;
 
 						case 'document':
@@ -130,6 +142,7 @@ class FileLoader extends Loader {
 						default: // 'text' or other
 							response = data;
 							break;
+
 					}
 
 					Cache.add( url, response );
@@ -144,7 +157,7 @@ class FileLoader extends Loader {
 
 				} );
 
-				return {cache: null, should_use_default_load: false};
+				return { cache: null, should_use_default_load: false };
 
 			}
 
@@ -163,7 +176,7 @@ class FileLoader extends Loader {
 						scope.manager.itemEnd( url );
 
 					}, 0 );
-					return {cache: cached, should_use_default_load: false};
+					return { cache: cached, should_use_default_load: false };
 
 				}
 
@@ -183,13 +196,14 @@ class FileLoader extends Loader {
 				}
 
 				scope.manager.itemEnd( url );
-				return {cache: null, should_use_default_load: false};
+				return { cache: null, should_use_default_load: false };
 
 			}
 
-			return {cache: null, should_use_default_load: true};
+			return { cache: null, should_use_default_load: true };
 
 		}
+
 	}
 	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
@@ -205,7 +219,7 @@ class FileLoader extends Loader {
 
 		const { cache, should_use_default_load } = this._load_( url, onLoad, onProgress, onError ); // @DDD@
 
-		if ( !should_use_default_load ) return cache; // @DDD@
+		if ( ! should_use_default_load ) return cache; // @DDD@
 
 		if ( url === undefined ) url = '';
 

@@ -517,12 +517,12 @@ function WebGLMaterials( renderer, properties ) {
 		if ( material.transmission > 0 ) {
 
 			uniforms.transmission.value = material.transmission;
-			
+
 			if ( transmissionRenderTarget ) { // @DDD@
 
 				uniforms.transmissionSamplerMap.value = transmissionRenderTarget.texture;
 				uniforms.transmissionSamplerSize.value.set( transmissionRenderTarget.width, transmissionRenderTarget.height );
-			
+
 			}
 
 			if ( material.transmissionMap ) {

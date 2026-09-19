@@ -386,18 +386,6 @@ class Texture extends EventDispatcher {
 	}
 
 
-	get width() {
-
-		return this.source.data?.naturalWidth || this.source.data?.width;
-
-	} // @DDD@
-
-	get height() {
-
-		return this.source.data?.naturalHeight || this.source.data?.height;
-
-	} // @DDD@
-
 
 	/**
 	 * The width of the texture in pixels.

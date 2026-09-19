@@ -178,7 +178,7 @@ class VideoTexture extends Texture {
 		}
 
 	}
-	getVolume( v ) {
+	getVolume() {
 
 		return this.image.volume;
 
@@ -188,7 +188,7 @@ class VideoTexture extends Texture {
 		this.image.loop = v;
 
 	}
-	getLoop( v ) {
+	getLoop() {
 
 		return this.image.loop;
 
@@ -207,18 +207,6 @@ class VideoTexture extends Texture {
 
 		this.image.pause();
 		this.setCurrentTime( 0 );
-
-	}
-	dispose() {
-
-		super.dispose();
-		try {
-
-			this.image.pause();
-
-		} catch ( e ) {}
-
-		this.image.currentTime = 0;
 
 	}
 	toJSON() {
@@ -280,6 +268,17 @@ class VideoTexture extends Texture {
 			this._requestVideoFrameCallbackId = 0;
 
 		}
+
+		// @DDD@ A disposed video should stop decoding, not play on unseen.
+		// This used to live in a second `dispose()` further up the class,
+		// where it never ran: the later definition of a method wins.
+		try {
+
+			this.image.pause();
+
+		} catch ( e ) {}
+
+		this.image.currentTime = 0;
 
 		super.dispose();
 

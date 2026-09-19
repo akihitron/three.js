@@ -11,8 +11,6 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	function update( object, geometry, material, program ) { // @DDD@
 
-		const objectInfluences = object.morphTargetInfluences;
-
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		let tmp_influences = null;
 		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
@@ -213,7 +211,7 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 	}
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-	function store( object, geometry ) {
+	function store( object /* , geometry */ ) {
 
 		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
 
