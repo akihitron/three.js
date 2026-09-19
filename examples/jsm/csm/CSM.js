@@ -233,21 +233,6 @@ export class CSM {
 
 	}
 
-	updateLights() { // @DDD@
-
-		for ( let i = 0; i < this.cascades; i ++ ) {
-
-			const light = this.lights[ i ];
-
-			light.shadow.camera.near = this.lightNear;
-			light.shadow.camera.far = this.lightFar;
-			light.shadow.bias = this.shadowBias * Math.exp( i );
-			light.shadow.normalBias = this.shadowNormalBias;
-
-		}
-
-	}
-
 	/**
 	 * Inits the cascades according to the scene's camera and breaks configuration.
 	 *
