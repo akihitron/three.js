@@ -488,6 +488,13 @@ class Material extends EventDispatcher {
 			// must not throw a solid shadow just because the body does.
 			this.castShadow = true; // @DDD@
 			this.motionBlur = true; // @DDD@
+			// A silent light source: geometry that feeds the environment map
+			// and the light probe grid but is never drawn by the normal
+			// renderer, and never reaches the shadow map either — a shadow
+			// cast by something you cannot see reads as a bug. Lets a
+			// lightmapped backdrop contribute its light in forward-only VR
+			// rendering without being visible itself.
+			this.silentLight = false; // @DDD@
 
 		}
 
@@ -864,6 +871,7 @@ class Material extends EventDispatcher {
 		if ( this.castDynamicEnvironment !== undefined ) data.castDynamicEnvironment = this.castDynamicEnvironment; // @DDD@
 		if ( this.receiveDynamicEnvironment !== undefined ) data.receiveDynamicEnvironment = this.receiveDynamicEnvironment; // @DDD@
 		if ( this.castShadow === false ) data.castShadow = this.castShadow; // @DDD@
+		if ( this.silentLight === true ) data.silentLight = this.silentLight; // @DDD@
 		if ( this.receiveShadow === false ) data.receiveShadow = this.receiveShadow; // @DDD@
 
 		// rotation (SpriteMaterial)
@@ -1219,6 +1227,7 @@ class Material extends EventDispatcher {
 		// clones every material (material_overwrite / material_original).
 		this.castShadow = source.castShadow; // @DDD@
 		this.receiveShadow = source.receiveShadow; // @DDD@
+		this.silentLight = source.silentLight; // @DDD@
 
 		this.userData = JSON.parse( JSON.stringify( source.userData ) );
 
