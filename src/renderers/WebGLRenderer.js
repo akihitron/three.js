@@ -1352,7 +1352,7 @@ class WebGLRenderer {
 			}
 
 			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
-			if ( geometry.morphAttributes.position !== undefined || geometry.morphAttributes.normal !== undefined ) {
+			if ( geometry.morphAttributes.position !== undefined || geometry.morphAttributes.normal !== undefined || geometry.morphUvs !== undefined ) {
 
 				morphtargets.store( object, geometry );
 
@@ -2370,6 +2370,7 @@ class WebGLRenderer {
 			materialProperties.morphNormals = parameters.morphNormals;
 			materialProperties.morphColors = parameters.morphColors;
 			materialProperties.morphTargetsCount = parameters.morphTargetsCount;
+			materialProperties.morphUvsCount = parameters.morphUvsCount; // @DDD@
 			materialProperties.numClippingPlanes = parameters.numClippingPlanes;
 			materialProperties.numIntersection = parameters.numClipIntersection;
 			materialProperties.vertexAlphas = parameters.vertexAlphas;
@@ -2433,6 +2434,7 @@ class WebGLRenderer {
 
 			const morphAttribute = geometry.morphAttributes.position || geometry.morphAttributes.normal || geometry.morphAttributes.color;
 			const morphTargetsCount = ( morphAttribute !== undefined ) ? morphAttribute.length : 0;
+			const morphUvsCount = ( geometry.morphUvs !== undefined ) ? geometry.morphUvs.length : 0; // @DDD@
 
 			const materialProperties = properties.get( material );
 			const currentRenderState = renderStates.get( scene ); // @DDD@ prevent null.
@@ -2558,6 +2560,10 @@ class WebGLRenderer {
 					needsProgramChange = true;
 
 				} else if ( materialProperties.morphTargetsCount !== morphTargetsCount ) {
+
+					needsProgramChange = true;
+
+				} else if ( materialProperties.morphUvsCount !== morphUvsCount ) { // @DDD@
 
 					needsProgramChange = true;
 
@@ -2758,7 +2764,7 @@ class WebGLRenderer {
 
 			const morphAttributes = geometry.morphAttributes;
 
-			if ( morphAttributes.position !== undefined || morphAttributes.normal !== undefined || ( morphAttributes.color !== undefined ) ) {
+			if ( morphAttributes.position !== undefined || morphAttributes.normal !== undefined || ( morphAttributes.color !== undefined ) || geometry.morphUvs !== undefined ) { // @DDD@
 
 				morphtargets.update( object, geometry, material, program ); // @DDD@
 

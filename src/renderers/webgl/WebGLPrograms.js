@@ -89,6 +89,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		if ( geometry.morphAttributes.normal !== undefined ) morphTextureStride = 2;
 		if ( geometry.morphAttributes.color !== undefined ) morphTextureStride = 3;
 
+		const morphUvsCount = ( geometry.morphUvs !== undefined ) ? geometry.morphUvs.length : 0; // @DDD@ PMX uv morphs
+
 		//
 
 		let vertexShader, fragmentShader;
@@ -334,6 +336,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			morphColors: geometry.morphAttributes.color !== undefined,
 			morphTargetsCount: morphTargetsCount,
 			morphTextureStride: morphTextureStride,
+			morphUvsCount: morphUvsCount, // @DDD@
 
 			numSunLights: lights.sun.length,
 			numDirLights: lights.directional.length,
@@ -471,6 +474,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		array.push( parameters.sizeAttenuation );
 		array.push( parameters.morphTargetsCount );
 		array.push( parameters.morphAttributeCount );
+		array.push( parameters.morphUvsCount ); // @DDD@
 		array.push( parameters.numSunLights );
 		array.push( parameters.numDirLights );
 		array.push( parameters.numPointLights );

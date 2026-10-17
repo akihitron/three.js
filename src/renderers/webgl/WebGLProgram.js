@@ -583,6 +583,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			( parameters.morphColors ) ? '#define USE_MORPHCOLORS' : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_TEXTURE_STRIDE ' + parameters.morphTextureStride : '',
 			( parameters.morphTargetsCount > 0 ) ? '#define MORPHTARGETS_COUNT ' + parameters.morphTargetsCount : '',
+			( parameters.morphUvsCount > 0 ) ? '#define USE_MORPHUVS' : '', // @DDD@ PMX uv morphs
+			( parameters.morphUvsCount > 0 ) ? '#define MORPHUVS_COUNT ' + parameters.morphUvsCount : '', // @DDD@
 			parameters.doubleSided ? '#define DOUBLE_SIDED' : '',
 			parameters.flipSided ? '#define FLIP_SIDED' : '',
 

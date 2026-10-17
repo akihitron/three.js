@@ -1,4 +1,4 @@
-import { FloatType } from '../../constants.js';
+import { FloatType, RGFormat } from '../../constants.js';
 import { DataArrayTexture } from '../../textures/DataArrayTexture.js';
 import { Vector4 } from '../../math/Vector4.js';
 import { Vector2 } from '../../math/Vector2.js';
@@ -7,12 +7,18 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 
 	const morphTextures = new WeakMap();
 	const objectMorphTemps = new WeakMap(); // @DDD@
+	const morphUvTextures = new WeakMap(); // @DDD@ PMX uv morphs, per geometry
 	const morph = new Vector4();
 
 	function update( object, geometry, material, program ) { // @DDD@
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		let tmp_influences = null;
+		// PMX uv morphs (see MMDLoader buildUvMorphs): one layer per raw morph
+		// whose uvMask is set, weighted from the same per-morph result.
+		const morphUvs = geometry.morphUvs;
+		const uvMask = morphUvs !== undefined ? geometry.uvInfluenceMasks : undefined;
+		let uv_influences = null;
 		if ( object.morphTargetInfluences_backup && object.morphTargetInfluences_cache ) {
 
 			const morphTargetInfluences = object.morphTargetInfluences;
@@ -26,9 +32,24 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 			// 	if (tmp_influences == null) tmp_influences = new Float32Array(geometry.morphAttributes.position.length);
 			// 	objectMorphTemps.set(object, {tmp_influences});
 			// }
-			tmp_influences = objectMorphTemps.get( object )?.tmp_influences;
-			if ( tmp_influences == null ) tmp_influences = new Float32Array( geometry.morphAttributes.position.length );
-			objectMorphTemps.set( object, { tmp_influences } );
+			// Kept per object and reused; remade only when the geometry's
+			// counts change (a model replaced in place).
+			const positionCount = geometry.morphAttributes.position !== undefined ? geometry.morphAttributes.position.length : 0;
+			const uvCount = morphUvs !== undefined ? Math.ceil( morphUvs.length / 4 ) * 4 : 0;
+			let temps = objectMorphTemps.get( object );
+			if ( temps === undefined || temps.tmp_influences.length !== positionCount || ( temps.uv_influences?.length ?? 0 ) !== uvCount ) {
+
+				temps = {
+					tmp_influences: new Float32Array( positionCount ),
+					uv_influences: uvCount > 0 ? new Float32Array( uvCount ) : null
+				};
+				objectMorphTemps.set( object, temps );
+
+			}
+
+			tmp_influences = temps.tmp_influences;
+			uv_influences = temps.uv_influences;
+			let u_index = 0;
 
 			let m_index = 0;
 			const mask = geometry.influenceMasks;
@@ -42,6 +63,9 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 					const m = mask[ i ];
 					const a = morphTargetInfluences[ i ] = r * m;
 					if ( m > 0 ) tmp_influences[ m_index ++ ] = a;
+					// `r`, not `a`: a group with only uv children has no
+					// position target, so its position mask is 0.
+					if ( uvMask !== undefined && uvMask[ i ] > 0 ) uv_influences[ u_index ++ ] = r;
 
 				}
 
@@ -62,6 +86,20 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 		} else {
 
 			tmp_influences = object.morphTargetInfluences;
+
+			if ( uvMask !== undefined ) {
+
+				// A model without DDD's morph arrays: weights straight from
+				// the influences.
+				uv_influences = new Float32Array( Math.ceil( morphUvs.length / 4 ) * 4 );
+				let u_index = 0;
+				for ( let i = 0, l = tmp_influences.length; i < l; ++ i ) {
+
+					if ( uvMask[ i ] > 0 ) uv_influences[ u_index ++ ] = tmp_influences[ i ];
+
+				}
+
+			}
 
 		}
 		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
@@ -208,7 +246,74 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 		program.getUniforms().setValue( gl, 'morphTargetsTexture', entry.texture, textures );
 		program.getUniforms().setValue( gl, 'morphTargetsTextureSize', entry.size );
 
+		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+		if ( morphUvs !== undefined && morphUvs.length > 0 ) {
+
+			const uvEntry = getMorphUvTexture( geometry, morphUvs );
+			const uniforms = program.getUniforms();
+			uniforms.setValue( gl, 'morphUvsTexture', uvEntry.texture, textures );
+			uniforms.setValue( gl, 'morphUvsTextureSize', uvEntry.size );
+			uniforms.setValue( gl, 'morphUvInfluences', uv_influences );
+
+		}
+		// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 	}
+
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	/**
+	 * The uv offsets of a geometry's uv morphs as an RG32F array texture,
+	 * one layer per morph and one texel per vertex, wrapped into rows past
+	 * the maximum texture width. Half floats would be ~5e-4 off at the
+	 * offsets models use -- two texels on a 4K atlas.
+	 */
+	function getMorphUvTexture( geometry, morphUvs ) {
+
+		let uvEntry = morphUvTextures.get( geometry );
+		if ( uvEntry !== undefined && uvEntry.count === morphUvs.length ) return uvEntry;
+		if ( uvEntry !== undefined ) uvEntry.texture.dispose();
+
+		const vertexCount = geometry.attributes.position.count;
+		let width = vertexCount;
+		let height = 1;
+
+		if ( width > capabilities.maxTextureSize ) {
+
+			height = Math.ceil( width / capabilities.maxTextureSize );
+			width = capabilities.maxTextureSize;
+
+		}
+
+		const layerSize = width * height * 2;
+		const buffer = new Float32Array( layerSize * morphUvs.length );
+		for ( let i = 0; i < morphUvs.length; i ++ ) {
+
+			buffer.set( morphUvs[ i ].array.subarray( 0, vertexCount * 2 ), layerSize * i );
+
+		}
+
+		const texture = new DataArrayTexture( buffer, width, height, morphUvs.length );
+		texture.format = RGFormat;
+		texture.type = FloatType;
+		texture.needsUpdate = true;
+
+		uvEntry = { count: morphUvs.length, texture: texture, size: new Vector2( width, height ) };
+		morphUvTextures.set( geometry, uvEntry );
+
+		function disposeUvTexture() {
+
+			texture.dispose();
+			morphUvTextures.delete( geometry );
+			geometry.removeEventListener( 'dispose', disposeUvTexture );
+
+		}
+
+		geometry.addEventListener( 'dispose', disposeUvTexture );
+
+		return uvEntry;
+
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 	function store( object /* , geometry */ ) {

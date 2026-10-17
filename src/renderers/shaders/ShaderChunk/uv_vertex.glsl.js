@@ -1,4 +1,22 @@
 export default /* glsl */`
+#ifdef USE_MORPHUVS // @DDD@ PMX uv morphs
+
+	// Every uv below is read through the uv macros (MAP_UV and the rest
+	// expand to uv), so redefining uv for the length of this chunk
+	// moves vUv and every map's uv at once. The attribute itself is read
+	// once, just here.
+	vec2 dddMorphedUv = uv;
+
+	for ( int i = 0; i < MORPHUVS_COUNT; i ++ ) {
+
+		float w = morphUvInfluences[ i >> 2 ][ i & 3 ];
+		if ( w != 0.0 ) dddMorphedUv += getMorphUv( gl_VertexID, i ) * w;
+
+	}
+
+	#define uv dddMorphedUv
+
+#endif
 #if defined( USE_UV ) || defined( USE_ANISOTROPY )
 
 	vUv = vec3( uv, 1 ).xy;
@@ -117,6 +135,11 @@ export default /* glsl */`
 #ifdef USE_THICKNESSMAP
 
 	vThicknessMapUv = ( thicknessMapTransform * vec3( THICKNESSMAP_UV, 1 ) ).xy;
+
+#endif
+#ifdef USE_MORPHUVS // @DDD@
+
+	#undef uv
 
 #endif
 `;

@@ -142,4 +142,19 @@ export default /* glsl */`
 	varying vec2 vThicknessMapUv;
 
 #endif
+#ifdef USE_MORPHUVS // @DDD@ PMX uv morphs: see WebGLMorphtargets
+
+	uniform sampler2DArray morphUvsTexture;
+	uniform ivec2 morphUvsTextureSize;
+	uniform vec4 morphUvInfluences[ ( MORPHUVS_COUNT + 3 ) / 4 ];
+
+	vec2 getMorphUv( const in int vertexIndex, const in int morphIndex ) {
+
+		int y = vertexIndex / morphUvsTextureSize.x;
+		int x = vertexIndex - y * morphUvsTextureSize.x;
+		return texelFetch( morphUvsTexture, ivec3( x, y, morphIndex ), 0 ).xy;
+
+	}
+
+#endif
 `;
