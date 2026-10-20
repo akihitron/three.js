@@ -92,6 +92,16 @@ const GTAOShader = {
 		#endif
 
 		vec3 getViewPosition( const in vec2 screenPosition, const in float depth ) {
+
+			// @DDD@ A logarithmic depth buffer holds log2( 1 + w ) / log2( far + 1 ),
+			// w being the distance along the view axis, not a projected depth:
+			// read as one, every position came out squashed, more so further off.
+			#ifdef LOG_DEPTH
+				vec4 rayPosition = cameraProjectionMatrixInverse * vec4( screenPosition * 2.0 - 1.0, 0.0, 1.0 );
+				vec3 ray = rayPosition.xyz / rayPosition.w;
+				float viewZ = 1.0 - exp2( depth * log2( cameraFar + 1.0 ) );
+				return ray * ( viewZ / ray.z );
+			#endif
 			#ifdef USE_REVERSED_DEPTH_BUFFER
 				vec4 clipSpacePosition = vec4( vec2( screenPosition ) * 2.0 - 1.0, depth, 1.0 );
 			#else
@@ -154,6 +164,15 @@ const GTAOShader = {
 			vec2 sampleUv = sampleClipPos.xy / sampleClipPos.w * 0.5 + 0.5;
 			float sampleSceneDepth = getDepth(sampleUv);
 			return vec3(sampleUv, sampleSceneDepth);
+		}
+
+		// @DDD@ A sample within a pixel of the centre reads the centre's own
+		// surface back at a slightly different depth: on a floor seen at a
+		// grazing angle that raised the horizon and darkened a flat plane.
+		// HBAO skips them the same way.
+		bool isApart(const in vec2 sampleUv) {
+			vec2 diff = (sampleUv - vUv) * resolution;
+			return dot(diff, diff) >= 1.0;
 		}
 
 		void main() {
@@ -222,7 +241,7 @@ const GTAOShader = {
 					vec3 sampleSceneUvDepth = getSceneUvAndDepth(viewPos + sampleViewOffset);
 					vec3 sampleSceneViewPos = getViewPosition(sampleSceneUvDepth.xy, sampleSceneUvDepth.z);
 					vec3 viewDelta = sampleSceneViewPos - viewPos;
-					if (abs(viewDelta.z) < thickness) {
+					if (abs(viewDelta.z) < distanceFalloffToUse && isApart(sampleSceneUvDepth.xy)) { // @DDD@ was thickness, unscaled
 						float sampleCosHorizon = dot(viewDir, normalize(viewDelta));
 						cosHorizons.x += max(0., (sampleCosHorizon - cosHorizons.x) * mix(1., 2. / float(j + 2), distanceFallOff));
 					}
@@ -230,7 +249,7 @@ const GTAOShader = {
 					sampleSceneUvDepth = getSceneUvAndDepth(viewPos - sampleViewOffset);
 					sampleSceneViewPos = getViewPosition(sampleSceneUvDepth.xy, sampleSceneUvDepth.z);
 					viewDelta = sampleSceneViewPos - viewPos;
-					if (abs(viewDelta.z) < thickness) {
+					if (abs(viewDelta.z) < distanceFalloffToUse && isApart(sampleSceneUvDepth.xy)) { // @DDD@ was thickness, unscaled
 						float sampleCosHorizon = dot(viewDir, normalize(viewDelta));
 						cosHorizons.y += max(0., (sampleCosHorizon - cosHorizons.y) * mix(1., 2. / float(j + 2), distanceFallOff));
 					}

@@ -1,6 +1,32 @@
 import {
 	Color,
+	MeshNormalMaterial,
+	NoBlending,
 } from 'three';
+
+/**
+ * @DDD@ A normal material for the AO passes that also cuts out what its
+ * source cuts out with its colour map's alpha. MeshNormalMaterial honours
+ * only alphaMap, so a leaf or hair card alpha-tested by its map stood as a
+ * solid quad in the AO normals and depth.
+ *
+ * @return {MeshNormalMaterial}
+ */
+function createNormalMaterial() {
+
+	const material = new MeshNormalMaterial();
+	material.blending = NoBlending;
+	material.onBeforeCompile = ( shader ) => {
+
+		shader.fragmentShader = shader.fragmentShader
+			.replace( '#include <uv_pars_fragment>', '#include <uv_pars_fragment>\n#include <map_pars_fragment>' )
+			.replace( '#include <alphamap_fragment>', '#include <map_fragment>\n#include <alphamap_fragment>' );
+
+	};
+
+	return material;
+
+}
 
 class MaterialReplacer {
 
@@ -281,4 +307,4 @@ class MaterialReplacer {
 
 }
 
-export { MaterialReplacer };
+export { MaterialReplacer, createNormalMaterial };

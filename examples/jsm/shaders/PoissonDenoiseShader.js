@@ -37,6 +37,7 @@ const PoissonDenoiseShader = {
 		'tNoise': { value: null },
 		'resolution': { value: new Vector2() },
 		'cameraProjectionMatrixInverse': { value: new Matrix4() },
+		'cameraFar': { value: 1. }, // @DDD@ for LOG_DEPTH
 		'lumaPhi': { value: 5. },
 		'depthPhi': { value: 5. },
 		'normalPhi': { value: 5. },
@@ -63,6 +64,7 @@ const PoissonDenoiseShader = {
 		uniform sampler2D tNoise;
 		uniform vec2 resolution;
 		uniform mat4 cameraProjectionMatrixInverse;
+		uniform float cameraFar;
 		uniform float lumaPhi;
 		uniform float depthPhi;
 		uniform float normalPhi;
@@ -87,6 +89,16 @@ const PoissonDenoiseShader = {
 		const vec3 poissonDisk[SAMPLES] = SAMPLE_VECTORS;
 
 		vec3 getViewPosition( const in vec2 screenPosition, const in float depth ) {
+
+			// @DDD@ A logarithmic depth buffer holds log2( 1 + w ) / log2( far + 1 ),
+			// w being the distance along the view axis, not a projected depth:
+			// read as one, every position came out squashed, more so further off.
+			#ifdef LOG_DEPTH
+				vec4 rayPosition = cameraProjectionMatrixInverse * vec4( screenPosition * 2.0 - 1.0, 0.0, 1.0 );
+				vec3 ray = rayPosition.xyz / rayPosition.w;
+				float viewZ = 1.0 - exp2( depth * log2( cameraFar + 1.0 ) );
+				return ray * ( viewZ / ray.z );
+			#endif
 			#ifdef USE_REVERSED_DEPTH_BUFFER
 				vec4 clipSpacePosition = vec4( vec2( screenPosition ) * 2.0 - 1.0, depth, 1.0 );
 			#else
@@ -227,7 +239,7 @@ function generateDenoiseSamples( numSamples, numRings, radiusExponent ) {
 	for ( let i = 0; i < numSamples; i ++ ) {
 
 		const angle = 2 * Math.PI * numRings * i / numSamples;
-		const radius = Math.pow( i / ( numSamples - 1 ), radiusExponent );
+		const radius = Math.pow( i / Math.max( numSamples - 1, 1 ), radiusExponent ); // @DDD@ 1 sample was 0 / 0
 		samples.push( new Vector3( Math.cos( angle ), Math.sin( angle ), radius ) );
 
 	}

@@ -25,7 +25,7 @@ import { generateMagicSquareNoise, GTAOShader, GTAODepthShader, GTAOBlendShader 
 import { generatePdSamplePointInitializer, PoissonDenoiseShader } from '../shaders/PoissonDenoiseShader.js';
 import { CopyShader } from '../shaders/CopyShader.js';
 import { SimplexNoise } from '../math/SimplexNoise.js';
-import { MaterialReplacer } from './MaterialReplacer.js';
+import { MaterialReplacer, createNormalMaterial } from './MaterialReplacer.js';
 
 
 /**
@@ -405,8 +405,7 @@ class GTAOPass extends Pass {
 
 		if ( parameters.distanceFallOff !== undefined ) {
 
-			this.gtaoMaterial.uniforms.distanceFallOff.value = parameters.distanceFallOff;
-			this.gtaoMaterial.needsUpdate = true;
+			this.gtaoMaterial.uniforms.distanceFallOff.value = parameters.distanceFallOff; // @DDD@ a uniform: no recompile
 
 		}
 
@@ -518,14 +517,7 @@ class GTAOPass extends Pass {
 			// this.restoreVisibility();
 
 			const replacer = this.materialReplacer; // @DDD@
-			replacer.replaceMaterials( this.scene, () => {
-
-				const m = new MeshNormalMaterial();
-				m.blending = NoBlending;
-
-				return m;
-
-			} );
+			replacer.replaceMaterials( this.scene, createNormalMaterial );
 			replacer.renderPass( this.scene, this.camera, renderer, this.normalRenderTarget, 0x7777ff, 1.0 );
 			replacer.restoreMaterials( this.scene );
 
@@ -533,6 +525,7 @@ class GTAOPass extends Pass {
 
 		// render AO
 
+		this._setLogDepth( [ this.gtaoMaterial, this.pdMaterial ], renderer.capabilities.logarithmicDepthBuffer && this.camera.isPerspectiveCamera ); // @DDD@
 		this.gtaoMaterial.uniforms.cameraNear.value = this.camera.near;
 		this.gtaoMaterial.uniforms.cameraFar.value = this.camera.far;
 		this.gtaoMaterial.uniforms.cameraProjectionMatrix.value.copy( this.camera.projectionMatrix );
@@ -543,6 +536,7 @@ class GTAOPass extends Pass {
 		// render poisson denoise
 
 		this.pdMaterial.uniforms.cameraProjectionMatrixInverse.value.copy( this.camera.projectionMatrixInverse );
+		this.pdMaterial.uniforms.cameraFar.value = this.camera.far; // @DDD@
 		this._renderPass( renderer, this.pdMaterial, this.pdRenderTarget, 0xffffff, 1.0 );
 
 		// output result to screen
@@ -612,6 +606,28 @@ class GTAOPass extends Pass {
 	}
 
 	// internals
+
+	/**
+	 * @DDD@ Positions are rebuilt from the depth buffer, which a logarithmic
+	 * depth buffer fills differently: the shaders need to know which it is.
+	 *
+	 * @param {Array<ShaderMaterial>} materials - The materials reading depth.
+	 * @param {boolean} on - Whether depth is logarithmic.
+	 */
+	_setLogDepth( materials, on ) {
+
+		if ( this._logDepth === on ) return;
+		this._logDepth = on;
+
+		for ( const material of materials ) {
+
+			if ( on ) material.defines.LOG_DEPTH = 1;
+			else delete material.defines.LOG_DEPTH;
+			material.needsUpdate = true;
+
+		}
+
+	}
 
 	_renderPass( renderer, passMaterial, renderTarget, clearColor, clearAlpha ) {
 
