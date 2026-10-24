@@ -73,4 +73,6 @@ float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;
 
 vec3 nonPerturbedNormal = normal;
 
+#define DDD_HAS_NORMAL // @DDD@ the G-buffer output reads the final view normal
+
 `;

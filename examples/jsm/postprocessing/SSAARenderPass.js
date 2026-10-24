@@ -255,7 +255,7 @@ class SSAARenderPass extends Pass {
 
 			if ( i === 0 ) { // @DDD@
 
-				this.copy_pass.render( renderer, this.sampleRenderTarget, effect_composer.renderTarget3 );
+				this.copy_pass.render( renderer, this._sampleRenderTarget, effect_composer.renderTarget3 );
 
 			}
 

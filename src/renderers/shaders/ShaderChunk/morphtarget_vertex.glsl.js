@@ -12,5 +12,25 @@ export default /* glsl */`
 
 	}
 
+	#ifdef DDD_GBUFFER_PREV // @DDD@
+
+		#ifdef USE_INSTANCING_MORPH
+
+			gbufPrevTransformed = transformed;
+
+		#else
+
+			gbufPrevTransformed *= prevMorphTargetBaseInfluence;
+
+			for ( int i = 0; i < MORPHTARGETS_COUNT; i ++ ) {
+
+				if ( prevMorphTargetInfluences[ i ] != 0.0 ) gbufPrevTransformed += getMorph( gl_VertexID, i, 0 ).xyz * prevMorphTargetInfluences[ i ];
+
+			}
+
+		#endif
+
+	#endif
+
 #endif
 `;

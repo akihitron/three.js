@@ -284,6 +284,18 @@ class WebGLRenderer {
 		 */
 		this.toneMappingExposure = 1.0;
 
+		/**
+		 * @DDD@ While enabled, materials drawn into a render target with at least
+		 * three attachments also write view normal + roughness (location 1) and
+		 * screen velocity + metalness (location 2). Previous-frame data comes from
+		 * `object.gbufferPrevMatrixWorld`, `camera.gbufferPrevViewMatrix`,
+		 * `camera.gbufferPrevProjectionMatrix`, `skeleton.gbufferPrevBoneTexture`
+		 * and `object.gbufferPrevMorph`.
+		 *
+		 * @type {{enabled: boolean}}
+		 */
+		this.gbuffer = { enabled: false };
+
 		// transmission
 
 		/**
@@ -350,6 +362,7 @@ class WebGLRenderer {
 		// camera matrices cache
 
 		const _projScreenMatrix = new Matrix4();
+		const _gbufferPrevModelView = new Matrix4(); // @DDD@
 
 		const _vector3 = new Vector3();
 
@@ -2376,6 +2389,7 @@ class WebGLRenderer {
 			materialProperties.vertexAlphas = parameters.vertexAlphas;
 			materialProperties.vertexTangents = parameters.vertexTangents;
 			materialProperties.toneMapping = parameters.toneMapping;
+			materialProperties.gbufferMode = parameters.gbufferMode; // @DDD@
 
 		}
 
@@ -2438,6 +2452,7 @@ class WebGLRenderer {
 
 			const materialProperties = properties.get( material );
 			const currentRenderState = renderStates.get( scene ); // @DDD@ prevent null.
+			const gbufferMode = programCache.getGBufferMode( material ); // @DDD@
 			const lights = currentRenderState.state.lights;
 
 
@@ -2564,6 +2579,10 @@ class WebGLRenderer {
 					needsProgramChange = true;
 
 				} else if ( materialProperties.morphUvsCount !== morphUvsCount ) { // @DDD@
+
+					needsProgramChange = true;
+
+				} else if ( materialProperties.gbufferMode !== gbufferMode ) { // @DDD@
 
 					needsProgramChange = true;
 
@@ -2740,6 +2759,7 @@ class WebGLRenderer {
 					if ( skeleton.boneTexture === null ) skeleton.computeBoneTexture();
 
 					p_uniforms.setValue( _gl, 'boneTexture', skeleton.boneTexture, textures );
+					if ( gbufferMode > 0 ) p_uniforms.setValue( _gl, 'prevBoneTexture', skeleton.gbufferPrevBoneTexture || skeleton.boneTexture, textures ); // @DDD@
 
 				}
 
@@ -2854,6 +2874,21 @@ class WebGLRenderer {
 			p_uniforms.setValue( _gl, 'modelViewMatrix', object.modelViewMatrix );
 			p_uniforms.setValue( _gl, 'normalMatrix', object.normalMatrix );
 			p_uniforms.setValue( _gl, 'modelMatrix', object.matrixWorld );
+
+			// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+			// Previous-frame transforms for the G-buffer velocity. They are kept
+			// by the caller on the object and camera; missing ones mean "did not
+			// move" (first frame, history reset).
+			if ( gbufferMode > 0 ) {
+
+				const prevView = camera.gbufferPrevViewMatrix || camera.matrixWorldInverse;
+				const prevWorld = object.gbufferPrevMatrixWorld || object.matrixWorld;
+				_gbufferPrevModelView.multiplyMatrices( prevView, prevWorld );
+				p_uniforms.setValue( _gl, 'prevModelViewMatrix', _gbufferPrevModelView );
+				p_uniforms.setValue( _gl, 'prevProjectionMatrix', camera.gbufferPrevProjectionMatrix || camera.projectionMatrix );
+
+			}
+			// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 			// UBOs
 

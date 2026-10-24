@@ -433,6 +433,37 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 	const customDefines = generateDefines( defines );
 
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	// G-buffer outputs (see WebGLPrograms.getGBufferMode and the
+	// DDD_GBUFFER blocks in the shader chunks). Velocity is only known when
+	// the vertex shader goes through project_vertex; other shaders (sprites,
+	// backgrounds) flag it as missing so post passes can derive camera motion.
+	// Skybox shaders (cube, backgroundCube) do use project_vertex, but pin the
+	// depth to the far plane on a box that follows the camera: reprojecting
+	// that box would turn camera translation into sky motion.
+	const gbufferMode = parameters.gbufferMode || 0;
+	const gbufferVelocity = gbufferMode > 0 && vertexShader.includes( '<project_vertex>' ) && ! vertexShader.includes( 'gl_Position.z = gl_Position.w' );
+
+	const gbufferVertex = gbufferMode > 0 ? [
+		'#define DDD_GBUFFER',
+		gbufferVelocity ? '#define DDD_GBUFFER_VELOCITY' : '',
+		'uniform mat4 prevModelViewMatrix;',
+		'uniform mat4 prevProjectionMatrix;',
+		'varying vec4 vGbufCurClip;',
+		'varying vec4 vGbufPrevClip;'
+	].filter( filterEmptyLine ).join( '\n' ) : '';
+
+	const gbufferFragment = gbufferMode > 0 ? [
+		'#define DDD_GBUFFER',
+		'#define DDD_GBUFFER_BLEND ' + gbufferMode,
+		gbufferVelocity ? '#define DDD_GBUFFER_VELOCITY' : '',
+		'varying vec4 vGbufCurClip;',
+		'varying vec4 vGbufPrevClip;',
+		'layout(location = 1) out highp vec4 gbufNormal;',
+		'layout(location = 2) out highp vec4 gbufVelocity;'
+	].filter( filterEmptyLine ).join( '\n' ) : '';
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
+
 	const program = gl.createProgram();
 
 	let prefixVertex, prefixFragment;
@@ -597,6 +628,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGARITHMIC_DEPTH_BUFFER' : '',
 			parameters.reversedDepthBuffer ? '#define USE_REVERSED_DEPTH_BUFFER' : '',
+
+			gbufferVertex, // @DDD@
 
 			'uniform mat4 modelMatrix;',
 			'uniform mat4 modelViewMatrix;',
@@ -768,6 +801,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.logarithmicDepthBuffer ? '#define USE_LOGARITHMIC_DEPTH_BUFFER' : '',
 			parameters.reversedDepthBuffer ? '#define USE_REVERSED_DEPTH_BUFFER' : '',
+
+			gbufferFragment, // @DDD@
 
 			'uniform mat4 viewMatrix;',
 			'uniform vec3 cameraPosition;',

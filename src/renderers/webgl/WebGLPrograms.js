@@ -1,4 +1,4 @@
-import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NormalBlending, SRGBTransfer, RGFormat, RG11_EAC_Format, RED_GREEN_RGTC2_Format } from '../../constants.js';
+import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NoBlending, NormalBlending, MultiplyBlending, SRGBTransfer, RGFormat, RG11_EAC_Format, RED_GREEN_RGTC2_Format, GLSL3 } from '../../constants.js';
 import { Layers } from '../../core/Layers.js';
 import { WebGLProgram } from './WebGLProgram.js';
 import { WebGLShaderCache } from './WebGLShaderCache.js';
@@ -50,6 +50,29 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		return `uv${ value }`;
 
 	}
+
+	// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
+	// G-buffer mode while renderer.gbuffer.enabled and the target has at
+	// least three attachments (color, normal, velocity). 0 = off, then how
+	// the extra outputs must be written so blending keeps them meaningful:
+	// 1 opaque, 2 normal blending (alpha weighted), 3 other blending
+	// (write 0 to keep the surface below), 4 multiply (write 1).
+	function getGBufferMode( material ) {
+
+		if ( renderer.gbuffer === undefined || renderer.gbuffer.enabled !== true ) return 0;
+
+		const target = renderer.getRenderTarget();
+		if ( target === null || target.textures.length < 3 ) return 0;
+		if ( material.isRawShaderMaterial === true || material.glslVersion === GLSL3 ) return 0;
+		if ( material.isMeshDepthMaterial === true || material.isMeshDistanceMaterial === true ) return 0;
+
+		if ( material.transparent !== true || material.blending === NoBlending ) return 1;
+		if ( material.blending === NormalBlending ) return 2;
+		if ( material.blending === MultiplyBlending ) return 4;
+		return 3;
+
+	}
+	// @DDD@ <<<<<<<<<<<<<<<<<<<<<<
 
 	function getParameters( material, lights, shadows, scene, object, lightProbeGrids ) {
 
@@ -201,6 +224,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 			isRawShaderMaterial: material.isRawShaderMaterial === true,
 			glslVersion: material.glslVersion,
+
+			gbufferMode: getGBufferMode( material ), // @DDD@
 
 			precision: precision,
 
@@ -444,6 +469,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		array.push( parameters.precision );
 		array.push( parameters.outputColorSpace );
+		array.push( parameters.gbufferMode ); // @DDD@
 		array.push( parameters.envMapMode );
 		array.push( parameters.envMapCubeUVHeight );
 		array.push( parameters.mapUv );
@@ -681,6 +707,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 	return {
 		getParameters: getParameters,
+		getGBufferMode: getGBufferMode, // @DDD@
 		getProgramCacheKey: getProgramCacheKey,
 		getUniforms: getUniforms,
 		acquireProgram: acquireProgram,

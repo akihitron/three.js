@@ -6,6 +6,13 @@ export default /* glsl */`
 		uniform float morphTargetBaseInfluence;
 		uniform float morphTargetInfluences[ MORPHTARGETS_COUNT ];
 
+		#ifdef DDD_GBUFFER // @DDD@
+
+			uniform float prevMorphTargetBaseInfluence;
+			uniform float prevMorphTargetInfluences[ MORPHTARGETS_COUNT ];
+
+		#endif
+
 	#endif
 
 	uniform sampler2DArray morphTargetsTexture;

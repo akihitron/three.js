@@ -29,6 +29,7 @@ import displacementmap_vertex from './ShaderChunk/displacementmap_vertex.glsl.js
 import emissivemap_fragment from './ShaderChunk/emissivemap_fragment.glsl.js';
 import emissivemap_pars_fragment from './ShaderChunk/emissivemap_pars_fragment.glsl.js';
 import colorspace_fragment from './ShaderChunk/colorspace_fragment.glsl.js';
+import gbuffer_fragment from './ShaderChunk/gbuffer_fragment.glsl.js'; // @DDD@
 import colorspace_pars_fragment from './ShaderChunk/colorspace_pars_fragment.glsl.js';
 import envmap_fragment from './ShaderChunk/envmap_fragment.glsl.js';
 import envmap_common_pars_fragment from './ShaderChunk/envmap_common_pars_fragment.glsl.js';
@@ -157,6 +158,7 @@ export const ShaderChunk = {
 	emissivemap_fragment: emissivemap_fragment,
 	emissivemap_pars_fragment: emissivemap_pars_fragment,
 	colorspace_fragment: colorspace_fragment,
+	gbuffer_fragment: gbuffer_fragment, // @DDD@
 	colorspace_pars_fragment: colorspace_pars_fragment,
 	envmap_fragment: envmap_fragment,
 	envmap_common_pars_fragment: envmap_common_pars_fragment,

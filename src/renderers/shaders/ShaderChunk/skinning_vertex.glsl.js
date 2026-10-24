@@ -11,5 +11,19 @@ export default /* glsl */`
 
 	transformed = ( bindMatrixInverse * skinned ).xyz;
 
+	#ifdef DDD_GBUFFER_PREV // @DDD@
+
+		vec4 gbufPrevSkinVertex = bindMatrix * vec4( gbufPrevTransformed, 1.0 );
+
+		vec4 gbufPrevSkinned = vec4( 0.0 );
+		gbufPrevSkinned += getPrevBoneMatrix( skinIndex.x ) * gbufPrevSkinVertex * skinWeight.x;
+		gbufPrevSkinned += getPrevBoneMatrix( skinIndex.y ) * gbufPrevSkinVertex * skinWeight.y;
+		gbufPrevSkinned += getPrevBoneMatrix( skinIndex.z ) * gbufPrevSkinVertex * skinWeight.z;
+		gbufPrevSkinned += getPrevBoneMatrix( skinIndex.w ) * gbufPrevSkinVertex * skinWeight.w;
+
+		gbufPrevTransformed = ( bindMatrixInverse * gbufPrevSkinned ).xyz;
+
+	#endif
+
 #endif
 `;

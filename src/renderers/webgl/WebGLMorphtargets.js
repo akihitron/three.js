@@ -241,6 +241,23 @@ function WebGLMorphtargets( gl, capabilities, textures ) {
 			program.getUniforms().setValue( gl, 'morphTargetBaseInfluence', morphBaseInfluence );
 			if ( tmp_influences.length > 0 ) program.getUniforms().setValue( gl, 'morphTargetInfluences', tmp_influences ); // @DDD@
 
+			// @DDD@ G-buffer velocity: the influences uploaded last frame. The
+			// caller copies object.gbufferMorph into object.gbufferPrevMorph at
+			// the end of each frame.
+			const uniforms = program.getUniforms();
+			if ( uniforms.map.prevMorphTargetInfluences !== undefined && tmp_influences.length > 0 ) {
+
+				const prev = object.gbufferPrevMorph;
+				const valid = prev !== undefined && prev.influences !== null && prev.influences.length === tmp_influences.length;
+				uniforms.setValue( gl, 'prevMorphTargetBaseInfluence', valid ? prev.base : morphBaseInfluence );
+				uniforms.setValue( gl, 'prevMorphTargetInfluences', valid ? prev.influences : tmp_influences );
+
+				if ( object.gbufferMorph === undefined ) object.gbufferMorph = { influences: null, base: 1 };
+				object.gbufferMorph.influences = tmp_influences;
+				object.gbufferMorph.base = morphBaseInfluence;
+
+			}
+
 		}
 
 		program.getUniforms().setValue( gl, 'morphTargetsTexture', entry.texture, textures );
