@@ -1,7 +1,9 @@
 import { Vector3 } from '../../math/Vector3.js';
+import { Matrix4 } from '../../math/Matrix4.js';
 import { Group } from '../../objects/Group.js';
 
 const _moveEvent = { type: 'move' };
+const _worldScaleMatrix = /*@__PURE__*/ new Matrix4(); // @DDD@
 
 /**
  * Class for representing a XR controller with its
@@ -219,9 +221,14 @@ class WebXRController {
 	 * @param {XRInputSource} inputSource - The input source.
 	 * @param {XRFrame} frame - The XR frame.
 	 * @param {XRReferenceSpace} referenceSpace - The reference space.
+	 * @param {number} [worldScale=1] - @DDD@ Scene units per metre: each pose
+	 * is scaled by it about the reference space origin, the controller's models
+	 * with it, as WebXRManager.setWorldScale() does for the eyes.
 	 * @return {WebXRController} A reference to this instance.
 	 */
-	update( inputSource, frame, referenceSpace ) {
+	update( inputSource, frame, referenceSpace, worldScale = 1 ) {
+
+		_worldScaleMatrix.makeScale( worldScale, worldScale, worldScale ); // @DDD@
 
 		let inputPose = null;
 		let gripPose = null;
@@ -248,9 +255,10 @@ class WebXRController {
 					if ( jointPose !== null ) {
 
 						joint.matrix.fromArray( jointPose.transform.matrix );
+						joint.matrix.premultiply( _worldScaleMatrix ); // @DDD@
 						joint.matrix.decompose( joint.position, joint.rotation, joint.scale );
 						joint.matrixWorldNeedsUpdate = true;
-						joint.jointRadius = jointPose.radius;
+						joint.jointRadius = jointPose.radius * worldScale; // @DDD@
 
 					}
 
@@ -263,7 +271,7 @@ class WebXRController {
 				// Check pinchz
 				const indexTip = hand.joints[ 'index-finger-tip' ];
 				const thumbTip = hand.joints[ 'thumb-tip' ];
-				const distance = indexTip.position.distanceTo( thumbTip.position );
+				const distance = indexTip.position.distanceTo( thumbTip.position ) / worldScale; // @DDD@ in metres
 
 				const distanceToPinch = 0.02;
 				const threshold = 0.005;
@@ -297,13 +305,14 @@ class WebXRController {
 					if ( gripPose !== null ) {
 
 						grip.matrix.fromArray( gripPose.transform.matrix );
+						grip.matrix.premultiply( _worldScaleMatrix ); // @DDD@
 						grip.matrix.decompose( grip.position, grip.rotation, grip.scale );
 						grip.matrixWorldNeedsUpdate = true;
 
 						if ( gripPose.linearVelocity ) {
 
 							grip.hasLinearVelocity = true;
-							grip.linearVelocity.copy( gripPose.linearVelocity );
+							grip.linearVelocity.copy( gripPose.linearVelocity ).multiplyScalar( worldScale ); // @DDD@
 
 						} else {
 
@@ -353,13 +362,14 @@ class WebXRController {
 				if ( inputPose !== null ) {
 
 					targetRay.matrix.fromArray( inputPose.transform.matrix );
+					targetRay.matrix.premultiply( _worldScaleMatrix ); // @DDD@
 					targetRay.matrix.decompose( targetRay.position, targetRay.rotation, targetRay.scale );
 					targetRay.matrixWorldNeedsUpdate = true;
 
 					if ( inputPose.linearVelocity ) {
 
 						targetRay.hasLinearVelocity = true;
-						targetRay.linearVelocity.copy( inputPose.linearVelocity );
+						targetRay.linearVelocity.copy( inputPose.linearVelocity ).multiplyScalar( worldScale ); // @DDD@
 
 					} else {
 

@@ -84,6 +84,9 @@ class WebXRManager extends EventDispatcher {
 		let _currentDepthNear = null;
 		let _currentDepthFar = null;
 
+		// @DDD@ Scene units per metre: see setWorldScale().
+		let worldScale = 1;
+
 		//
 
 		/**
@@ -339,6 +342,41 @@ class WebXRManager extends EventDispatcher {
 		this.setReferenceSpace = function ( space ) {
 
 			customReferenceSpace = space;
+
+		};
+
+		/**
+		 * @DDD@ Sets how many scene units a metre is. XR poses come in metres; a
+		 * scene built in other units (MMD: 1 unit = 10 cm, so 10) would otherwise
+		 * be seen ten times too large. Positions in every pose the manager hands
+		 * out, the eyes, the controllers' target ray and grip and the hand
+		 * joints, are scaled by it about the reference space origin, so head
+		 * motion, eye distance and hands come out in scene units, whatever the
+		 * camera's parent is. The controllers are scaled as a whole too, so the
+		 * models under them keep their size in metres.
+		 *
+		 * The eyes stay rigid: a scale in the view matrix would put view space,
+		 * where lights, fog and shadow cascades are evaluated, in metres while
+		 * the scene is not. Their projections take the scale instead (near and
+		 * far in scene units), and the camera's near and far, in scene units,
+		 * go to the session divided by it.
+		 *
+		 * @param {number} scale - Scene units per metre.
+		 */
+		this.setWorldScale = function ( scale ) {
+
+			worldScale = scale > 0 ? scale : 1;
+
+		};
+
+		/**
+		 * @DDD@ Returns the scene units per metre set by setWorldScale().
+		 *
+		 * @return {number} Scene units per metre.
+		 */
+		this.getWorldScale = function () {
+
+			return worldScale;
 
 		};
 
@@ -749,25 +787,30 @@ class WebXRManager extends EventDispatcher {
 
 			if ( depthSensing.texture !== null ) {
 
-				if ( depthSensing.depthNear > 0 ) depthNear = depthSensing.depthNear;
-				if ( depthSensing.depthFar > 0 ) depthFar = depthSensing.depthFar;
+				// @DDD@ in metres
+				if ( depthSensing.depthNear > 0 ) depthNear = depthSensing.depthNear * worldScale;
+				if ( depthSensing.depthFar > 0 ) depthFar = depthSensing.depthFar * worldScale;
 
 			}
 
 			cameraXR.near = cameraR.near = cameraL.near = depthNear;
 			cameraXR.far = cameraR.far = cameraL.far = depthFar;
 
-			if ( _currentDepthNear !== cameraXR.near || _currentDepthFar !== cameraXR.far ) {
+			// @DDD@ The session's depth range is in metres, the cameras' in scene units.
+			const sessionDepthNear = depthNear / worldScale;
+			const sessionDepthFar = depthFar / worldScale;
+
+			if ( _currentDepthNear !== sessionDepthNear || _currentDepthFar !== sessionDepthFar ) {
 
 				// Note that the new renderState won't apply until the next frame. See #18320
 
 				session.updateRenderState( {
-					depthNear: cameraXR.near,
-					depthFar: cameraXR.far
+					depthNear: sessionDepthNear,
+					depthFar: sessionDepthFar
 				} );
 
-				_currentDepthNear = cameraXR.near;
-				_currentDepthFar = cameraXR.far;
+				_currentDepthNear = sessionDepthNear;
+				_currentDepthFar = sessionDepthFar;
 
 			}
 
@@ -1011,8 +1054,21 @@ class WebXRManager extends EventDispatcher {
 					}
 
 					camera.matrix.fromArray( view.transform.matrix );
-					camera.matrix.decompose( camera.position, camera.quaternion, camera.scale );
 					camera.projectionMatrix.fromArray( view.projectionMatrix );
+
+					if ( worldScale !== 1 ) {
+
+						// @DDD@ see setWorldScale(). Scaling the eye position, and the
+						// projection's last column, is S * pose for the view and
+						// s * P * S^-1 for the projection: the same clip space.
+						const m = camera.matrix.elements;
+						const p = camera.projectionMatrix.elements;
+						m[ 12 ] *= worldScale; m[ 13 ] *= worldScale; m[ 14 ] *= worldScale;
+						p[ 12 ] *= worldScale; p[ 13 ] *= worldScale; p[ 14 ] *= worldScale; p[ 15 ] *= worldScale;
+
+					}
+
+					camera.matrix.decompose( camera.position, camera.quaternion, camera.scale );
 					camera.projectionMatrixInverse.copy( camera.projectionMatrix ).invert();
 					camera.viewport.set( viewport.x, viewport.y, viewport.width, viewport.height );
 
@@ -1096,7 +1152,7 @@ class WebXRManager extends EventDispatcher {
 
 				if ( inputSource !== null && controller !== undefined ) {
 
-					controller.update( inputSource, frame, customReferenceSpace || referenceSpace );
+					controller.update( inputSource, frame, customReferenceSpace || referenceSpace, worldScale ); // @DDD@ worldScale
 
 				}
 
