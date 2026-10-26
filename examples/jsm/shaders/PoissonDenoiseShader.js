@@ -150,7 +150,11 @@ const PoissonDenoiseShader = {
 
 		vec3 getViewNormal(const vec2 uv) {
 		#if NORMAL_VECTOR_TYPE == 2
-			return normalize(textureLod(tNormal, uv, 0.).rgb);
+			// @DDD@ An empty normal (an unlit or additive surface in a shared
+			// G-buffer, which still wrote depth) would normalize to NaN and
+			// blacken the area through the denoiser: rebuild it from depth.
+			vec3 n = textureLod(tNormal, uv, 0.).rgb;
+			return dot(n, n) > 1e-6 ? normalize(n) : computeNormalFromDepth(uv);
 		#elif NORMAL_VECTOR_TYPE == 1
 			return unpackRGBToNormal(textureLod(tNormal, uv, 0.).rgb);
 		#else
