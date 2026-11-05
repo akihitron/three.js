@@ -71,6 +71,8 @@ class AudioLoader extends Loader {
 		}
 
 		const loader = new FileLoader( this.manager );
+		loader.setPriority( this.priority );
+		loader.setCache( this.cache );
 		loader.setResponseType( 'arraybuffer' );
 		loader.setPath( this.path );
 		loader.setRequestHeader( this.requestHeader );

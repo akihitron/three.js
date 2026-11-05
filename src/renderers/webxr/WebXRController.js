@@ -256,7 +256,7 @@ class WebXRController {
 
 						joint.matrix.fromArray( jointPose.transform.matrix );
 						joint.matrix.premultiply( _worldScaleMatrix ); // @DDD@
-						joint.matrix.decompose( joint.position, joint.rotation, joint.scale );
+						joint.matrix.decompose( joint.position, joint.quaternion, joint.scale );
 						joint.matrixWorldNeedsUpdate = true;
 						joint.jointRadius = jointPose.radius * worldScale; // @DDD@
 
@@ -306,7 +306,7 @@ class WebXRController {
 
 						grip.matrix.fromArray( gripPose.transform.matrix );
 						grip.matrix.premultiply( _worldScaleMatrix ); // @DDD@
-						grip.matrix.decompose( grip.position, grip.rotation, grip.scale );
+						grip.matrix.decompose( grip.position, grip.quaternion, grip.scale );
 						grip.matrixWorldNeedsUpdate = true;
 
 						if ( gripPose.linearVelocity ) {
@@ -363,7 +363,7 @@ class WebXRController {
 
 					targetRay.matrix.fromArray( inputPose.transform.matrix );
 					targetRay.matrix.premultiply( _worldScaleMatrix ); // @DDD@
-					targetRay.matrix.decompose( targetRay.position, targetRay.rotation, targetRay.scale );
+					targetRay.matrix.decompose( targetRay.position, targetRay.quaternion, targetRay.scale );
 					targetRay.matrixWorldNeedsUpdate = true;
 
 					if ( inputPose.linearVelocity ) {

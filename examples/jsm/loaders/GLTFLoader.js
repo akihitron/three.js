@@ -85,6 +85,7 @@ import { clone } from '../utils/SkeletonUtils.js';
  * - KHR_lights_punctual
  * - KHR_materials_anisotropy
  * - KHR_materials_clearcoat
+ * - KHR_materials_diffuse_roughness
  * - KHR_materials_dispersion
  * - KHR_materials_emissive_strength
  * - KHR_materials_ior
@@ -145,6 +146,12 @@ class GLTFLoader extends Loader {
 		this.register( function ( parser ) {
 
 			return new GLTFMaterialsClearcoatExtension( parser );
+
+		} );
+
+		this.register( function ( parser ) {
+
+			return new GLTFMaterialsDiffuseRoughnessExtension( parser );
 
 		} );
 
@@ -310,6 +317,8 @@ class GLTFLoader extends Loader {
 		};
 
 		const loader = new FileLoader( this.manager );
+		loader.setPriority( this.priority );
+		loader.setCache( this.cache );
 
 		loader.setPath( this.path );
 		loader.setResponseType( 'arraybuffer' );
@@ -479,6 +488,9 @@ class GLTFLoader extends Loader {
 
 			path: path || this.resourcePath || '',
 			crossOrigin: this.crossOrigin,
+			priority: this.priority,
+			cache: this.cache,
+			withCredentials: this.withCredentials,
 			requestHeader: this.requestHeader,
 			manager: this.manager,
 			ktx2Loader: this.ktx2Loader,
@@ -630,6 +642,7 @@ const EXTENSIONS = {
 	KHR_DRACO_MESH_COMPRESSION: 'KHR_draco_mesh_compression',
 	KHR_LIGHTS_PUNCTUAL: 'KHR_lights_punctual',
 	KHR_MATERIALS_CLEARCOAT: 'KHR_materials_clearcoat',
+	KHR_MATERIALS_DIFFUSE_ROUGHNESS: 'KHR_materials_diffuse_roughness',
 	KHR_MATERIALS_DISPERSION: 'KHR_materials_dispersion',
 	KHR_MATERIALS_IOR: 'KHR_materials_ior',
 	KHR_MATERIALS_SHEEN: 'KHR_materials_sheen',
@@ -955,6 +968,52 @@ class GLTFMaterialsClearcoatExtension {
 }
 
 /**
+ * Diffuse Roughness Materials Extension
+ *
+ * Specification: https://github.com/MiiBond/glTF/tree/mbond/EXT_materials_diffuse_roughness/extensions/2.0/Khronos/KHR_materials_diffuse_roughness
+ *
+ * @private
+ */
+class GLTFMaterialsDiffuseRoughnessExtension {
+
+	constructor( parser ) {
+
+		this.parser = parser;
+		this.name = EXTENSIONS.KHR_MATERIALS_DIFFUSE_ROUGHNESS;
+
+	}
+
+	getMaterialType( materialIndex ) {
+
+		const extension = getMaterialExtension( this.parser, materialIndex, this.name );
+
+		return extension !== null ? MeshPhysicalMaterial : null;
+
+	}
+
+	extendMaterialParams( materialIndex, materialParams ) {
+
+		const extension = getMaterialExtension( this.parser, materialIndex, this.name );
+
+		if ( extension === null ) return Promise.resolve();
+
+		const pending = [];
+
+		materialParams.diffuseRoughness = extension.diffuseRoughnessFactor !== undefined ? extension.diffuseRoughnessFactor : 0;
+
+		if ( extension.diffuseRoughnessTexture !== undefined ) {
+
+			pending.push( this.parser.assignTexture( materialParams, 'diffuseRoughnessMap', extension.diffuseRoughnessTexture ) );
+
+		}
+
+		return Promise.all( pending );
+
+	}
+
+}
+
+/**
  * Materials dispersion Extension
  *
  * Specification: https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_dispersion
@@ -1042,21 +1101,15 @@ class GLTFMaterialsIridescenceExtension {
 
 		}
 
-		if ( materialParams.iridescenceThicknessRange === undefined ) {
-
-			materialParams.iridescenceThicknessRange = [ 100, 400 ];
-
-		}
-
 		if ( extension.iridescenceThicknessMinimum !== undefined ) {
 
-			materialParams.iridescenceThicknessRange[ 0 ] = extension.iridescenceThicknessMinimum;
+			materialParams.iridescenceThicknessMinimum = extension.iridescenceThicknessMinimum;
 
 		}
 
 		if ( extension.iridescenceThicknessMaximum !== undefined ) {
 
-			materialParams.iridescenceThicknessRange[ 1 ] = extension.iridescenceThicknessMaximum;
+			materialParams.iridescenceThicknessMaximum = extension.iridescenceThicknessMaximum;
 
 		}
 
@@ -2653,20 +2706,27 @@ class GLTFParser {
 		if ( typeof createImageBitmap === 'undefined' || ( isSafari && safariVersion < 17 ) || ( isFirefox && firefoxVersion < 98 ) ) {
 
 			this.textureLoader = new TextureLoader( this.options.manager );
+			this.textureLoader.setPriority( this.options.priority );
+			this.textureLoader.setCache( this.options.cache );
 
 		} else {
 
 			this.textureLoader = new ImageBitmapLoader( this.options.manager );
+			this.textureLoader.setPriority( this.options.priority );
+			this.textureLoader.setCache( this.options.cache );
 
 		}
 
 		this.textureLoader.setCrossOrigin( this.options.crossOrigin );
+		this.textureLoader.setWithCredentials( this.options.withCredentials );
 		this.textureLoader.setRequestHeader( this.options.requestHeader );
 
 		this.fileLoader = new FileLoader( this.options.manager );
+		this.fileLoader.setPriority( this.options.priority );
+		this.fileLoader.setCache( this.options.cache );
 		this.fileLoader.setResponseType( 'arraybuffer' );
 
-		if ( this.options.crossOrigin === 'use-credentials' ) {
+		if ( this.options.withCredentials || this.options.crossOrigin === 'use-credentials' ) {
 
 			this.fileLoader.setWithCredentials( true );
 
@@ -3402,97 +3462,118 @@ class GLTFParser {
 
 		let sourceURI = sourceDef.uri || '';
 		let isObjectURL = false;
+		let pending;
 
-		if ( sourceDef.bufferView !== undefined ) {
+		if ( loader.isKTX2Loader === true && sourceDef.bufferView !== undefined ) {
 
-			// Load binary image data from bufferView, if provided.
+			// KTX2Loader parses the binary image data from bufferView directly (see #35193).
 
-			sourceURI = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
+			pending = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
 
-				isObjectURL = true;
-				const blob = new Blob( [ bufferView ], { type: sourceDef.mimeType } );
-				sourceURI = URL.createObjectURL( blob );
-				return sourceURI;
+				return new Promise( function ( resolve, reject ) {
+
+					loader.parse( bufferView, resolve, reject );
+
+				} );
 
 			} );
 
-		} else if ( sourceDef.uri === undefined ) {
+		} else {
 
-			throw new Error( 'THREE.GLTFLoader: Image ' + sourceIndex + ' is missing URI and bufferView' );
+			if ( sourceDef.bufferView !== undefined ) {
+
+				// Load binary image data from bufferView, if provided.
+
+				sourceURI = parser.getDependency( 'bufferView', sourceDef.bufferView ).then( function ( bufferView ) {
+
+					isObjectURL = true;
+					const blob = new Blob( [ bufferView ], { type: sourceDef.mimeType } );
+					sourceURI = URL.createObjectURL( blob );
+					return sourceURI;
+
+				} );
+
+			} else if ( sourceDef.uri === undefined ) {
+
+				throw new Error( 'THREE.GLTFLoader: Image ' + sourceIndex + ' is missing URI and bufferView' );
+
+			}
+
+			pending = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
+
+				return new Promise( async function ( resolve, reject ) { // @DDD@
+
+					let onLoad = resolve;
+
+					if ( loader.isImageBitmapLoader === true ) {
+
+						onLoad = function ( imageBitmap ) {
+
+							const texture = new Texture( imageBitmap );
+							texture.needsUpdate = true;
+
+							resolve( texture );
+
+						};
+
+					}
+
+					let use_ktx2 = false;
+					sourceURI = await sourceURI;
+					if ( true ) { // @DDD@
+
+						if ( window.is_data_url( sourceURI ) == false ) {
+
+							if ( sourceURI.indexOf( 'file:///' ) >= 0 ) {
+
+								sourceURI = decodeURI( sourceURI ).slice( 'file:///'.length );
+
+							}
+
+							const C = window.C;
+							const d_path = C.DPath( sourceURI );
+							const ktx2_path = C.DPathJoin( d_path.dirname, d_path.name + '.ktx2' );
+							const abs_path = C.DPath( ktx2_path ).is_absolute_path ? ktx2_path : C.DPathJoin( options.path, ktx2_path );
+							if ( await window.cross_file_system.exists( abs_path ) ) {
+
+								sourceURI = abs_path;
+								use_ktx2 = true;
+
+							}
+
+						}
+
+					}
+
+					if ( use_ktx2 && scope.options.ktx2Loader ) { // @DDD@
+
+						if ( window.debug ) console.log( sourceURI );
+						scope.options.ktx2Loader.load( sourceURI, resolve, undefined, reject );
+
+					} else {
+
+						if ( window.debug ) console.log( sourceURI );
+						let t_path = LoaderUtils.resolveURL( sourceURI, options.path );
+						if ( window.C.DPath( sourceURI ).is_absolute_path ) { // @DDD@
+
+							t_path = sourceURI;
+
+						}
+
+						sourceURI = t_path;
+						loader.load( t_path, onLoad, undefined, reject );
+
+					}
+
+					// loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
+
+				} );
+
+			} );
 
 		}
 
-		const promise = Promise.resolve( sourceURI ).then( function ( sourceURI ) {
-
-			return new Promise( async function ( resolve, reject ) { // @DDD@
-
-				let onLoad = resolve;
-
-				if ( loader.isImageBitmapLoader === true ) {
-
-					onLoad = function ( imageBitmap ) {
-
-						const texture = new Texture( imageBitmap );
-						texture.needsUpdate = true;
-
-						resolve( texture );
-
-					};
-
-				}
-
-				let use_ktx2 = false;
-				sourceURI = await sourceURI;
-				if ( true ) { // @DDD@
-
-					if ( window.is_data_url( sourceURI ) == false ) {
-
-						if ( sourceURI.indexOf( 'file:///' ) >= 0 ) {
-
-							sourceURI = decodeURI( sourceURI ).slice( 'file:///'.length );
-
-						}
-
-						const C = window.C;
-						const d_path = C.DPath( sourceURI );
-						const ktx2_path = C.DPathJoin( d_path.dirname, d_path.name + '.ktx2' );
-						const abs_path = C.DPath( ktx2_path ).is_absolute_path ? ktx2_path : C.DPathJoin( options.path, ktx2_path );
-						if ( await window.cross_file_system.exists( abs_path ) ) {
-
-							sourceURI = abs_path;
-							use_ktx2 = true;
-
-						}
-
-					}
-
-				}
-
-				if ( use_ktx2 && scope.options.ktx2Loader ) { // @DDD@
-
-					if ( window.debug ) console.log( sourceURI );
-					scope.options.ktx2Loader.load( sourceURI, resolve, undefined, reject );
-
-				} else {
-
-					if ( window.debug ) console.log( sourceURI );
-					let t_path = LoaderUtils.resolveURL( sourceURI, options.path );
-					if ( window.C.DPath( sourceURI ).is_absolute_path ) { // @DDD@
-
-						t_path = sourceURI;
-
-					}
-
-					sourceURI = t_path;
-					loader.load( t_path, onLoad, undefined, reject );
-
-				}
-
-				// loader.load( LoaderUtils.resolveURL( sourceURI, options.path ), onLoad, undefined, reject );
-
-			} );
-
-		} ).then( function ( _texture ) {
+		const promise = pending.then( function ( _texture ) {
 
 			// Clean up resources and configure Texture.
 
@@ -3506,7 +3587,7 @@ class GLTFParser {
 
 			if ( _texture instanceof ImageBitmap ) _texture = new THREE.CanvasTexture( _texture ); // @DDD@
 
-			if ( window.is_data_url( sourceURI ) == false ) {
+			if ( typeof sourceURI === 'string' && window.is_data_url( sourceURI ) == false ) { // @DDD@ no URI when parsed from a bufferView
 
 				_texture.__tmp_uri__ = decodeURIComponent( sourceURI ); // @DDD@
 

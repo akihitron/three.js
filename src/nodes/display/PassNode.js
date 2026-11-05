@@ -1,11 +1,12 @@
-import TempNode from '../core/TempNode.js';
+import Node from '../core/Node.js';
 import { default as TextureNode/*, texture*/ } from '../accessors/TextureNode.js';
 import { NodeUpdateType } from '../core/constants.js';
 import { context } from '../tsl/TSLBase.js';
+import { mergeContext } from '../core/NodeUtils.js';
 import { uniform } from '../core/UniformNode.js';
 import { viewZToOrthographicDepth, perspectiveDepthToViewZ } from './ViewportDepthNode.js';
 
-import { HalfFloatType, FloatType } from '../../constants.js';
+import { HalfFloatType, FloatType, DepthStencilFormat, UnsignedInt248Type } from '../../constants.js';
 import { Vector2 } from '../../math/Vector2.js';
 import { Vector4 } from '../../math/Vector4.js';
 import { DepthTexture } from '../../textures/DepthTexture.js';
@@ -54,6 +55,12 @@ class PassTextureNode extends TextureNode {
 		this.isPassTextureNode = true;
 
 		this.setUpdateMatrix( false );
+
+	}
+
+	isCacheable( /*builder*/ ) {
+
+		return true;
 
 	}
 
@@ -177,9 +184,9 @@ class PassMultipleTextureNode extends PassTextureNode {
  * postProcessing.outputNode = scenePass;
  * ```
  *
- * @augments TempNode
+ * @augments Node
  */
-class PassNode extends TempNode {
+class PassNode extends Node {
 
 	static get type() {
 
@@ -250,7 +257,23 @@ class PassNode extends TempNode {
 
 		if ( this.scope === PassNode.DEPTH || options.depthBuffer !== false ) {
 
-			depthTexture = options.depthTexture || new DepthTexture();
+			if ( options.depthTexture !== undefined ) {
+
+				depthTexture = options.depthTexture;
+
+			} else {
+
+				depthTexture = new DepthTexture();
+
+				if ( renderTarget.stencilBuffer === true ) {
+
+					depthTexture.format = DepthStencilFormat;
+					depthTexture.type = UnsignedInt248Type;
+
+				}
+
+			}
+
 			depthTexture.isRenderTargetTexture = true;
 			//depthTexture.type = FloatType;
 			depthTexture.name = 'depth';
@@ -277,7 +300,7 @@ class PassNode extends TempNode {
 		 * Whether the pass is transparent.
 		 *
 		 * @type {boolean}
-		 * @default false
+		 * @default true
 		 */
 		this.transparent = true;
 
@@ -484,6 +507,12 @@ class PassNode extends TempNode {
 		 * @default true
 		 */
 		this.global = true;
+
+	}
+
+	isCacheable( /*builder*/ ) {
+
+		return false;
 
 	}
 
@@ -785,13 +814,25 @@ class PassNode extends TempNode {
 		const currentRenderTarget = renderer.getRenderTarget();
 		const currentMRT = renderer.getMRT();
 
+		const currentContextNode = renderer.contextNode;
+
+		// the render target is configured like in setup() and updateBefore(), so the pipelines match the ones of the render
+
+		this.renderTarget.samples = this.options.samples === undefined ? renderer.samples : this.options.samples;
+
+		renderer.getDrawingBufferSize( _size );
+		this.setSize( _size.width, _size.height );
+
 		renderer.setRenderTarget( this.renderTarget );
 		renderer.setMRT( this._mrt );
+
+		if ( this.contextNode !== null ) renderer.contextNode = this._getContextNode( renderer );
 
 		await renderer.compileAsync( this.scene, this.camera );
 
 		renderer.setRenderTarget( currentRenderTarget );
 		renderer.setMRT( currentMRT );
+		renderer.contextNode = currentContextNode;
 
 	}
 
@@ -889,16 +930,7 @@ class PassNode extends TempNode {
 
 		if ( this.contextNode !== null ) {
 
-			if ( this._contextNodeCache === null || this._contextNodeCache.version !== this.version ) {
-
-				this._contextNodeCache = {
-					version: this.version,
-					context: context( { ...renderer.contextNode.getFlowContextData(), ...this.contextNode.getFlowContextData() } )
-				};
-
-			}
-
-			renderer.contextNode = this._contextNodeCache.context;
+			renderer.contextNode = this._getContextNode( renderer );
 
 		}
 
@@ -923,6 +955,33 @@ class PassNode extends TempNode {
 		renderer.lighting = currentLighting;
 
 		camera.layers.mask = currentMask;
+
+	}
+
+	/**
+	 * Returns the context node of the pass merged with the context node of the renderer.
+	 *
+	 * @private
+	 * @param {Renderer} renderer - The renderer.
+	 * @return {ContextNode} The context node.
+	 */
+	_getContextNode( renderer ) {
+
+		const rendererContextNode = renderer.contextNode;
+		const cache = this._contextNodeCache;
+
+		if ( cache === null || cache.version !== this.version || cache.rendererContextNode !== rendererContextNode || cache.rendererVersion !== rendererContextNode.version ) {
+
+			this._contextNodeCache = {
+				version: this.version,
+				rendererContextNode,
+				rendererVersion: rendererContextNode.version,
+				context: context( mergeContext( rendererContextNode.getFlowContextData(), this.contextNode.getFlowContextData() ) )
+			};
+
+		}
+
+		return this._contextNodeCache.context;
 
 	}
 

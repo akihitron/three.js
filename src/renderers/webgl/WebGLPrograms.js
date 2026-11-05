@@ -1,4 +1,4 @@
-import { BackSide, DoubleSide, CubeUVReflectionMapping, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NoBlending, NormalBlending, MultiplyBlending, SRGBTransfer, RGFormat, RG11_EAC_Format, RED_GREEN_RGTC2_Format, GLSL3 } from '../../constants.js';
+import { BackSide, DoubleSide, ObjectSpaceNormalMap, TangentSpaceNormalMap, NoToneMapping, NoBlending, NormalBlending, MultiplyBlending, SRGBTransfer, RGFormat, RG11_EAC_Format, RED_GREEN_RGTC2_Format, GLSL3 } from '../../constants.js';
 import { Layers } from '../../core/Layers.js';
 import { WebGLProgram } from './WebGLProgram.js';
 import { WebGLShaderCache } from './WebGLShaderCache.js';
@@ -20,8 +20,6 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 	const _activeChannels = new Set();
 	const programs = [];
 	const programsMap = new Map();
-
-	let precision = capabilities.precision;
 
 	const shaderIDs = {
 		MeshDepthMaterial: 'depth',
@@ -82,12 +80,13 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		const usePMREM = material.isMeshStandardMaterial || ( material.isMeshLambertMaterial && ! material.envMap ) || ( material.isMeshPhongMaterial && ! material.envMap );
 		const envMap = environments.get( material.envMap || environment, usePMREM );
-		const envMapCubeUVHeight = ( !! envMap ) && ( envMap.mapping === CubeUVReflectionMapping ) ? envMap.image.height : null;
 
 		const shaderID = shaderIDs[ material.type ];
 
 		// heuristics to create shader parameters according to lights in the scene
 		// (not to blow over maxLights budget)
+
+		let precision = capabilities.precision;
 
 		if ( material.precision !== null ) {
 
@@ -150,6 +149,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		const HAS_MAP = !! material.map;
 		const HAS_MATCAP = !! material.matcap;
 		const HAS_ENVMAP = !! envMap;
+		const HAS_PMREM = HAS_ENVMAP && envMap.isPMREMTexture === true;
 		const HAS_AOMAP = !! material.aoMap;
 		const HAS_LIGHTMAP = !! material.lightMap;
 		const HAS_BUMPMAP = !! material.bumpMap && material.wireframe === false;
@@ -162,6 +162,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		const HAS_ANISOTROPY = material.anisotropy > 0;
 		const HAS_CLEARCOAT = material.clearcoat > 0;
+		const HAS_DIFFUSE_ROUGHNESS = material.diffuseRoughness > 0;
 		const HAS_DISPERSION = material.dispersion > 0;
 		const HAS_RETROREFLECTION = material.retroreflectivity > 0;
 		const HAS_IRIDESCENCE = material.iridescence > 0;
@@ -173,6 +174,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		const HAS_CLEARCOATMAP = HAS_CLEARCOAT && !! material.clearcoatMap;
 		const HAS_CLEARCOAT_NORMALMAP = HAS_CLEARCOAT && !! material.clearcoatNormalMap;
 		const HAS_CLEARCOAT_ROUGHNESSMAP = HAS_CLEARCOAT && !! material.clearcoatRoughnessMap;
+		const HAS_DIFFUSE_ROUGHNESSMAP = HAS_DIFFUSE_ROUGHNESS && !! material.diffuseRoughnessMap;
 
 		const HAS_IRIDESCENCEMAP = HAS_IRIDESCENCE && !! material.iridescenceMap;
 		const HAS_IRIDESCENCE_THICKNESSMAP = HAS_IRIDESCENCE && !! material.iridescenceThicknessMap;
@@ -209,6 +211,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 		}
 
+		const envMapMipmaps = HAS_PMREM ? ( envMap.isCompressedCubeTexture ? envMap.image[ 0 ].mipmaps : envMap.mipmaps ) : null;
+
 		const parameters = {
 
 			shaderID: shaderID,
@@ -242,7 +246,9 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			matcap: HAS_MATCAP,
 			envMap: HAS_ENVMAP,
 			envMapMode: HAS_ENVMAP && envMap.mapping,
-			envMapCubeUVHeight: envMapCubeUVHeight,
+			envMapPMREM: HAS_PMREM,
+			envMapMaxLod: HAS_PMREM ? envMapMipmaps.length - 1 : null,
+			envMapSize: HAS_PMREM ? envMapMipmaps[ 0 ].width : null,
 			aoMap: HAS_AOMAP,
 			lightMap: HAS_LIGHTMAP,
 			bumpMap: HAS_BUMPMAP,
@@ -265,6 +271,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			clearcoatNormalMap: HAS_CLEARCOAT_NORMALMAP,
 			clearcoatRoughnessMap: HAS_CLEARCOAT_ROUGHNESSMAP,
 
+			diffuseRoughness: HAS_DIFFUSE_ROUGHNESS,
+			diffuseRoughnessMap: HAS_DIFFUSE_ROUGHNESSMAP,
 			dispersion: HAS_DISPERSION,
 			retroreflection: HAS_RETROREFLECTION,
 
@@ -312,6 +320,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			clearcoatMapUv: HAS_CLEARCOATMAP && getChannel( material.clearcoatMap.channel ),
 			clearcoatNormalMapUv: HAS_CLEARCOAT_NORMALMAP && getChannel( material.clearcoatNormalMap.channel ),
 			clearcoatRoughnessMapUv: HAS_CLEARCOAT_ROUGHNESSMAP && getChannel( material.clearcoatRoughnessMap.channel ),
+			diffuseRoughnessMapUv: HAS_DIFFUSE_ROUGHNESSMAP && getChannel( material.diffuseRoughnessMap.channel ),
 
 			iridescenceMapUv: HAS_IRIDESCENCEMAP && getChannel( material.iridescenceMap.channel ),
 			iridescenceThicknessMapUv: HAS_IRIDESCENCE_THICKNESSMAP && getChannel( material.iridescenceThicknessMap.channel ),
@@ -349,6 +358,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			),
 
 			sizeAttenuation: material.sizeAttenuation === true,
+			// @DDD@ Read live, not cached: WebGLShadowMap turns this off while it
+			// renders, or depth materials write log depth into the shadow map.
 			logarithmicDepthBuffer: capabilities.logarithmicDepthBuffer,
 			reversedDepthBuffer: reversedDepthBuffer,
 
@@ -379,7 +390,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 
 			numLightProbes: lights.numLightProbes,
 
-			numLightProbeGrids: lightProbeGrids.length,
+			numLightProbeGrids: lightProbeGrids.filter( grid => grid.texture !== null ).length,
 
 			numClippingPlanes: clipping.numPlanes,
 			numClipIntersection: clipping.numIntersection,
@@ -471,7 +482,9 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		array.push( parameters.outputColorSpace );
 		array.push( parameters.gbufferMode ); // @DDD@
 		array.push( parameters.envMapMode );
-		array.push( parameters.envMapCubeUVHeight );
+		array.push( parameters.envMapPMREM );
+		array.push( parameters.envMapMaxLod );
+		array.push( parameters.envMapSize );
 		array.push( parameters.mapUv );
 		array.push( parameters.alphaMapUv );
 		array.push( parameters.lightMapUv );
@@ -486,6 +499,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		array.push( parameters.clearcoatMapUv );
 		array.push( parameters.clearcoatNormalMapUv );
 		array.push( parameters.clearcoatRoughnessMapUv );
+		array.push( parameters.diffuseRoughnessMapUv );
 		array.push( parameters.iridescenceMapUv );
 		array.push( parameters.iridescenceThicknessMapUv );
 		array.push( parameters.sheenColorMapUv );
@@ -499,7 +513,6 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		array.push( parameters.fogExp2 );
 		array.push( parameters.sizeAttenuation );
 		array.push( parameters.morphTargetsCount );
-		array.push( parameters.morphAttributeCount );
 		array.push( parameters.morphUvsCount ); // @DDD@
 		array.push( parameters.numSunLights );
 		array.push( parameters.numDirLights );
@@ -514,6 +527,7 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 		array.push( parameters.numSpotLightShadows );
 		array.push( parameters.numSpotLightShadowsWithMaps );
 		array.push( parameters.numLightProbes );
+		array.push( parameters.numLightProbeGrids );
 		array.push( parameters.shadowMapType );
 		array.push( parameters.toneMapping );
 		array.push( parameters.numClippingPlanes );
@@ -568,6 +582,8 @@ function WebGLPrograms( renderer, environments, extensions, capabilities, bindin
 			_programLayers.enable( 19 );
 		if ( parameters.retroreflection )
 			_programLayers.enable( 24 );
+		if ( parameters.diffuseRoughness )
+			_programLayers.enable( 25 );
 		if ( parameters.batchingColor )
 			_programLayers.enable( 20 );
 		if ( parameters.gradientMap )
