@@ -186,6 +186,12 @@ class GLTFExporter {
 
 		this.register( function ( writer ) {
 
+			return new GLTFMaterialsDiffuseRoughnessExtension( writer ); // @DDD@
+
+		} );
+
+		this.register( function ( writer ) {
+
 			return new GLTFMaterialsEmissiveStrengthExtension( writer );
 
 		} );
@@ -3447,6 +3453,45 @@ class GLTFMaterialsAnisotropyExtension {
 		materialDef.extensions[ this.name ] = extensionDef;
 
 		extensionsUsed[ this.name ] = true;
+
+	}
+
+}
+
+/**
+ * Materials Diffuse Roughness Extension. GLTFLoader reads it; upstream's
+ * exporter does not write it yet, and a round trip would lose the value. @DDD@
+ *
+ * @private
+ */
+class GLTFMaterialsDiffuseRoughnessExtension {
+
+	constructor( writer ) {
+
+		this.writer = writer;
+		this.name = 'KHR_materials_diffuse_roughness';
+
+	}
+
+	async writeMaterialAsync( material, materialDef ) {
+
+		if ( ! material.isMeshPhysicalMaterial || material.diffuseRoughness === 0 ) return;
+
+		const writer = this.writer;
+		const extensionDef = { diffuseRoughnessFactor: material.diffuseRoughness };
+
+		if ( material.diffuseRoughnessMap ) {
+
+			const mapDef = { index: await writer.processTextureAsync( material.diffuseRoughnessMap ) };
+			writer.applyTextureTransform( mapDef, material.diffuseRoughnessMap );
+			extensionDef.diffuseRoughnessTexture = mapDef;
+
+		}
+
+		materialDef.extensions = materialDef.extensions || {};
+		materialDef.extensions[ this.name ] = extensionDef;
+
+		writer.extensionsUsed[ this.name ] = true;
 
 	}
 
