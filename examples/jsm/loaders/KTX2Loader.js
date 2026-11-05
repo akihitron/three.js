@@ -406,6 +406,24 @@ class KTX2Loader extends Loader {
 
 		// @DDD@ >>>>>>>>>>>>>>>>>>>>>>
 		const texture = new CompressedTexture();
+		const deliver = ( _texture ) => {
+
+			// The placeholder is a 2D texture: a cube or array result copied
+			// into it would lose its faces and layers, so those go out as they are.
+			if ( _texture.isCompressedCubeTexture === true || _texture.isCompressedArrayTexture === true ) {
+
+				if ( onLoad ) onLoad( _texture );
+				return;
+
+			}
+
+			texture.copy( _texture );
+			texture.needsUpdate = true;
+
+			if ( onLoad ) onLoad( texture );
+
+		};
+
 		let use_default = true;
 		if ( window.is_data_url( url ) == false ) {
 
@@ -437,15 +455,7 @@ class KTX2Loader extends Loader {
 
 					}
 
-					this._createTexture( buffer )
-						.then( function ( _texture ) {
-
-							texture.copy( _texture );
-							texture.needsUpdate = true;
-
-							if ( onLoad ) onLoad( texture );
-
-						} ).catch( onError );
+					this._createTexture( buffer ).then( deliver ).catch( onError );
 
 				} catch ( e ) {
 
@@ -474,15 +484,7 @@ class KTX2Loader extends Loader {
 
 				}
 
-				this._createTexture( buffer )
-					.then( function ( _texture ) {
-
-						texture.copy( _texture );
-						texture.needsUpdate = true;
-
-						if ( onLoad ) onLoad( texture );
-
-					} ).catch( onError );
+				this._createTexture( buffer ).then( deliver ).catch( onError );
 
 			}, onProgress, onError );
 
