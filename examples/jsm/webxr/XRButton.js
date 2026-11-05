@@ -35,9 +35,12 @@ class XRButton {
 
 			async function onSessionStarted( session ) {
 
-				session.addEventListener( 'end', onSessionEnded );
-
 				await renderer.xr.setSession( session );
+
+				// @DDD@ After setSession(): three's own 'end' handler has to run first.
+				// The app renders from its callback, and while three still counts as
+				// presenting that reaches updateRenderState() on the ended session.
+				session.addEventListener( 'end', onSessionEnded );
 
 				button.textContent = 'STOP ' + TYPE;
 

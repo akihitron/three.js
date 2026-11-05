@@ -480,7 +480,12 @@ class WebXRManager extends EventDispatcher {
 
 				// Check that the browser implements the necessary APIs to use an
 				// XRProjectionLayer rather than an XRWebGLLayer
-				const supportsLayers = supportsGlBinding && 'createProjectionLayer' in XRWebGLBinding.prototype;
+				// @DDD@ The API being there is not enough: 'layers' is an optional feature and
+				// the session may not have it (Edge 156 on Windows). A projection layer on
+				// such a session is accepted, but the session then delivers no frames at all.
+				const enabledFeatures = session.enabledFeatures;
+				const supportsLayers = supportsGlBinding && 'createProjectionLayer' in XRWebGLBinding.prototype &&
+					( enabledFeatures === undefined || enabledFeatures.includes( 'layers' ) );
 
 				if ( ! supportsLayers ) {
 
